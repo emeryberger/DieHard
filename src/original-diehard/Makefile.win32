@@ -1,0 +1,48 @@
+CFLAGS = /Zi /Ox /Oy /DNDEBUG /MD /DDIEHARD_REPLICATED=0 
+
+DEPS =  Makefile.win32 \
+	winhard.cpp bitmap.h diehard.h \
+	bumpalloc.h diehardheap.h heapshield.cpp largeheap.h lock.h lockheap.h log2.h \
+	marsaglia.h mmapalloc.h mmapwrapper.h platformspecific.h \
+	randomheap.h randomminiheap.h \
+	randomnumbergenerator.h realrandomvalue.h sassert.h \
+	sparc-interchange.il staticif.h staticlog.h  \
+	staticforloop.h  \
+	usewinhard.cpp version.h wrapper.cpp libdiehard.cpp \
+	multiheap.cpp
+
+all: winhard.dll usewinhard.obj diehard.exe diehard-system.dll
+#all: diehard.exe diehard-system.dll
+	copy diehard-system.dll c:\windows\system32
+
+prepare-release:
+	@del diehard.exe
+	@cl /DDIEHARD_RELEASE=1 /Imadcodehook /MT diehard.cpp user32.lib madcodehook\madchook.lib
+	@copy diehard.exe ..\build
+	@copy diehard-system.dll ..\build
+	@copy madCodeHook\madCHook.dll ..\build
+	@echo Build complete.
+
+prepare:
+	@copy diehard.exe ..\build
+	@copy diehard-system.dll ..\build
+	@copy madCodeHook\madCHook.dll ..\build
+	@echo Build complete.
+
+usewinhard.obj: usewinhard.cpp
+	cl $(CFLAGS) /nologo /c usewinhard.cpp
+
+winhard.dll: winhard.obj $(DEPS)
+	cl /LD winhard.obj /link /base:0x63000000 kernel32.lib user32.lib msvcrt.lib advapi32.lib /subsystem:console /dll /incremental:no /entry:HardDllMain
+
+winhard.obj: $(DEPS)
+	cl $(CFLAGS) /nologo /c winhard.cpp
+
+diehard.exe: diehard.cpp $(DEPS)
+	cl /Imadcodehook /MT diehard.cpp user32.lib advapi32.lib madcodehook\madchook.lib
+
+diehard-system.dll: diehard-system.cpp $(DEPS)
+	cl /ImadCodeHook /I.. /Oityb1 /D_MT=1 /DNDEBUG /LD /DDIEHARD_REPLICATED=0 /DDIEHARD_DIEFAST=0 diehard-system.cpp madCodeHook\madCHook.lib kernel32.lib user32.lib shell32.lib advapi32.lib /link /entry:_DllMainCRTStartup@12
+
+clean:
+	del winhard.dll winhard.obj usewinhard.obj diehard-system.dll

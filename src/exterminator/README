@@ -1,0 +1,19 @@
+ ----------------------------------------
+ DieHard
+
+ Copyright (C) 2005 by Emery Berger,
+ University of Massachusetts Amherst.
+
+ http://www.cs.umass.edu/~emery/diehard
+ ----------------------------------------
+
+ DieHard automatically hardens software applications against a wide
+ range of bugs. These bugs -- known as memory errors -- often end up
+ as serious security vulnerabilities, cause crashes, or lead to
+ unpredictable behavior. DieHard either eliminates these bugs
+ altogether, or avoids them with high probability. In other words,
+ DieHard can take some buggy programs and make them bug-free (or close
+ to it).
+
+ For information about DieHard and how to use it, point your browser
+ to the file docs/index.html.

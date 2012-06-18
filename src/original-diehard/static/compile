@@ -1,0 +1,23 @@
+#! /bin/sh
+
+case "$OSTYPE" in
+darwin8.0)
+echo "Compiling for Darwin"
+  g++ -pipe -O3 -finline-limit=65000 -fkeep-inline-functions -finline-functions -ffast-math -fomit-frame-pointer -DDIEHARD_REPLICATED=0 -DDIEHARD_MULTITHREADED=1 -DNDEBUG  -I. -I.. -D_REENTRANT=1 -compatibility_version 1 -current_version 1 -dynamiclib libdiehard.cpp -o libdiehard.dylib;;
+linux*)
+  echo "Compiling for Linux"
+#  g++ -pipe -fno-inline -g -I. -I.. -DDIEHARD_REPLICATED=0 -D_REENTRANT=1 -shared libdiehard.cpp -o libdiehard.so
+  g++  -static -pipe -march=pentiumpro -O3 -finline-functions -fkeep-inline-functions -finline-limit=256000 -ffast-math -fomit-frame-pointer -DNDEBUG  -I. -I.. -D_REENTRANT=1 -DDIEHARD_REPLICATED=1 -DDIEHARD_MULTITHREADED=0 -shared libdiehard.cpp -o libdiehard_r.so -ldl
+  g++  -static -pipe -march=pentiumpro -O3 -finline-functions -fkeep-inline-functions -finline-limit=256000 -ffast-math -fomit-frame-pointer -DNDEBUG  -I. -I.. -D_REENTRANT=1 -DDIEHARD_REPLICATED=0 -DDIEHARD_MULTITHREADED=0 -shared libdiehard.cpp -o libdiehard.so -ldl;;
+solaris)
+  echo "Compiling for Solaris"
+#  CC -xildoff -native -noex -xipo=2 -xO5 -mt -DNDEBUG -I. -I.. -D_REENTRANT=1 -G -PIC libdiehard.cpp -o libdiehard.so;;
+  g++ -fPIC -O3 -finline-limit=65000 -mcpu=ultrasparc -DNDEBUG  -I. -I.. -D_REENTRANT=1 -DDIEHARD_REPLICATED=0 -DDIEHARD_MULTITHREADED=1 -shared libdiehard.cpp -o libdiehard.so
+  g++ -fPIC -O3 -finline-limit=65000 -mcpu=ultrasparc -DNDEBUG  -I. -I.. -D_REENTRANT=1 -DDIEHARD_REPLICATED=1 -DDIEHARD_MULTITHREADED=1 -shared libdiehard.cpp -o libdiehard_r.so;;
+#  g++ -fPIC -pipe -O3 -finline-limit=5000 -fkeep-inline-functions -ffast-math -fomit-frame-pointer -DNDEBUG  -I. -I.. -D_REENTRANT=1 -shared libdiehard.cpp -o libdiehard.so;;
+*)
+  echo "hmmm"
+esac
+
+
+
