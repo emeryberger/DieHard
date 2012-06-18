@@ -1,9 +1,0 @@
-#! /bin/sh
-# After compiling, use the following:
-# setenv LD_PRELOAD "$cwd/libdiehard.so:/lib/libCrun.so.1:/usr/lib/libthread.so"
-CC -xildoff -xipo=2 -xO5 -mt -lpthread -xthreadvar=dynamic -L/usr/lib/lwp -R/usr/lib/lwp -DNDEBUG -I. -I.. -DDIEHARD_REPLICATED=0 -DDIEHARD_MULTITHREADED=1 -D_REENTRANT=1 -G -PIC libdiehard.cpp sparc-interchange.il -o libdiehard.so -lthread
-CC -DDIEHARD_REPLICATED=1 -xildoff -xipo=2 -xO5 -mt -lpthread -xthreadvar=dynamic -L/usr/lib/lwp -R/usr/lib/lwp -DNDEBUG -I. -I.. -DDIEHARD_REPLICATED=1 -DDIEHARD_MULTITHREADED=1 -D_REENTRANT=1 -G -PIC libdiehard.cpp sparc-interchange.il -o libdiehard_r.so -lthread
-
-
-
-
