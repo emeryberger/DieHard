@@ -1,0 +1,11 @@
+Build DieHard.
+Set LD_PRELOAD to libdiehard.so (not _r!).
+Run your program (src/test/overflow.cpp)
+Send your program SIGUSR1
+The program will create a core file (DHcore-XXXX) in its CWD.
+Repeat.
+Build the patcher (src/patcher).
+Set the environment variable DH_PATCHFILE to something (patch.test).
+Run the patcher with two command line arguments (./patcher DHcore-XX DHcore-YY)
+Run the program again (./overflow).
+It will read the file specified by DH_PATCHFILE and behave "appropriately".

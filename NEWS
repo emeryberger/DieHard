@@ -1,0 +1,46 @@
+---------------------
+DieHard release notes
+---------------------
+
+version 1.2:
+	* Added 64-bit support.
+
+version 1.1:
+	* Dramatically reduced memory consumption.
+	* Fixed logic (for Windows) that protects against double free errors.
+	* Fixed the MWC random number generator, enhancing randomness.
+	* More robust whitelist processing for DieHard system, for
+	Windows protection.
+
+release 1.0.2:
+	* Fixed a race condition in Windows injection logic. 
+	* Added support for posix_memalign.
+        * free now ignores invalid offsets, and frees the object anyway.
+          This allows DieHard to cleanly support memalign.
+
+release 1.0.1:
+	* Fixed a bug in some string functions (for Windows).
+	* Fixed a minor bug in random heap selection.
+	* Added notification messages for when DieHard detects
+	and prevents certain errors.
+
+release 1.0:
+	* Introduced adaptive version, which grows only as needed.
+	* Added HeapShield (blocks heap-based overflows).
+
+release 0.3 (December 28, 2005):
+	* Added "red zones" around heap metadata to prevent
+	corruption by buffer overflows.
+	* Added support for Microsoft Visual Studio 2005.
+	* Changed behavior of DieHard to initialize unallocated
+	memory to zeros (standalone version only).
+
+
+release 0.2 (December 2, 2005):
+	* Added atomic updates of bitmap for scalability on
+	multiprocessor/multicore platforms.
+	* Ported to Solaris Sun Workshop compilers.
+
+
+release 0.1 (November 23, 2005):
+	* Initial release.

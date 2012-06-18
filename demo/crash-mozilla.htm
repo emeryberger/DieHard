@@ -1,0 +1,247 @@
+<html><head><title>DieHard: Stop Memory Errors</title>
+
+<style type="text/css">
+BODY,TABLE,TD {
+	FONT-SIZE: 10pt; CURSOR: default; FONT-FAMILY: verdana,geneva,arial,sans-serif;
+}
+a:link { color: blue; background-color: transparent; text-decoration: none; }
+a:link, :visited { color: blue; text-decoration: none; }
+a:link:hover, :visited:hover { color: #ff4500; text-decoration: underline; }
+ </style>
+<meta content="DieHard automatically hardens software applications against a wide range of memory errors, like dangling pointers, double frees and buffer overflows." name="description">
+<meta content="malloc replacement, memory errors, memory bugs, heap overflow, heap overflows, heap errors, buffer overflows, buffer overflow, buffer overrun, dangling pointer, dangling pointers, double free, double frees, invalid free, invalid frees, memory safety" name="keywords">
+<meta content="2 days" name="revisit-after"></head><body bgcolor="black">
+
+<center>
+<table style="border-collapse: collapse;" bgcolor="white" border="0" cellpadding="5" cellspacing="0" width="90%">
+<tbody><tr>
+<td bgcolor="black" width="5"> 
+<A HREF=https:нннннннннннннннннннннннннннннннннннннннннннн ></a>
+<img src="test.gif">
+&nbsp;
+</td>
+<td bgcolor="white" valign="center">
+<center>
+<a href="http://www.cs.umass.edu/%7Eemery/diehard/"><img src="DieHard%20%20Stop%20Memory%20Errors_files/diehard-logo.gif" alt="DieHard" border="0"></a>
+</center>
+</td>
+<td bgcolor="black" height="1" valign="center" width="5">
+&nbsp;
+</td>
+</tr>
+
+<tr>
+</tr>
+
+<tr>
+<td></td>
+<td bgcolor="yellow">
+<center>
+<b><font size="+1">If you see this in Mozilla 1.0.2 or 1.7.3, you're using DieHard.</font></b>
+<br>
+</td>
+</tr>
+
+
+<tr>
+<td bgcolor="black">
+</td>
+<td colspan="2" bgcolor="black" valign="center">
+<center>
+<b>
+<a href="#Download"><font color="white">download</font></a>&nbsp;&nbsp;
+<a href="#Build"><font color="white">build</font></a>&nbsp;&nbsp;
+<a href="#Details"><font color="white">tech details</font></a>&nbsp;&nbsp;
+<a href="#Graphs"><font color="white">graphs</font></a>&nbsp;&nbsp;
+<a href="#Questions"><font color="white">questions</font></a>&nbsp;&nbsp;
+<a href="#License"><font color="white">license</font></a>
+</b>
+
+</center>
+</td>
+</tr>
+
+<tr>
+<td bgcolor="black" valign="center" width="5">
+&nbsp;
+</td>
+<td>
+DieHard automatically hardens software applications against a wide
+range of bugs. These bugs &#8212; known as <em>memory errors</em> &#8212; often
+end up as serious security vulnerabilities, cause crashes, or lead to
+unpredictable behavior. DieHard either eliminates these bugs altogether, or
+avoids them with high probability. In other words, DieHard can take
+some buggy programs and make them bug-free (or close to it).<p>
+
+DieHard has multiple uses. It has been used to allow buggy programs to
+run correctly. More importantly, DieHard can be used as a plug-in
+replacement for <tt>malloc</tt> to protect your applications from
+unanticipated errors and vulnerabilities.</p><p>
+
+<b><font color="red">NEWS: Release 1.0, June 26 2006 - adapts to application memory usage requirements and prevents <em>all</em> standard library-based heap overflows.</font></b>
+</p><p>
+ 
+<a name="Download">
+
+</a></p><h3><a name="Download">How do I get DieHard?</a></h3>
+
+<a name="Download"><b></b></a><b><a href="http://www.cs.umass.edu/%7Eemery/diehard/download/">Download DieHard.</a></b> It is strongly recommended that you <b><a href="http://groups.yahoo.com/group/libdiehard/">sign up for the DieHard mailing list</a></b> for information about new releases.
+
+<p>
+
+<a name="Details">
+
+<b>Technical details:</b> DieHard <em>prevents</em> invalid and multiple frees
+and heap corruption, and <em>probabilistically avoids</em> buffer overflows,
+dangling pointer errors, and uninitialized reads. For more details,
+see the following (technical) paper:</a></p><p>
+
+</p><center>
+<table width="75%">
+<tbody><tr>
+<td>
+<b><a href="http://www.cs.umass.edu/%7Eemery/pubs/fp014-berger.pdf">DieHard: Probabilistic Memory Safety for
+Unsafe Languages</a></b><br>
+<a href="http://www.cs.umass.edu/%7Eemery">Emery D. Berger</a> and <a href="http://research.microsoft.com/%7Ezorn">Benjamin G. Zorn</a>,
+PLDI 2006.
+<p>
+Or view this <b><a href="http://www.cs.umass.edu/%7Eemery/diehard/diehard-pldi06.ppt">PowerPoint presentation</a></b>.
+</p></td>
+</tr>
+</tbody></table>
+</center>
+
+<p>
+
+<a name="Details">DieHard works in two modes: <b>standalone</b> and
+<b>replicated</b>. The standalone version replaces the memory manager
+with the DieHard <em>randomized</em> memory manager. This
+randomization increases the odds that buffer overflows will have no
+effect, and reduces the risk of dangling pointers. The replicated
+version provides greater protection against errors by running several
+instances of the application simultaneously and <em>voting</em> on
+their output. Because each <em>replica</em> is randomized differently,
+each replica will likely have a different output if it has an error,
+and some replicas are likely to run correctly despite the error.
+</a></p><p>
+
+<a name="Details">The standalone version works for Linux, Solaris, and Windows, while
+the replicated version currently only supports Linux or Solaris
+console applications.</a></p><p>
+
+<a name="Build">
+
+</a></p><h3><a name="Build">How do I build and use DieHard?</a></h3>
+
+<a name="Build">The source code for DieHard is in the <b><tt>src/</tt></b> directory.
+
+</a><h4><a name="Build"><em>standalone</em></a></h4>
+
+<a name="Build">To use the standalone version, just enter <b><tt>compile</tt></b>
+(Linux, Solaris) or <b><tt>compile-winhard</tt></b> (Windows). On
+Linux and Solaris, use DieHard by setting the
+<b><tt>LD_PRELOAD</tt></b> environment variable, as in</a><p>
+
+</p><center>
+<table bgcolor="LightBlue" border="1" cellpadding="5" cellspacing="0" width="60%">
+<tbody><tr>
+<td>
+<tt>setenv LD_PRELOAD /path/to/diehard/libdiehard.so</tt>
+</td>
+</tr>
+</tbody></table>
+</center>
+<p>
+
+<a name="Build">On Windows, you need to link your program with the <b><tt>/MD</tt></b>
+flag and <b><tt>usewinhard.obj</tt></b> and
+<b><tt>winhard.lib</tt></b>. Then copy <b><tt>winhard.dll</tt></b> to
+the same directory as the executable.</a></p><p>
+
+</p><h4><a name="Build"><em>replicated</em></a></h4>
+
+<a name="Build">To use the replicated version, compile with <b><tt>make</tt></b> and invoke
+your program with (for example):</a><p>
+
+</p><center>
+<table bgcolor="LightBlue" border="1" cellpadding="5" cellspacing="0" width="60%">
+<tbody><tr>
+<td>
+<tt>diehard 3 /path/to/libdiehard_r.so yourapp</tt>
+</td>
+</tr>
+</tbody></table>
+</center>
+<p>
+
+<a name="Build">This would create 3 replicas of <b><tt>yourapp</tt></b>. If the
+application does not read from standard input, add <b><tt>&lt;
+/dev/null</tt></b> to the command line.</a></p><p>
+
+<a name="Graphs">
+
+</a></p><h3><a name="Graphs">How well does DieHard work?</a></h3>
+
+<table cellspacing="10" width="80%">
+
+<tbody><tr>
+<td valign="top" width="33%">
+<img src="DieHard%20%20Stop%20Memory%20Errors_files/dangling-probability.jpg"><br>
+<font face="Times,serif">
+This graph shows how DieHard (in standalone mode) protects against
+dangling pointer errors. These errors occur when an application frees
+an object prematurely.
+</font>
+</td>
+
+
+<td valign="top" width="33%">
+<img src="DieHard%20%20Stop%20Memory%20Errors_files/overflow-probability.jpg"><br>
+<font face="Times,serif">
+Here's how much DieHard protects against buffer overflows of a whole
+object (i.e., at least 8 bytes), depending on how full the heap is.
+</font>
+</td>
+</tr>
+
+
+</tbody></table>
+
+<a name="Questions">
+
+</a><h3><a name="Questions">Where can I discuss DieHard or get notified about future releases?</a></h3>
+
+<a name="Questions">The right place to do all that is on the <b></b></a><b><a href="http://groups.yahoo.com/group/libdiehard/">DieHard mailing list</a></b>.
+
+<h3>How's the performance?</h3>
+
+DieHard is fast, sometimes faster than the default Windows allocator.
+Of course, it consumes more memory, but provides much more reliability.
+
+<a name="License">
+
+</a><h3><a name="License">Terms of use</a></h3>
+
+<a name="License">DieHard is Copyright (C) 2005-6 </a><a href="http://www.cs.umass.edu/%7Eemery">Emery
+Berger</a>, <a href="http://www.cs.umass.edu/">University of Massachusetts Amherst</a>, and is free for noncommercial use.<br>
+</td>
+<td bgcolor="black" width="5">
+&nbsp;
+</td>
+</tr>
+
+<tr>
+<td colspan="3" bgcolor="black" width="5">
+&nbsp;
+</td>
+</tr>
+
+</tbody></table>
+</center>
+
+<script src="DieHard%20%20Stop%20Memory%20Errors_files/urchin.js" type="text/javascript">
+</script>
+<script type="text/javascript">
+_uacct = "UA-300147-3";
+urchinTracker();
+</script></body></html>

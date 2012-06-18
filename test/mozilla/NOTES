@@ -1,0 +1,39 @@
+What versions of Mozilla each bug crashes,
+and which ones DieHard protects.
+
+* GIF overflow in crash-1.0.2
+  https://bugzilla.mozilla.org/show_bug.cgi?id=285595
+
+  Without DieHard: crashes 1.4, 1.5b
+  With DieHard: generally protects 1.4, always? 1.5b
+
+* XUL overflow
+  Crashes everything, with or without DieHard
+
+https://bugzilla.mozilla.org/show_bug.cgi?id=157989
+ zero-width gif
+
+bugzilla.mozilla.org/attachment.cgi?id=205201
+  -- freezes browser 1.5.0.7
+
+https://bugzilla.mozilla.org/attachment.cgi?id=208358
+  -- test case, doesn't freeze 1.5.0.7 -- or 1.5.0.1
+
+bug # 319296
+milw0rm
+http://www.mozilla.org/security/announce/2006/mfsa2006-04.html
+https://bugzilla.mozilla.org/show_bug.cgi?id=319296
+
+
+-- fixed in 1.5.0.4
+https://bugzilla.mozilla.org/show_bug.cgi?id=330897
+http://www.mozilla.org/security/announce/2006/mfsa2006-32.html
+
+-- fixed in 1.5.0.2
+http://www.mozilla.org/security/announce/2006/mfsa2006-22.html
+http://www.mozilla.org/security/announce/2006/mfsa2006-20.html
+
+-- memcpy overflow!!
+https://bugzilla.mozilla.org/show_bug.cgi?id=325403
+-- windows:
+https://bugzilla.mozilla.org/attachment.cgi?id=210451
