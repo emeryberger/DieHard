@@ -6,12 +6,12 @@
  * @sa     randomheap.h, randomminiheap.h
  * @author Emery Berger <http://www.cs.umass.edu/~emery>
  *
- * Copyright (C) 2006-11 Emery Berger, University of Massachusetts Amherst
+ * Copyright (C) 2006-12 Emery Berger, University of Massachusetts Amherst
  */
 
 
-#ifndef _DIEHARDHEAP_H_
-#define _DIEHARDHEAP_H_
+#ifndef DH_DIEHARDHEAP_H
+#define DH_DIEHARDHEAP_H
 
 #include <new>
 
@@ -25,10 +25,15 @@
 #include "sassert.h"
 #include "staticlog.h"
 
+// for DieHarder
+#include "mypagetable.h"
+#include "pagetableentry.h"
+
 template <int Numerator,
 	  int Denominator,
 	  int MaxSize,
-	  bool DieFast>
+	  bool DieFastOn,
+	  bool DieHarderOn>
 
 class DieHardHeap {
 
@@ -57,8 +62,8 @@ public:
     : _localRandomValue (RealRandomValue::value())
   {
     // Check that there are no size dependencies to worry about.
-    sassert<(sizeof(RandomHeap<Numerator, Denominator, Alignment, MaxSize, RandomMiniHeap, DieFast>)
-	     == (sizeof(RandomHeap<Numerator, Denominator, 256 * Alignment, MaxSize, RandomMiniHeap, DieFast>)))>
+    sassert<(sizeof(RandomHeap<Numerator, Denominator, Alignment, MaxSize, RandomMiniHeap, DieFastOn>)
+	     == (sizeof(RandomHeap<Numerator, Denominator, 256 * Alignment, MaxSize, RandomMiniHeap, DieFastOn>)))>
       verifyNoSizeDependencies;
 
     // Check to make sure the size specified by MaxSize is correct.
@@ -96,12 +101,13 @@ public:
     int index = getIndex (sz);
     void * ptr = getHeap(index)->malloc (sz);
     
-    if (DieFast) {
+    if (DieFastOn) {
       // Fill with special value.
       size_t actualSize = getClassSize (index);
       DieFast::fill (ptr, actualSize, _localRandomValue);
     }
     
+    assert (((size_t) ptr % Alignment) == 0);
     return ptr;
   }
   
@@ -122,21 +128,27 @@ public:
     return false;
   }
   
-  
+  /// @brief Gets the size of a heap object.
   /// @return the space available from this point in the given object
   /// @note returns 0 if this object is not managed by this heap
   inline size_t getSize (void * ptr) const {
-    // Iterate, from smallest to largest, checking for the given
-    // object size.
-    for (int i = 0; i < MAX_INDEX; i++) {
-      size_t sz = getHeap(i)->getSize (ptr);
-      if (sz != 0) {
-	return sz;
+    if (!DieHarderOn) {
+      // Iterate, from smallest to largest, checking for the given
+      // object size.
+      for (int i = 0; i < MAX_INDEX; i++) {
+	size_t sz = getHeap(i)->getSize (ptr);
+	if (sz != 0) {
+	  return sz;
+	}
       }
+      // If we get here, the object could be a "big" object. In any
+      // event, we don't own it, so return 0.
+      return 0;
+    } else {
+      PageTableEntry * entry = MyPageTable::getInstance().getPageTableEntry (ptr);
+      if (!entry) return 0;
+      else return entry->getHeap()->getSize(ptr);
     }
-    // If we get here, the object could be a "big" object. In any
-    // event, we don't own it, so return 0.
-    return 0;
   }
   
 private:
@@ -167,7 +179,7 @@ private:
 	(1 << index) * Alignment, // NB: = getClassSize(index)
 	MaxSize,
         RandomMiniHeap,
-	DieFast>();
+	DieFastOn>();
     }
   };
 
@@ -180,7 +192,7 @@ private:
   }
 
   enum { MINIHEAPSIZE = 
-	 sizeof(RandomHeap<Numerator, Denominator, Alignment, MaxSize, RandomMiniHeap, DieFast>) };
+	 sizeof(RandomHeap<Numerator, Denominator, Alignment, MaxSize, RandomMiniHeap, DieFastOn>) };
 
   /// A random value used for detecting overflows (for DieFast).
   const size_t _localRandomValue;
