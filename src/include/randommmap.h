@@ -20,6 +20,7 @@ public:
     _pages = (void *) (MmapWrapper::map (bytes));
     if (_pages == NULL) {
       // Map failed!
+      fprintf (stderr, "Unable to allocate memory.\n");
       abort();
     }
     // Tell the OS that it's going to be randomly accessed.
@@ -87,7 +88,7 @@ public:
 
 private:
   
-  enum { BITS = 32 - StaticLog<CPUInfo::PageSize>::value }; // size of address space, minus bits for pages.
+  enum { BITS = 31 - StaticLog<CPUInfo::PageSize>::value }; // size of address space, minus bits for pages.
   enum { PAGES = (1ULL << BITS) };
   
   MWC64 _rng;
