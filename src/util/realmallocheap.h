@@ -1,7 +1,7 @@
 // -*- C++ -*-
 
-#ifndef _REALMALLOCHEAP_H_
-#define _REALMALLOCHEAP_H_
+#ifndef DH_REALMALLOCHEAP_H
+#define DH_REALMALLOCHEAP_H
 
 #include <dlfcn.h>
 #include <stdio.h>
