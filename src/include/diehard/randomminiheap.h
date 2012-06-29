@@ -5,11 +5,11 @@
  * @brief  Randomly allocates a particular object size in a range of memory.
  * @author Emery Berger <http://www.cs.umass.edu/~emery>
  *
- * Copyright (C) 2006 Emery Berger, University of Massachusetts Amherst
+ * Copyright (C) 2006-12 Emery Berger, University of Massachusetts Amherst
  */
 
-#ifndef _RANDOMMINIHEAP_H_
-#define _RANDOMMINIHEAP_H_
+#ifndef DH_RANDOMMINIHEAP_H
+#define DH_RANDOMMINIHEAP_H
 
 #include <assert.h>
 
@@ -32,11 +32,11 @@ extern "C" void reportOverflowError (void);
 class RandomMiniHeapBase {
 public:
 
-  virtual void * malloc (size_t) = 0; //  { abort(); return 0; }
+  virtual void * malloc (size_t) = 0; // { abort(); return 0; }
   virtual bool free (void *) = 0; // { abort(); return true; }
   virtual size_t getSize (void *) = 0; // { abort(); return 0; }
   virtual void activate (void) = 0; // { abort(); }
-  virtual ~RandomMiniHeapBase () { abort(); }
+  virtual ~RandomMiniHeapBase () {}
 };
 
 
@@ -79,15 +79,15 @@ public:
       _isHeapIntact (true),
       _check2 ((size_t) CHECK2)
   {
-    //    printf ("freed value = %ld\n", _freedValue);
-    //    printf ("rng = %p\n", rng);
-
     Check<RandomMiniHeap *> sanity (this);
 
-    /// Some sanity checking.
-    CheckPowerOfTwo<ObjectSize>	_SizeIsPowerOfTwo;
+    // Some sanity checking: all these need to be powers of two.
 
-    _SizeIsPowerOfTwo = _SizeIsPowerOfTwo; // to prevent warnings
+    CheckPowerOfTwo<ObjectSize>	invariant1;
+    invariant1 = invariant1; // to prevent warnings
+
+    CheckPowerOfTwo<CPUInfo::PageSize> invariant2;
+    invariant2 = invariant2;
   }
 
   bool isIntact (void) const {
@@ -167,7 +167,7 @@ public:
       return false;
     }
 
-    int index = computeIndex (ptr);
+    unsigned int index = computeIndex (ptr);
     assert ((index >= 0) && ((unsigned long) index < NObjects));
 
     bool didFree = true;
@@ -177,7 +177,7 @@ public:
       // We actually reset the bit, so this was not a double free.
       if (DieFastOn) {
 	checkOverflowError (ptr, index);
-	// Trash the object.
+	// Trash the object: REQUIRED for DieHarder.
 	DieFast::fill (ptr, ObjectSize, _freedValue);
       }
     } else {
@@ -229,13 +229,13 @@ private:
   }
 
   /// @return the index corresponding to the given object.
-  inline int computeIndex (void * ptr) const {
+  inline unsigned int computeIndex (void * ptr) const {
     assert (inBounds(ptr));
     size_t offset = computeOffset (ptr);
     if (IsPowerOfTwo<ObjectSize>::value) {
-      return (int) (offset >> StaticLog<ObjectSize>::value);
+      return (offset >> StaticLog<ObjectSize>::value);
     } else {
-      return (int) (offset / ObjectSize);
+      return (offset / ObjectSize);
     }
   }
 
@@ -282,24 +282,6 @@ private:
   inline bool isActivated (void) const {
     return (_miniHeap != NULL);
   }
-
-  /// Cache-padded lock structure.
-  class MyLock {
-  private:
-    enum { CACHE_LINE_SIZE = 128 };
-    
-    Lock _lock;
-    char _dummy[CACHE_LINE_SIZE - (sizeof(Lock) % CACHE_LINE_SIZE)];
-    
-  public:
-    void lock() {
-      _lock.lock();
-    }
-    
-    void unlock() {
-      _lock.unlock();
-    }
-  };
 
   /// Sanity check value.
   const size_t _check1;
