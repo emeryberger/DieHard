@@ -5,11 +5,11 @@
  * @brief  Randomly allocates a particular object size in a range of memory.
  * @author Emery Berger <http://www.cs.umass.edu/~emery>
  *
- * Copyright (C) 2006-11 Emery Berger, University of Massachusetts Amherst
+ * Copyright (C) 2006-12 Emery Berger, University of Massachusetts Amherst
  */
 
-#ifndef _RANDOMMINIHEAP_H_
-#define _RANDOMMINIHEAP_H_
+#ifndef DH_RANDOMMINIHEAP_H
+#define DH_RANDOMMINIHEAP_H
 
 #include <assert.h>
 
@@ -89,9 +89,6 @@ public:
       _isHeapIntact (true),
       _check2 ((size_t) CHECK2)
   {
-    //    printf ("freed value = %ld\n", _freedValue);
-    //    printf ("rng = %p\n", rng);
-
     Check<RandomMiniHeap *> sanity (this);
 
     // Some sanity checking: all these need to be powers of two.
@@ -104,7 +101,6 @@ public:
     
     CheckPowerOfTwo<ObjectsPerPage> invariant3;
     invariant3 = invariant3;
-
   }
 
   bool isIntact (void) const {
@@ -364,7 +360,8 @@ private:
       // assert (entry->getHeap() == this);
       return entry->getPageIndex();
     }
-   
+
+    fprintf (stderr, "Something has run off the rails.\n");
     abort(); 
     return 0;
   }
