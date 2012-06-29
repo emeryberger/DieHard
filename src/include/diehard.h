@@ -5,6 +5,10 @@
 #define DIEHARD_DIEFAST 0 // NB: This is correct for DieHarder.
 #endif
 
+#ifndef DIEHARD_DIEHARDER
+#define DIEHARD_DIEHARDER 0 // Default: DieHard, not DieHarder.
+#endif
+
 #define DIEHARD_DLL_NAME "C:\\Windows\\System32\\diehard-system.dll"
 #define MADCHOOK_DLL_NAME "C:\\Windows\\System32\\madCHook.dll"
 #define DIEHARD_GUID "D5DCD74D-EDBB-4e96-B9F1-DECF65E5BF92"
