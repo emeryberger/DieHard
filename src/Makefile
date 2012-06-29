@@ -1,19 +1,58 @@
-DIEHARD_TARGET   = libdiehard
-DIEHARD_INCLUDE = -I./include -I./include/diehard
+# Commands to compile DieHard / DieHarder for various targets.
+# Run make (with no arguments) to see the complete target list.
 
-DIEHARDER_TARGET = libdieharder
-DIEHARDER_INCLUDE = -I./include -I./include/dieharder
+all:
+	@echo
+	@echo To build DieHard / DieHarder, specify the desired build target:
+	@echo -----------------------------------------------------------------
+	@echo freebsd
+	@echo linux-gcc-x86
+	@echo linux-gcc-x86-64
+	@echo macos
+	@echo solaris-sunw-sparc
+	@echo solaris-sunw-x86
+	@echo solaris-sunw-x86-64
+	@echo solaris-gcc-sparc
+	@echo generic-gcc
+	@echo windows
+	@echo -----------------------------------------------------------------
+	@echo Add -replicated to build for replicated execution;
+	@echo not supported on all targets.
+	@echo "Specify TARGET=libdiehard to build DieHard (default)."
+	@echo Specify TARGET=libdieharder to build DieHarder.
+	@echo
 
-TARGET  = $(DIEHARD_TARGET)
-INCLUDE = $(DIEHARD_INCLUDE)
+
+.PHONY: macos freebsd linux-gcc-x86 linux-gcc-x86-debug solaris-sunw-sparc solaris-sunw-x86 solaris-gcc-sparc generic-gcc linux-gcc-x86-64 linux-gcc-x86-64-dieharder windows clean
+
+DIEHARD_TARGET    := libdiehard
+DIEHARD_INCLUDE   := -I./include -I./include/diehard
+
+DIEHARDER_TARGET  := libdieharder
+DIEHARDER_INCLUDE := -I./include -I./include/dieharder
+
+ifeq (TARGET,libdieharder)
+INCLUDE := $(DIEHARD_INCLUDE)
+else
+INCLUDE := $(DIEHARDER_INCLUDE)
+endif
 
 UNIX_SRC  = Heap-Layers/wrappers/gnuwrapper.cpp source/libdieharder.cpp
 MACOS_SRC = Heap-Layers/wrappers/macwrapper.cpp source/libdieharder.cpp
 
+DEPS = $(UNIX_SRC) $(MACOS_SRC)
+
 REPLICATED_SRC = replicated/replicated.cpp
 
-# MACOS_COMPILER = g++
-MACOS_COMPILER = llvm-g++
+MACOS_COMPILER = g++
+# MACOS_COMPILER = llvm-g++
+
+
+WIN_INCLUDES = /I. /Iinclude /Iinclude/util /Iinclude/hoard /Iinclude/superblocks /IHeap-Layers /IHeap-Layers/arch-specific /IHeap-Layers/wrappers /IHeap-Layers/utility /IHeap-Layers/locks /IHeap-Layers/threads /IHeap-Layers/heaps/buildingblock /IHeap-Layers/heaps/threads /IHeap-Layers/heaps/utility /IHeap-Layers/heaps/general /IHeap-Layers/heaps/combining /IHeap-Layers/heaps/objectrep /IHeap-Layers/heaps/top /IHeap-Layers/heaps/debug -IHeap-Layers/heaps/special
+
+WIN_FLAGS = /Iinclude /Zi /Ox /Oy /DNDEBUG /MD /DDIEHARD_REPLICATED=0 
+
+WINDOWS_COMMAND_STANDALONE := cl /LD $(WIN_INCLUDES) $(WIN_FLAGS) winhard.cpp /link /base:0x63000000 kernel32.lib user32.lib msvcrt.lib advapi32.lib /subsystem:console /dll /incremental:no /entry:HardDllMain
 
 MACOS_COMMAND_STANDALONE := $(MACOS_COMPILER) -mpreferred-stack-boundary=4 -m128bit-long-double -msse2 -arch i386 -arch x86_64 -g -O3 -W -Wall -DDIEHARD_MULTITHREADED=1 -DNDEBUG  $(INCLUDE) -D_REENTRANT=1 -compatibility_version 1 -current_version 1 -dynamiclib  -D'CUSTOM_PREFIX(x)=xx\#\#x' $(MACOS_SRC) -o $(TARGET).dylib
 
@@ -29,6 +68,10 @@ LINUX_COMMAND_REPLICATED := g++ -malign-double -pipe -march=pentium4 -O3 -fno-rt
 
 LINUX_64_COMMAND_STANDALONE := g++ -W -Wall -O3 -DNDEBUG -pipe -fPIC -m64 -march=nocona -ffast-math -g $(INCLUDE) -D_REENTRANT=1 -DDIEHARD_MULTITHREADED=1 -shared  -D'CUSTOM_PREFIX(x)=diehard\#\#x' $(UNIX_SRC) -Bsymbolic -o $(TARGET).so -ldl -lpthread
 
+LINUX_64_COMMAND_STANDALONE_DIEHARDER := g++ -W -Wall -g -pipe -fPIC -m64 -march=nocona -ffast-math -g $(DIEHARDER_INCLUDE) -D_REENTRANT=1 -DDIEHARD_MULTITHREADED=1 -shared  -D'CUSTOM_PREFIX(x)=diehard\#\#x' $(UNIX_SRC) -Bsymbolic -o $(DIEHARDER_TARGET).so -ldl -lpthread
+
+# LINUX_64_COMMAND_STANDALONE_DIEHARDER := g++ -W -Wall -O3 -DNDEBUG -pipe -fPIC -m64 -march=nocona -ffast-math -g $(DIEHARDER_INCLUDE) -D_REENTRANT=1 -DDIEHARD_MULTITHREADED=1 -shared  -D'CUSTOM_PREFIX(x)=diehard\#\#x' $(UNIX_SRC) -Bsymbolic -o $(DIEHARDER_TARGET).so -ldl -lpthread
+
 LINUX_64_COMMAND_REPLICATED := g++ -O1 -DNDEBUG -pipe -fPIC -march=nocona -m64 -g $(INCLUDE) -D_REENTRANT=1  $(REPLICATED_SRC) -DDIEHARD_MULTITHREADED=1 -shared $(UNIX_SRC) -Bsymbolic -o libdieharder_r.so -ldl -lpthread
 
 SOLARIS_SPARC32_COMMAND_STANDALONE := CC -xtarget=ultra2 -xildoff -xO5 -xthreadvar=dynamic -L/usr/lib/lwp -R/usr/lib/lwp -DNDEBUG $(INCLUDE) -DDIEHARD_MULTITHREADED=1 -G -PIC $(UNIX_SRC) sparc-interchange.il -o $(TARGET).so -lthread -ldl -lCrun
@@ -39,34 +82,20 @@ SOLARIS_SPARC64_COMMAND_STANDALONE := CC -xcode=pic13 -xtarget=ultra2 -m64 -dali
 
 SOLARIS_SPARC64_COMMAND_REPLICATED := CC -xcode=pic13 -xtarget=ultra2 -m64 -dalign -xbuiltin=%all -xO5 -xildoff -xthreadvar=dynamic -L/usr/lib/lwp -R/usr/lib/lwp -DNDEBUG $(INCLUDE)  $(REPLICATED_SRC) -DDIEHARD_MULTITHREADED=1 -G -PIC $(UNIX_SRC) sparc-interchange.il -o libdieharder_r.so -lthread -ldl -lCrun
 
-# After compiling:
-# setenv LD_PRELOAD "$cwd/$(TARGET).so"
-# and whenever g++ supports thread-level storage on Solaris...
-# g++ -fPIC -O3 -finline-limit=65000 -mcpu=ultrasparc -DNDEBUG  $(INCLUDE) -D_REENTRANT=1 -DDIEHARD_MULTITHREADED=1 -shared $(UNIX_SRC) -o $(TARGET).so
 
-DEPS = $(UNIX_SRC) $(MACOS_SRC) 
-
-.PHONY: macos linux solaris
-
-all:
-	@echo "Type make <target>, where target is one of the following: "
-	@echo "  linux-x86"
-	@echo "  linux-x86-64"
-	@echo "  solaris-sparc"
-	@echo "  solaris-sparc-64"
-	@echo "  macos"
-	@echo "Add -replicated to make library for replicated execution."
-
-linux-x86:
+linux-gcc-x86:
 	$(LINUX_COMMAND_STANDALONE)
 
-linux-x86-replicated:
+linux-gcc-x86-replicated:
 	$(LINUX_COMMAND_REPLICATED)
 
-linux-x86-64:
+linux-gcc-x86-64:
 	$(LINUX_64_COMMAND_STANDALONE)
 
-linux-x86-64-replicated:
+linux-gcc-x86-64-dieharder:
+	$(LINUX_64_COMMAND_STANDALONE_DIEHARDER)
+
+linux-gcc-x86-64-replicated:
 	$(LINUX_64_COMMAND_REPLICATED)
 
 solaris-sparc:
@@ -80,6 +109,9 @@ solaris-sparc-64:
 
 solaris-sparc-64-replicated:
 	$(SOLARIS_SPARC64_COMMAND_REPLICATED)
+
+windows:
+	$(WINDOWS_COMMAND_STANDALONE)
 
 macos:
 	$(MACOS_COMMAND_STANDALONE)
