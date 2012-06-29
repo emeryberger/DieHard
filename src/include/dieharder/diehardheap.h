@@ -6,12 +6,12 @@
  * @sa     randomheap.h, randomminiheap.h
  * @author Emery Berger <http://www.cs.umass.edu/~emery>
  *
- * Copyright (C) 2006-11 Emery Berger, University of Massachusetts Amherst
+ * Copyright (C) 2006-12 Emery Berger, University of Massachusetts Amherst
  */
 
 
-#ifndef _DIEHARDHEAP_H_
-#define _DIEHARDHEAP_H_
+#ifndef DH_DIEHARDHEAP_H
+#define DH_DIEHARDHEAP_H
 
 #include <new>
 
@@ -31,7 +31,8 @@
 template <int Numerator,
 	  int Denominator,
 	  int MaxSize,
-	  bool DieFastOn>
+	  bool DieFastOn,
+	  bool DieHarderOn>
 
 class DieHardHeap {
 
