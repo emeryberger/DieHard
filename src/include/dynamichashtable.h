@@ -17,8 +17,10 @@ class DynamicHashTable {
 
   typedef unsigned int UINT;
 
-  // The maximum load factor for the hash table.
-  static const float MaxLoadFactor = 0.125;
+  // The reciprocal of the maximum load factor for the hash table.  In
+  // other words, 1/LOAD_FACTOR_RECIPROCAL is how full the hash table
+  // can get.
+  enum { LOAD_FACTOR_RECIPROCAL = 8 };
 
   // When we grow the hash table, we multiply its size by this expansion factor.
   // NOTE: This *must* be a power of two.
@@ -55,7 +57,7 @@ public:
   {
     //fprintf(stderr,"inserting, now %d/%d\n",_num_elts,_map_size);
     
-    if(_num_elts+1 > MaxLoadFactor * _map_size) {
+    if(_num_elts+1 > _map_size / LOAD_FACTOR_RECIPROCAL) {
       grow();
     } 
     
