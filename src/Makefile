@@ -23,13 +23,15 @@ all:
 	@echo
 
 
-.PHONY: macos freebsd linux-gcc-x86 linux-gcc-x86-debug solaris-sunw-sparc solaris-sunw-x86 solaris-gcc-sparc generic-gcc linux-gcc-x86-64 linux-gcc-x86-64-dieharder windows clean
+.PHONY: macos freebsd linux-gcc-x86 linux-gcc-x86-debug solaris-sunw-sparc solaris-sunw-x86 solaris-gcc-sparc generic-gcc linux-gcc-x86-64 windows clean
 
 DIEHARD_TARGET    := libdiehard
 DIEHARD_INCLUDE   := -I./include -I./include/diehard
 
 DIEHARDER_TARGET  := libdieharder
 DIEHARDER_INCLUDE := -I./include -I./include/dieharder
+
+TARGET ?= libdiehard
 
 ifeq (TARGET,libdieharder)
 INCLUDE := $(DIEHARD_INCLUDE)
@@ -68,10 +70,6 @@ LINUX_COMMAND_REPLICATED := g++ -malign-double -pipe -march=pentium4 -O3 -fno-rt
 
 LINUX_64_COMMAND_STANDALONE := g++ -W -Wall -O3 -DNDEBUG -pipe -fPIC -m64 -march=nocona -ffast-math -g $(INCLUDE) -D_REENTRANT=1 -DDIEHARD_MULTITHREADED=1 -shared  -D'CUSTOM_PREFIX(x)=diehard\#\#x' $(UNIX_SRC) -Bsymbolic -o $(TARGET).so -ldl -lpthread
 
-LINUX_64_COMMAND_STANDALONE_DIEHARDER := g++ -W -Wall -g -pipe -fPIC -m64 -march=nocona -ffast-math -g $(DIEHARDER_INCLUDE) -D_REENTRANT=1 -DDIEHARD_MULTITHREADED=1 -shared  -D'CUSTOM_PREFIX(x)=diehard\#\#x' $(UNIX_SRC) -Bsymbolic -o $(DIEHARDER_TARGET).so -ldl -lpthread
-
-# LINUX_64_COMMAND_STANDALONE_DIEHARDER := g++ -W -Wall -O3 -DNDEBUG -pipe -fPIC -m64 -march=nocona -ffast-math -g $(DIEHARDER_INCLUDE) -D_REENTRANT=1 -DDIEHARD_MULTITHREADED=1 -shared  -D'CUSTOM_PREFIX(x)=diehard\#\#x' $(UNIX_SRC) -Bsymbolic -o $(DIEHARDER_TARGET).so -ldl -lpthread
-
 LINUX_64_COMMAND_REPLICATED := g++ -O1 -DNDEBUG -pipe -fPIC -march=nocona -m64 -g $(INCLUDE) -D_REENTRANT=1  $(REPLICATED_SRC) -DDIEHARD_MULTITHREADED=1 -shared $(UNIX_SRC) -Bsymbolic -o libdieharder_r.so -ldl -lpthread
 
 SOLARIS_SPARC32_COMMAND_STANDALONE := CC -xtarget=ultra2 -xildoff -xO5 -xthreadvar=dynamic -L/usr/lib/lwp -R/usr/lib/lwp -DNDEBUG $(INCLUDE) -DDIEHARD_MULTITHREADED=1 -G -PIC $(UNIX_SRC) sparc-interchange.il -o $(TARGET).so -lthread -ldl -lCrun
@@ -91,9 +89,6 @@ linux-gcc-x86-replicated:
 
 linux-gcc-x86-64:
 	$(LINUX_64_COMMAND_STANDALONE)
-
-linux-gcc-x86-64-dieharder:
-	$(LINUX_64_COMMAND_STANDALONE_DIEHARDER)
 
 linux-gcc-x86-64-replicated:
 	$(LINUX_64_COMMAND_REPLICATED)
