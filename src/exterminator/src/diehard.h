@@ -6,8 +6,8 @@
  * @author Emery Berger <http://www.cs.umass.edu/~emery>
  */
 
-#ifndef _DIEHARD_H_
-#define _DIEHARD_H_
+#ifndef DH_DIEHARD_H
+#define DH_DIEHARD_H
 
 #if !defined(DIEHARD_REPLICATED)
 #error "Must define DIEHARD_REPLICATED to 0 or 1."
@@ -256,7 +256,7 @@ private:
       if (ptr) {
         return ptr;
       }
-      // We're out of memory in thi partition.  Request an object
+      // We're out of memory in this partition.  Request an object
       // from the next size class up (twice as large as requested).
       sc++;
     }
