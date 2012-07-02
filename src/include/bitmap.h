@@ -16,8 +16,8 @@
 
 #include "staticlog.h"
 
-#ifndef _BITMAP_H_
-#define _BITMAP_H_
+#ifndef DH_BITMAP_H
+#define DH_BITMAP_H
 
 /**
  * @class BitMap
@@ -114,7 +114,7 @@ private:
   enum { WORDBYTES = sizeof(WORD) };
 
   /// The log of the number of bits in a WORD, for shifting.
-  enum { WORDBITSHIFT = StaticLog<WORDBITS>::value };
+  enum { WORDBITSHIFT = StaticLog<WORDBITS>::VALUE };
 
   /// The bit array itself.
   WORD * _bitarray;
