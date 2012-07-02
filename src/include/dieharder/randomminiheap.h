@@ -58,7 +58,8 @@ template <int Numerator,
 	  unsigned long ObjectSize,
 	  unsigned long NObjects,
 	  class Allocator,
-	  bool DieFastOn>
+	  bool DieFastOn,
+	  bool DieHarderOn>
 class RandomMiniHeap : public RandomMiniHeapBase {
 
   /// Check values for sanity checking.
@@ -74,9 +75,6 @@ class RandomMiniHeap : public RandomMiniHeapBase {
   typedef struct {
     char obj[ObjectSize];
   } ObjectStruct;
-
-  friend class Check<RandomMiniHeap *>;
-
 
 public:
 
@@ -154,7 +152,7 @@ public:
   /// @return the space remaining from this point in this object
   /// @nb Returns zero if this object is not managed by this heap.
   inline size_t getSize (void * ptr) const {
-    Check<RandomMiniHeap *> sanity (this);
+    Check<const RandomMiniHeap *> sanity (this);
 
     if (!inBounds(ptr)) {
       return 0;
@@ -191,14 +189,16 @@ public:
     // Reset the appropriate bit in the bitmap.
     if (_miniHeapBitmap.reset (index)) {
       // We actually reset the bit, so this was not a double free.
-      if (!DieFastOn) {
+      if (DieHarderOn) {
 	// Trash the object: REQUIRED for DieHarder.
 	memset (ptr, 0, ObjectSize);
       } else {
-	// Check for overflows into adjacent objects,
-	// then fill the freed object with a known random value.
-	checkOverflowError (ptr, index);
-	DieFast::fill (ptr, ObjectSize, _freedValue);
+	if (DieFastOn) {
+	  // Check for overflows into adjacent objects,
+	  // then fill the freed object with a known random value.
+	  checkOverflowError (ptr, index);
+	  DieFast::fill (ptr, ObjectSize, _freedValue);
+	}
       }
     } else {
       //      reportDoubleFreeError();

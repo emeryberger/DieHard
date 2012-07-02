@@ -58,8 +58,10 @@ template <int Numerator,
 		    unsigned long ObjectSize,
 		    unsigned long NObjects,
 		    class Allocator,
-		    bool DieFastOn> class MiniHeap,
-	  bool DieFastOn>
+		    bool DieFastOn,
+                    bool DieHarderOn> class MiniHeap,
+	  bool DieFastOn,
+	  bool DieHarderOn>
 class RandomHeap : public RandomHeapBase<Numerator, Denominator> {
 
   /// The most miniheaps we will use without overflowing.
@@ -206,7 +208,7 @@ private:
 
   // The type of a mini heap.
   template <unsigned long Number> class MiniHeapType
-    : public MiniHeap<Numerator, Denominator, ObjectSize, Number, TheAllocator, DieFastOn> {};
+    : public MiniHeap<Numerator, Denominator, ObjectSize, Number, TheAllocator, DieFastOn, DieHarderOn> {};
 
   // The size of a mini heap.
   enum { MINIHEAP_SIZE = sizeof(MiniHeapType<MIN_OBJECTS>) };

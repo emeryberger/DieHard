@@ -58,7 +58,8 @@ template <int Numerator,
 	  unsigned long ObjectSize,
 	  unsigned long NObjects,
 	  class Allocator,
-	  bool DieFastOn>
+	  bool DieFastOn,
+	  bool DieHarderOn>
 class RandomMiniHeap : public RandomMiniHeapBase {
 
   /// Check values for sanity checking.
@@ -185,10 +186,16 @@ public:
     // Reset the appropriate bit in the bitmap.
     if (_miniHeapBitmap.reset (index)) {
       // We actually reset the bit, so this was not a double free.
-      if (DieFastOn) {
-	checkOverflowError (ptr, index);
+      if (DieHarderOn) {
 	// Trash the object: REQUIRED for DieHarder.
-	DieFast::fill (ptr, ObjectSize, _freedValue);
+	memset (ptr, 0, ObjectSize);
+      } else {
+	if (DieFastOn) {
+	  // Check for overflows into adjacent objects,
+	  // then fill the freed object with a known random value.
+	  checkOverflowError (ptr, index);
+	  DieFast::fill (ptr, ObjectSize, _freedValue);
+	}
       }
     } else {
       //      reportDoubleFreeError();

@@ -62,8 +62,8 @@ public:
     : _localRandomValue (RealRandomValue::value())
   {
     // Check that there are no size dependencies to worry about.
-    sassert<(sizeof(RandomHeap<Numerator, Denominator, Alignment, MaxSize, RandomMiniHeap, DieFastOn>)
-	     == (sizeof(RandomHeap<Numerator, Denominator, 256 * Alignment, MaxSize, RandomMiniHeap, DieFastOn>)))>
+    sassert<(sizeof(RandomHeap<Numerator, Denominator, Alignment, MaxSize, RandomMiniHeap, DieFastOn, DieHarderOn>)
+	     == (sizeof(RandomHeap<Numerator, Denominator, 256 * Alignment, MaxSize, RandomMiniHeap, DieFastOn, DieHarderOn>)))>
       verifyNoSizeDependencies;
 
     // Check to make sure the size specified by MaxSize is correct.
@@ -179,7 +179,8 @@ private:
 	(1 << index) * Alignment, // NB: = getClassSize(index)
 	MaxSize,
         RandomMiniHeap,
-	DieFastOn>();
+        DieFastOn,
+        DieHarderOn>();
     }
   };
 
@@ -192,7 +193,7 @@ private:
   }
 
   enum { MINIHEAPSIZE = 
-	 sizeof(RandomHeap<Numerator, Denominator, Alignment, MaxSize, RandomMiniHeap, DieFastOn>) };
+	 sizeof(RandomHeap<Numerator, Denominator, Alignment, MaxSize, RandomMiniHeap, DieFastOn, DieHarderOn>) };
 
   /// A random value used for detecting overflows (for DieFast).
   const size_t _localRandomValue;
