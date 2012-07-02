@@ -33,10 +33,15 @@ DIEHARDER_INCLUDE := -I./include -I./include/dieharder
 
 TARGET ?= libdiehard
 
+# WIN_INCLUDES = /I. /Iinclude /Iinclude/util /Iinclude/hoard /Iinclude/superblocks /IHeap-Layers /IHeap-Layers/arch-specific /IHeap-Layers/wrappers /IHeap-Layers/utility /IHeap-Layers/locks /IHeap-Layers/threads /IHeap-Layers/heaps/buildingblock /IHeap-Layers/heaps/threads /IHeap-Layers/heaps/utility /IHeap-Layers/heaps/general /IHeap-Layers/heaps/combining /IHeap-Layers/heaps/objectrep /IHeap-Layers/heaps/top /IHeap-Layers/heaps/debug -IHeap-Layers/heaps/special
+
+INCLUDES = -I. -Iinclude -Iinclude/util -Iinclude/hoard -Iinclude/superblocks -IHeap-Layers -IHeap-Layers/arch-specific -IHeap-Layers/wrappers -IHeap-Layers/utility -IHeap-Layers/locks -IHeap-Layers/threads -IHeap-Layers/heaps/buildingblock -IHeap-Layers/heaps/threads -IHeap-Layers/heaps/utility -IHeap-Layers/heaps/general -IHeap-Layers/heaps/combining -IHeap-Layers/heaps/objectrep -IHeap-Layers/heaps/top -IHeap-Layers/heaps/debug -IHeap-Layers/heaps/special
+
+
 ifeq (TARGET,libdieharder)
-INCLUDE := $(DIEHARD_INCLUDE)
+INCLUDE := $(DIEHARDER_INCLUDE) $(INCLUDES)
 else
-INCLUDE := $(DIEHARDER_INCLUDE)
+INCLUDE := $(DIEHARD_INCLUDE) $(INCLUDES)
 endif
 
 UNIX_SRC  = Heap-Layers/wrappers/gnuwrapper.cpp source/libdieharder.cpp
@@ -48,9 +53,6 @@ REPLICATED_SRC = replicated/replicated.cpp
 
 MACOS_COMPILER = g++
 # MACOS_COMPILER = llvm-g++
-
-
-WIN_INCLUDES = /I. /Iinclude /Iinclude/util /Iinclude/hoard /Iinclude/superblocks /IHeap-Layers /IHeap-Layers/arch-specific /IHeap-Layers/wrappers /IHeap-Layers/utility /IHeap-Layers/locks /IHeap-Layers/threads /IHeap-Layers/heaps/buildingblock /IHeap-Layers/heaps/threads /IHeap-Layers/heaps/utility /IHeap-Layers/heaps/general /IHeap-Layers/heaps/combining /IHeap-Layers/heaps/objectrep /IHeap-Layers/heaps/top /IHeap-Layers/heaps/debug -IHeap-Layers/heaps/special
 
 WIN_FLAGS = /Iinclude /Zi /Ox /Oy /DNDEBUG /MD /DDIEHARD_REPLICATED=0 
 
@@ -68,7 +70,11 @@ LINUX_COMMAND_STANDALONE := g++ -m32 -finline-functions -malign-double -pipe -ma
 
 LINUX_COMMAND_REPLICATED := g++ -malign-double -pipe -march=pentium4 -O3 -fno-rtti -finline-functions  -ffast-math -fomit-frame-pointer -DNDEBUG  $(INCLUDE) -D_REENTRANT=1  $(REPLICATED_SRC) -DDIEHARD_MULTITHREADED=1 -shared $(UNIX_SRC) -Bsymbolic -o libdieharder_r.so -ldl -lpthread
 
-LINUX_64_COMMAND_STANDALONE := g++ -W -Wall -O3 -DNDEBUG -pipe -fPIC -m64 -march=nocona -ffast-math -g $(INCLUDE) -D_REENTRANT=1 -DDIEHARD_MULTITHREADED=1 -shared  -D'CUSTOM_PREFIX(x)=diehard\#\#x' $(UNIX_SRC) -Bsymbolic -o $(TARGET).so -ldl -lpthread
+FLAGS = -pedantic -Wall -Wpointer-arith -Woverloaded-virtual -Werror=return-type -Wtype-limits -Wempty-body -Wno-ctor-dtor-privacy -Wno-overlength-strings -Wno-invalid-offsetof -Wno-variadic-macros -Wcast-align -Wno-long-long -pthread -pipe  -DNDEBUG
+
+LINUX_64_COMMAND_STANDALONE_DEBUG := g++ -W -Wall -O0 -pipe -fPIC -m64 -march=nocona -ffast-math -g $(INCLUDE) -D_REENTRANT=1 -DDIEHARD_MULTITHREADED=1 -shared  -D'CUSTOM_PREFIX(x)=diehard\#\#x' $(UNIX_SRC) -Bsymbolic -o $(TARGET).so -ldl -lpthread
+
+LINUX_64_COMMAND_STANDALONE := g++ $(FLAGS) -W -Wall -O3 -DNDEBUG -pipe -fPIC -m64 -march=nocona -ffast-math -g $(INCLUDE) -D_REENTRANT=1 -DDIEHARD_MULTITHREADED=1 -shared  -D'CUSTOM_PREFIX(x)=diehard\#\#x' $(UNIX_SRC) -Bsymbolic -o $(TARGET).so -ldl -lpthread
 
 LINUX_64_COMMAND_REPLICATED := g++ -O1 -DNDEBUG -pipe -fPIC -march=nocona -m64 -g $(INCLUDE) -D_REENTRANT=1  $(REPLICATED_SRC) -DDIEHARD_MULTITHREADED=1 -shared $(UNIX_SRC) -Bsymbolic -o libdieharder_r.so -ldl -lpthread
 
@@ -89,6 +95,9 @@ linux-gcc-x86-replicated:
 
 linux-gcc-x86-64:
 	$(LINUX_64_COMMAND_STANDALONE)
+
+linux-gcc-x86-64-debug:
+	$(LINUX_64_COMMAND_STANDALONE_DEBUG)
 
 linux-gcc-x86-64-replicated:
 	$(LINUX_64_COMMAND_REPLICATED)
