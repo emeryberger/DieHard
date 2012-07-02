@@ -26,22 +26,19 @@ all:
 .PHONY: macos freebsd linux-gcc-x86 linux-gcc-x86-debug solaris-sunw-sparc solaris-sunw-x86 solaris-gcc-sparc generic-gcc linux-gcc-x86-64 windows clean
 
 DIEHARD_TARGET    := libdiehard
-DIEHARD_INCLUDE   := -I./include -I./include/diehard
-
 DIEHARDER_TARGET  := libdieharder
-DIEHARDER_INCLUDE := -I./include -I./include/dieharder
 
 TARGET ?= libdiehard
 
-# WIN_INCLUDES = /I. /Iinclude /Iinclude/util /Iinclude/hoard /Iinclude/superblocks /IHeap-Layers /IHeap-Layers/arch-specific /IHeap-Layers/wrappers /IHeap-Layers/utility /IHeap-Layers/locks /IHeap-Layers/threads /IHeap-Layers/heaps/buildingblock /IHeap-Layers/heaps/threads /IHeap-Layers/heaps/utility /IHeap-Layers/heaps/general /IHeap-Layers/heaps/combining /IHeap-Layers/heaps/objectrep /IHeap-Layers/heaps/top /IHeap-Layers/heaps/debug -IHeap-Layers/heaps/special
+# WIN_INCLUDES = /I. /Iinclude /Iinclude/layers /Iinclude/util /Iinclude/math /Iinclude/static /Iinclude/rng /Iinclude/hoard /Iinclude/superblocks /IHeap-Layers /IHeap-Layers/arch-specific /IHeap-Layers/wrappers /IHeap-Layers/utility /IHeap-Layers/locks /IHeap-Layers/threads /IHeap-Layers/heaps/buildingblock /IHeap-Layers/heaps/threads /IHeap-Layers/heaps/utility /IHeap-Layers/heaps/general /IHeap-Layers/heaps/combining /IHeap-Layers/heaps/objectrep /IHeap-Layers/heaps/top /IHeap-Layers/heaps/debug -IHeap-Layers/heaps/special
 
-INCLUDES = -I. -Iinclude -Iinclude/util -Iinclude/hoard -Iinclude/superblocks -IHeap-Layers -IHeap-Layers/arch-specific -IHeap-Layers/wrappers -IHeap-Layers/utility -IHeap-Layers/locks -IHeap-Layers/threads -IHeap-Layers/heaps/buildingblock -IHeap-Layers/heaps/threads -IHeap-Layers/heaps/utility -IHeap-Layers/heaps/general -IHeap-Layers/heaps/combining -IHeap-Layers/heaps/objectrep -IHeap-Layers/heaps/top -IHeap-Layers/heaps/debug -IHeap-Layers/heaps/special
+INCLUDES = -I. -Iinclude -Iinclude/layers -Iinclude/util -Iinclude/math -Iinclude/static -Iinclude/rng -Iinclude/hoard -Iinclude/superblocks -IHeap-Layers -IHeap-Layers/arch-specific -IHeap-Layers/wrappers -IHeap-Layers/utility -IHeap-Layers/locks -IHeap-Layers/threads -IHeap-Layers/heaps/buildingblock -IHeap-Layers/heaps/threads -IHeap-Layers/heaps/utility -IHeap-Layers/heaps/general -IHeap-Layers/heaps/combining -IHeap-Layers/heaps/objectrep -IHeap-Layers/heaps/top -IHeap-Layers/heaps/debug -IHeap-Layers/heaps/special
 
 
 ifeq ($(TARGET),libdieharder)
-INCLUDE := $(DIEHARDER_INCLUDE) $(INCLUDES) -DDIEHARD_DIEHARDER=1
+INCLUDE := $(INCLUDES) -DDIEHARD_DIEHARDER=1
 else
-INCLUDE := $(DIEHARD_INCLUDE) $(INCLUDES) -DDIEHARD_DIEHARDER=0
+INCLUDE := $(INCLUDES) -DDIEHARD_DIEHARDER=0
 endif
 
 UNIX_SRC  = Heap-Layers/wrappers/gnuwrapper.cpp source/libdieharder.cpp

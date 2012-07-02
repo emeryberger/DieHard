@@ -9,8 +9,8 @@
  */
 
 
-#ifndef _RANDOMHEAP_H_
-#define _RANDOMHEAP_H_
+#ifndef DH_RANDOMHEAP_H
+#define DH_RANDOMHEAP_H
 
 #include <iostream>
 #include <new>
@@ -25,7 +25,6 @@ using namespace std;
 #include "randomnumbergenerator.h"
 #include "sassert.h"
 #include "staticlog.h"
-#include "threadlocal.h"
 
 template <int Numerator, int Denominator>
 class RandomHeapBase {
@@ -191,7 +190,7 @@ private:
   inline void * getObject (size_t sz) {
     void * ptr = NULL;
     while (!ptr) {
-      size_t rnd = ((RandomNumberGenerator *) _random)->next();
+      size_t rnd = _random.next();
       // NB: _chunksInUse acts as a bitmask that eliminates the need for
       // an (expensive) modulus operation on _available -- the
       // expression is the same as "v = rnd % _available".
@@ -266,7 +265,7 @@ private:
 		      
 		      
   /// Local random source.
-  threadlocal<RandomNumberGenerator> _random;
+  RandomNumberGenerator _random;
 
   size_t _check1;
 

@@ -62,8 +62,10 @@ public:
     : _localRandomValue (RealRandomValue::value())
   {
     // Check that there are no size dependencies to worry about.
-    sassert<(sizeof(RandomHeap<Numerator, Denominator, Alignment, MaxSize, RandomMiniHeap, DieFastOn, DieHarderOn>)
-	     == (sizeof(RandomHeap<Numerator, Denominator, 256 * Alignment, MaxSize, RandomMiniHeap, DieFastOn, DieHarderOn>)))>
+    typedef RandomHeap<Numerator, Denominator, Alignment, MaxSize, RandomMiniHeap, DieFastOn, DieHarderOn> RH1;
+    typedef RandomHeap<Numerator, Denominator, 256 * Alignment, MaxSize, RandomMiniHeap, DieFastOn, DieHarderOn> RH2;
+
+    sassert<(sizeof(RH1) == (sizeof(RH2)))>
       verifyNoSizeDependencies;
 
     // Check to make sure the size specified by MaxSize is correct.

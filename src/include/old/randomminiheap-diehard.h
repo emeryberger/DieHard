@@ -76,9 +76,6 @@ class RandomMiniHeap : public RandomMiniHeapBase {
     char obj[ObjectSize];
   } ObjectStruct;
 
-  friend class Check<RandomMiniHeap *>;
-
-
 public:
 
   typedef RandomMiniHeapBase SuperHeap;
@@ -87,7 +84,6 @@ public:
     : _check1 ((size_t) CHECK1),
       _freedValue (((RandomNumberGenerator *) _random)->next() | 1), // Enforce invalid pointer value.
       _miniHeap (NULL),
-      _isHeapIntact (true),
       _check2 ((size_t) CHECK2)
   {
     Check<RandomMiniHeap *> sanity (this);
@@ -99,10 +95,9 @@ public:
 
     CheckPowerOfTwo<CPUInfo::PageSize> invariant2;
     invariant2 = invariant2;
-  }
 
-  bool isIntact (void) const {
-    return _isHeapIntact;
+    CheckPowerOfTwo<ObjectsPerPage> invariant3;
+    invariant3 = invariant3;
   }
 
   /// @return an allocated object of size ObjectSize
@@ -132,10 +127,11 @@ public:
     assert ((unsigned long) index < NObjects);
     ptr = getObject (index);
     
+    assert (index == computeIndex(ptr));
+    
     if (DieFastOn) {
       // Check to see if this object was overflowed.
       if (DieFast::checkNot (ptr, ObjectSize, _freedValue)) {
-	_isHeapIntact = false;
 	//	reportOverflowError();
       }
     }
@@ -156,12 +152,27 @@ public:
       return 0;
     }
 
-    // Compute offset corresponding to the pointer.
-    size_t offset = computeOffset (ptr);
+    size_t remainingSize;
 
-    // Return the space remaining in the object from this point.
-    size_t remainingSize =     
-      ObjectSize - modulo<ObjectSize>(offset);
+    if (DieHarderOn) {
+
+      // Return the space remaining in the object from this point.
+      if (ObjectSize <= CPUInfo::PageSize) {
+	remainingSize = ObjectSize - modulo<ObjectSize>(reinterpret_cast<uintptr_t>(ptr));
+      } else {
+	uintptr_t start = (uintptr_t) _miniHeapMap[getPageIndex(ptr)];
+	remainingSize = ObjectSize - ((uintptr_t) ptr - start);
+      }
+
+    } else {
+      // Compute offset corresponding to the pointer.
+      size_t offset = computeOffset (ptr);
+      
+      // Return the space remaining in the object from this point.
+      remainingSize =     
+	ObjectSize - modulo<ObjectSize>(offset);
+
+    }
 
     return remainingSize;
 
@@ -179,7 +190,7 @@ public:
     }
 
     unsigned int index = computeIndex (ptr);
-    assert ((index >= 0) && ((unsigned long) index < NObjects));
+    assert (((unsigned long) index < NObjects));
 
     bool didFree = true;
 
@@ -270,7 +281,6 @@ private:
     if (!_miniHeapBitmap.isSet (index - 1)) {
       void * p = (void *) (((ObjectStruct *) ptr) - 1);
       if (DieFast::checkNot (p, ObjectSize, _freedValue)) {
-	_isHeapIntact = false;
 	//	reportOverflowError();
       }
     }
@@ -279,7 +289,6 @@ private:
 	(!_miniHeapBitmap.isSet (index + 1))) {
       void * p = (void *) (((ObjectStruct *) ptr) + 1);
       if (DieFast::checkNot (p, ObjectSize, _freedValue)) {
-	_isHeapIntact = false;
 	//	reportOverflowError();
       }
     }
@@ -313,9 +322,6 @@ private:
 
   /// The heap pointer.
   char * _miniHeap;
-
-  /// True iff the heap is intact (and DieFastOn is true).
-  bool _isHeapIntact;
 
   /// Sanity check value.
   const size_t _check2;
