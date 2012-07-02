@@ -34,7 +34,7 @@ public:
 
   inline virtual void * malloc (size_t) = 0; // { abort(); return NULL; }
   inline virtual bool free (void *) = 0; // { abort(); }
-  inline virtual size_t getSize (void *) = 0; // { abort(); return 0; }
+  inline virtual size_t getSize (void *) const = 0; // { abort(); return 0; }
 
 };
 
@@ -159,8 +159,8 @@ public:
 
   /// @return the space available from this point in the given object
   /// @note returns 0 if this object is not managed by this heap
-  inline size_t getSize (void * ptr) {
-    Check<RandomHeap *> sanity (this);
+  inline size_t getSize (void * ptr) const {
+    Check<const RandomHeap *> sanity (this);
 
     // We start from the largest heap (most objects) and work our way
     // down to improve performance in the common case.
@@ -178,6 +178,10 @@ public:
     return 0;
   }
 
+  inline void check (void) const {
+    assert ((_check1 == CHECK1) && (_check2 == CHECK2));
+  }
+		      
 
 private:
 
@@ -224,8 +228,8 @@ private:
 
 
   /// @return the desired mini-heap.
-  inline typename MiniHeapType<MIN_OBJECTS>::SuperHeap * getMiniHeap (unsigned int index) {
-    Check<RandomHeap *> sanity (this);
+  inline typename MiniHeapType<MIN_OBJECTS>::SuperHeap * getMiniHeap (unsigned int index) const {
+    Check<const RandomHeap *> sanity (this);
     assert (index < MAX_MINIHEAPS);
     assert (index <= _miniHeapsInUse);
     return (typename MiniHeapType<MIN_OBJECTS>::SuperHeap *) &_buf[index * MINIHEAP_SIZE];
@@ -257,13 +261,7 @@ private:
     check();
 
   }
-		      
-		      
-  inline void check (void) const {
-    assert ((_check1 == CHECK1) && (_check2 == CHECK2));
-  }
-		      
-		      
+     
   /// Local random source.
   RandomNumberGenerator _random;
 

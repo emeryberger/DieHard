@@ -1,3 +1,5 @@
+// -*- C++ -*-
+
 #ifndef PAGETABLEENTRY_H_
 #define PAGETABLEENTRY_H_
 
@@ -5,6 +7,13 @@ class RandomMiniHeapBase;
 
 class PageTableEntry {
 public:
+
+  PageTableEntry ()
+    : _pageNumber (0),
+      _heap (0),
+      _pageIndex (0)
+  {}
+
   PageTableEntry (uintptr_t pNum,
 		  RandomMiniHeapBase * b,
 		  unsigned int idx) 

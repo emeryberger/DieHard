@@ -274,9 +274,13 @@ private:
     void * page;
     
     if (ObjectSize <= CPUInfo::PageSize) {
-      page = MyPageTable::getInstance().allocatePage (this,idx);
+      // Get one page.
+      page = MyPageTable::getInstance().allocatePages (this, idx, 1);
     } else {
-      page = MyPageTable::getInstance().allocatePageRange (this, idx, ObjectSize / CPUInfo::PageSize);
+      // Get a number of pages.
+      page = MyPageTable::getInstance().allocatePages (this, idx, ObjectSize / CPUInfo::PageSize);
+      // Check that object size is an even multiple of page size.
+      assert (CPUInfo::PageSize * (ObjectSize / CPUInfo::PageSize) == ObjectSize);
     }
 
     _miniHeapMap[idx] = page;

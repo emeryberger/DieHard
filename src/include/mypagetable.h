@@ -23,20 +23,7 @@ public:
     return DynamicHashTable<uintptr_t, PageTableEntry, MmapHeap>::get (pageNumber);
   }
 
-  void * allocatePage (RandomMiniHeapBase * heap, unsigned int idx) {
-#if WE_ALREADY_HAVE_ASLR
-    void * ret = MmapWrapper::map (CPUInfo::PageSize);
-    // EDB: I am not sure the below advice makes a difference for a single page...
-    MadviseWrapper::random (ret, CPUInfo::PageSize);
-#else
-    void * ret = _mapper.map (CPUInfo::PageSize);
-#endif
-    uintptr_t pageNumber = computePageNumber (ret);
-    insert (PageTableEntry (pageNumber, heap, idx));
-    return ret;
-  }
-  
-  void * allocatePageRange (RandomMiniHeapBase * heap, unsigned int idx, size_t ct) {
+  void * allocatePages (RandomMiniHeapBase * heap, unsigned int idx, size_t ct) {
 #if WE_ALREADY_HAVE_ASLR
     void * ret = MmapWrapper::map (ct*CPUInfo::PageSize);
     MadviseWrapper::random (ret, ct * CPUInfo::PageSize);
@@ -52,7 +39,7 @@ public:
 
 private:
 
-  uintptr_t computePageNumber (void * addr) {
+  static uintptr_t computePageNumber (void * addr) {
     return (uintptr_t) addr >> StaticLog<CPUInfo::PageSize>::VALUE;
   }
 
