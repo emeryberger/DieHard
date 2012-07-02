@@ -18,19 +18,19 @@ class StaticLog;
 template <>
 class StaticLog<1> {
 public:
-  enum { value = 0 };
+  enum { VALUE = 0 };
 };
 
 template <>
 class StaticLog<2> {
 public:
-  enum { value = 1 };
+  enum { VALUE = 1 };
 };
 
 template <int Number>
 class StaticLog {
 public:
-  enum { value = StaticIf<(Number > 1), StaticLog<Number/2>::value + 1, 0>::value };
+  enum { VALUE = StaticIf<(Number > 1), StaticLog<Number/2>::VALUE + 1, 0>::VALUE };
 };
 
 #endif

@@ -23,7 +23,7 @@ public:
 
 private:
 
-  C _item;
+  const C _item;
 
 };
 

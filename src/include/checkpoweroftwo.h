@@ -9,8 +9,8 @@
  **/
 
 
-#ifndef _CHECKPOWEROFTWO_H_
-#define _CHECKPOWEROFTWO_H_
+#ifndef DH_CHECKPOWEROFTWO_H
+#define DH_CHECKPOWEROFTWO_H
 
 #include "sassert.h"
 
@@ -22,7 +22,7 @@
 template <unsigned long Number>
 class IsPowerOfTwo {
 public:
-  enum { value = (!(Number & (Number - 1)) && Number) };
+  enum { VALUE = (!(Number & (Number - 1)) && Number) };
 };
 
 
@@ -33,7 +33,7 @@ public:
  **/
 template <unsigned long V>
 class CheckPowerOfTwo {
-  enum { Verify = sassert<IsPowerOfTwo<V>::value>::value };
+  enum { Verify = HL::sassert<IsPowerOfTwo<V>::VALUE>::VALUE };
 };
 
 

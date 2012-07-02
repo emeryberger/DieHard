@@ -14,7 +14,7 @@ inline size_t modulo (size_t v) {
   sassert<(B > 0)> modulus_must_be_positive;
   modulus_must_be_positive = modulus_must_be_positive;
 
-  enum { Pow2 = IsPowerOfTwo<B>::value };
+  enum { Pow2 = IsPowerOfTwo<B>::VALUE };
   if (Pow2) {
     return (v & (B-1));
   } else {

@@ -13,30 +13,30 @@
 
 #include <assert.h>
 
-extern "C" void reportDoubleFreeError (void);
-extern "C" void reportInvalidFreeError (void);
-extern "C" void reportOverflowError (void);
+//extern "C" void reportDoubleFreeError (void);
+//extern "C" void reportInvalidFreeError (void);
+//extern "C" void reportOverflowError (void);
 
 
 #include "bitmap.h"
 #include "check.h"
 #include "checkpoweroftwo.h"
+#include "cpuinfo.h"
 #include "diefast.h"
+#include "madvisewrapper.h"
 #include "modulo.h"
+#include "mypagetable.h"
 #include "randomnumbergenerator.h"
 #include "sassert.h"
 #include "staticlog.h"
 #include "threadlocal.h"
-#include "cpuinfo.h"
-
-#include "mypagetable.h"
 
 class RandomMiniHeapBase {
 public:
 
   virtual void * malloc (size_t) = 0; // { abort(); return 0; }
   virtual bool free (void *) = 0; // { abort(); return true; }
-  virtual size_t getSize (void *) = 0; // { abort(); return 0; }
+  virtual size_t getSize (void *) const = 0; // { abort(); return 0; }
   virtual void activate (void) = 0; // { abort(); }
   virtual ~RandomMiniHeapBase () {}
 };
@@ -68,7 +68,7 @@ class RandomMiniHeap : public RandomMiniHeapBase {
 
   enum { ObjectsPerPage = StaticIf<(ObjectSize < CPUInfo::PageSize),
 				    CPUInfo::PageSize / ObjectSize,
-				    1>::value };
+				    1>::VALUE };
 
   /// A convenience struct.
   typedef struct {
@@ -140,7 +140,7 @@ public:
       // Check to see if this object was overflowed.
       if (DieFast::checkNot (ptr, ObjectSize, _freedValue)) {
 	_isHeapIntact = false;
-	reportOverflowError();
+	//	reportOverflowError();
       }
     }
 
@@ -153,7 +153,7 @@ public:
 
   /// @return the space remaining from this point in this object
   /// @nb Returns zero if this object is not managed by this heap.
-  inline size_t getSize (void * ptr) {
+  inline size_t getSize (void * ptr) const {
     Check<RandomMiniHeap *> sanity (this);
 
     if (!inBounds(ptr)) {
@@ -201,7 +201,7 @@ public:
 	DieFast::fill (ptr, ObjectSize, _freedValue);
       }
     } else {
-      reportDoubleFreeError();
+      //      reportDoubleFreeError();
       didFree = false;
     }
     return didFree;
@@ -273,7 +273,7 @@ private:
     if (ObjectSize > CPUInfo::PageSize) {
       return _miniHeapMap[index];
     } else {
-      unsigned int mapIdx = (index >> StaticLog<ObjectsPerPage>::value);
+      unsigned int mapIdx = (index >> StaticLog<ObjectsPerPage>::VALUE);
       return (void *) &((ObjectStruct *) _miniHeapMap[mapIdx])[index & (ObjectsPerPage-1)];
     }
 
@@ -292,9 +292,9 @@ private:
 
     //    fprintf (stderr,"pidx = %d, offset = %ld\n",pageIdx,offset);
    
-    if (IsPowerOfTwo<ObjectSize>::value) {
+    if (IsPowerOfTwo<ObjectSize>::VALUE) {
       unsigned int ret = (unsigned int) ((pageIdx * ObjectsPerPage) + 
-					 (offset >> StaticLog<ObjectSize>::value));
+					 (offset >> StaticLog<ObjectSize>::VALUE));
       
       assert (ret < NObjects);
       return ret;
@@ -316,7 +316,7 @@ private:
       void * p = (void *) (((ObjectStruct *) ptr) - 1);
       if (DieFast::checkNot (p, ObjectSize, _freedValue)) {
 	_isHeapIntact = false;
-	reportOverflowError();
+	//	reportOverflowError();
       }
     }
     // Check successor.
@@ -325,7 +325,7 @@ private:
       void * p = (void *) (((ObjectStruct *) ptr) + 1);
       if (DieFast::checkNot (p, ObjectSize, _freedValue)) {
 	_isHeapIntact = false;
-	reportOverflowError();
+	//	reportOverflowError();
       }
     }
 #endif

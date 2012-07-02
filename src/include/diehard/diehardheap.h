@@ -51,8 +51,8 @@ private:
 
   /// The number of size classes managed by this heap.
   enum { MAX_INDEX =
-	 StaticLog<MaxSize>::value -
-	 StaticLog<Alignment>::value + 1 };
+	 StaticLog<MaxSize>::VALUE -
+	 StaticLog<Alignment>::VALUE + 1 };
 
 public:
 
@@ -165,7 +165,7 @@ private:
   static inline int getIndex (size_t sz) {
     // Now compute the log.
     assert (sz >= Alignment);
-    int index = log2(sz) - StaticLog<Alignment>::value;
+    int index = log2(sz) - StaticLog<Alignment>::VALUE;
     return index;
   }
 

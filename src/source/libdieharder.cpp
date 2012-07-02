@@ -34,7 +34,8 @@ enum { Numerator = 4, Denominator = 3 };
 #include "realrandomvalue.h"
 #include "largeheap.h"
 #include "mmapwrapper.h"
-#include "lockheap.h"
+#include "lockedheap.h"
+#include "posixlock.h"
 #include "oneheap.h"
 #include "diehardheap.h"
 // #include "reentrantheap.h"
@@ -49,10 +50,10 @@ class TheLargeHeap : public OneHeap<LargeHeap<MmapWrapper> > {};
 
 #if 1 // multi-threaded
 
-// typedef ANSIWrapper<LockHeap<DebugHeap<CombineHeap<DieHardHeap<Numerator, Denominator, 65536, (DIEHARD_DIEFAST == 1)>,
+// typedef ANSIWrapper<LockedHeap<PosixLockType, DebugHeap<CombineHeap<DieHardHeap<Numerator, Denominator, 65536, (DIEHARD_DIEFAST == 1)>,
 //						   TheLargeHeap> > > >
 
-typedef ANSIWrapper<LockHeap<CombineHeap<DieHardHeap<Numerator, Denominator, 65536, (DIEHARD_DIEFAST == 1), (DIEHARD_DIEHARDER == 1)>,
+typedef ANSIWrapper<LockedHeap<PosixLockType, CombineHeap<DieHardHeap<Numerator, Denominator, 65536, (DIEHARD_DIEFAST == 1), (DIEHARD_DIEHARDER == 1)>,
 					 TheLargeHeap> > >
   TheDieHardHeap;
 
@@ -102,6 +103,8 @@ extern "C" {
 
 }
 
+
+#if 0 // Disabled.
 
 /*************************  error-reporting functions ************************/
 
@@ -229,3 +232,4 @@ BOOL WINAPI CUSTOM_DLLNAME (HANDLE hinstDLL, DWORD fdwReason, LPVOID lpreserved)
 
 #endif // WIN32
 
+#endif

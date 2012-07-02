@@ -1,12 +1,11 @@
 // -*- C++ -*-
 
-#ifndef DYNAMICHASHTABLE_H_
-#define DYNAMICHASHTABLE_H_
+#ifndef DH_DYNAMICHASHTABLE_H
+#define DH_DYNAMICHASHTABLE_H
 
-#include <sys/mman.h>
 #include <stdint.h>
 
-#include "sassert.h"
+#include "checkpoweroftwo.h"
 
 template <class KEY_TYPE,
 	  class VALUE_TYPE,
@@ -33,8 +32,8 @@ public:
     _map_size (INIT_SIZE / sizeof(VALUE_TYPE)),
     _mask (_map_size-1)
   {
-    sassert<((ExpansionFactor & (ExpansionFactor-1)) == 0)> verifyPowerOfTwo;
-    verifyPowerOfTwo = verifyPowerOfTwo;
+    CheckPowerOfTwo<ExpansionFactor> verify1;
+    CheckPowerOfTwo<INIT_SIZE / sizeof(VALUE_TYPE)> verify2;
     _entries = (VALUE_TYPE *) allocTable (_map_size);
   }
   
@@ -115,8 +114,7 @@ private:
 
     assert (ct == old_elt_count);
 
-    SourceHeap::free (old_entries); // , _map_size / ExpansionFactor * sizeof(VALUE_TYPE));
-    //    MmapWrapper::unmap (old_entries, _map_size / ExpansionFactor * sizeof(VALUE_TYPE));
+    _sh.free (old_entries);
   }
 
 
@@ -165,11 +163,11 @@ private:
   {
     //fprintf(stderr,"allocating %d bytes\n",nElts*sizeof(VALUE_TYPE));
     void * ptr = 
-      SourceHeap::malloc (nElts * sizeof(VALUE_TYPE));
-      // MmapWrapper::map (nElts * sizeof(VALUE_TYPE));
+      _sh.malloc (nElts * sizeof(VALUE_TYPE));
     return ptr;
   }
   
+  SourceHeap _sh;
   VALUE_TYPE * _entries;
   char * _addrspace;
   size_t _map_size;

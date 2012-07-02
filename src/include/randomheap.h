@@ -64,7 +64,7 @@ class RandomHeap : public RandomHeapBase<Numerator, Denominator> {
 
   /// The most miniheaps we will use without overflowing.
   /// We will support at most 2GB per size class.
-  enum { MAX_MINIHEAPS = (int) 31 - StaticLog<AllocationGrain>::value };
+  enum { MAX_MINIHEAPS = (int) 31 - StaticLog<AllocationGrain>::VALUE };
 
   /// The smallest miniheap size, which may be larger than AllocationGrain.
   enum { MIN_SIZE = (AllocationGrain > (Numerator * ObjectSize) / Denominator)

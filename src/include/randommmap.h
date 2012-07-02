@@ -88,7 +88,7 @@ public:
 
 private:
   
-  enum { BITS = 31 - StaticLog<CPUInfo::PageSize>::value }; // size of address space, minus bits for pages.
+  enum { BITS = 31 - StaticLog<CPUInfo::PageSize>::VALUE }; // size of address space, minus bits for pages.
   enum { PAGES = (1ULL << BITS) };
   
   MWC64 _rng;

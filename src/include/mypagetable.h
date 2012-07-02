@@ -19,7 +19,8 @@ class MyPageTableClass : public DynamicHashTable<uintptr_t, PageTableEntry, Mmap
 public:
 
   PageTableEntry * getPageTableEntry (void * addr) {
-    return DynamicHashTable<uintptr_t, PageTableEntry, MmapHeap>::get ((uintptr_t) addr >> StaticLog<CPUInfo::PageSize>::value);
+    uintptr_t pageNumber = computePageNumber (addr);
+    return DynamicHashTable<uintptr_t, PageTableEntry, MmapHeap>::get (pageNumber);
   }
 
   void * allocatePage (RandomMiniHeapBase * heap, unsigned int idx) {
@@ -30,7 +31,7 @@ public:
 #else
     void * ret = _mapper.map (CPUInfo::PageSize);
 #endif
-    uintptr_t pageNumber = ((uintptr_t) ret) >> StaticLog<CPUInfo::PageSize>::value;
+    uintptr_t pageNumber = computePageNumber (ret);
     insert (PageTableEntry (pageNumber, heap, idx));
     return ret;
   }
@@ -42,7 +43,7 @@ public:
 #else
     void * ret = _mapper.map (ct * CPUInfo::PageSize);
 #endif
-    uintptr_t pageNumber = ((uintptr_t)ret) >> StaticLog<CPUInfo::PageSize>::value;
+    uintptr_t pageNumber = computePageNumber (ret);
     for (size_t i = 0; i < ct; i++) {
       insert (PageTableEntry (pageNumber+i,heap,idx));
     }
@@ -50,6 +51,10 @@ public:
   }
 
 private:
+
+  uintptr_t computePageNumber (void * addr) {
+    return (uintptr_t) addr >> StaticLog<CPUInfo::PageSize>::VALUE;
+  }
 
   RandomMmap _mapper;
 

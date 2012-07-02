@@ -8,8 +8,8 @@
  */
 
 
-#ifndef _REALRANDOMVALUE_H_
-#define _REALRANDOMVALUE_H_
+#ifndef DH_REALRANDOMVALUE_H
+#define DH_REALRANDOMVALUE_H
 
 #include <stdio.h>
 #include <stdlib.h>

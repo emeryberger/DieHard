@@ -13,17 +13,19 @@
 
 #include <assert.h>
 
-extern "C" void reportDoubleFreeError (void);
-extern "C" void reportInvalidFreeError (void);
-extern "C" void reportOverflowError (void);
+//extern "C" void reportDoubleFreeError (void);
+//extern "C" void reportInvalidFreeError (void);
+//extern "C" void reportOverflowError (void);
 
 
 #include "bitmap.h"
 #include "check.h"
 #include "checkpoweroftwo.h"
+#include "cpuinfo.h"
 #include "diefast.h"
 #include "madvisewrapper.h"
 #include "modulo.h"
+#include "mypagetable.h"
 #include "randomnumbergenerator.h"
 #include "sassert.h"
 #include "staticlog.h"
@@ -34,7 +36,7 @@ public:
 
   virtual void * malloc (size_t) = 0; // { abort(); return 0; }
   virtual bool free (void *) = 0; // { abort(); return true; }
-  virtual size_t getSize (void *) = 0; // { abort(); return 0; }
+  virtual size_t getSize (void *) const = 0; // { abort(); return 0; }
   virtual void activate (void) = 0; // { abort(); }
   virtual ~RandomMiniHeapBase () {}
 };
@@ -46,6 +48,8 @@ public:
  * @param Numerator the heap multiplier numerator.
  * @param Denominator the heap multiplier denominator.
  * @param ObjectSize the object size managed by this heap.
+ * @param NObjects the number of objects in this heap.
+ * @param Allocator the source heap for allocations.
  * @sa    RandomHeap
  * @author Emery Berger <http://www.cs.umass.edu/~emery>
  **/
@@ -59,6 +63,12 @@ class RandomMiniHeap : public RandomMiniHeapBase {
 
   /// Check values for sanity checking.
   enum { CHECK1 = 0xEEDDCCBB, CHECK2 = 0xBADA0101 };
+
+  enum { NumPages = (NObjects * ObjectSize) / CPUInfo::PageSize };
+
+  enum { ObjectsPerPage = StaticIf<(ObjectSize < CPUInfo::PageSize),
+				    CPUInfo::PageSize / ObjectSize,
+				    1>::VALUE };
 
   /// A convenience struct.
   typedef struct {
@@ -125,7 +135,7 @@ public:
       // Check to see if this object was overflowed.
       if (DieFast::checkNot (ptr, ObjectSize, _freedValue)) {
 	_isHeapIntact = false;
-	reportOverflowError();
+	//	reportOverflowError();
       }
     }
 
@@ -138,8 +148,8 @@ public:
 
   /// @return the space remaining from this point in this object
   /// @nb Returns zero if this object is not managed by this heap.
-  inline size_t getSize (void * ptr) {
-    Check<RandomMiniHeap *> sanity (this);
+  inline size_t getSize (void * ptr) const {
+    Check<const RandomMiniHeap *> sanity (this);
 
     if (!inBounds(ptr)) {
       return 0;
@@ -181,14 +191,19 @@ public:
 	DieFast::fill (ptr, ObjectSize, _freedValue);
       }
     } else {
-      reportDoubleFreeError();
+      //      reportDoubleFreeError();
       didFree = false;
     }
     return didFree;
   }
 
-private:
+  /// Sanity check.
+  void check (void) const {
+    assert ((_check1 == CHECK1) &&
+	    (_check2 == CHECK2));
+  }
 
+private:
 
   /// @brief Activates the heap, making it ready for allocations.
   NO_INLINE void activate (void) {
@@ -215,12 +230,6 @@ private:
   RandomMiniHeap (const RandomMiniHeap&);
   RandomMiniHeap& operator= (const RandomMiniHeap&);
 
-  /// Sanity check.
-  void check (void) const {
-    assert ((_check1 == CHECK1) &&
-	    (_check2 == CHECK2));
-  }
-
   /// @return the object at the given index.
   inline void * getObject (unsigned int index) const {
     assert ((unsigned long) index < NObjects);
@@ -232,8 +241,8 @@ private:
   inline unsigned int computeIndex (void * ptr) const {
     assert (inBounds(ptr));
     size_t offset = computeOffset (ptr);
-    if (IsPowerOfTwo<ObjectSize>::value) {
-      return (offset >> StaticLog<ObjectSize>::value);
+    if (IsPowerOfTwo<ObjectSize>::VALUE) {
+      return (offset >> StaticLog<ObjectSize>::VALUE);
     } else {
       return (offset / ObjectSize);
     }
@@ -255,7 +264,7 @@ private:
       void * p = (void *) (((ObjectStruct *) ptr) - 1);
       if (DieFast::checkNot (p, ObjectSize, _freedValue)) {
 	_isHeapIntact = false;
-	reportOverflowError();
+	//	reportOverflowError();
       }
     }
     // Check successor.
@@ -264,7 +273,7 @@ private:
       void * p = (void *) (((ObjectStruct *) ptr) + 1);
       if (DieFast::checkNot (p, ObjectSize, _freedValue)) {
 	_isHeapIntact = false;
-	reportOverflowError();
+	//	reportOverflowError();
       }
     }
   }
