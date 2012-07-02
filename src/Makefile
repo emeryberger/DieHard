@@ -38,10 +38,10 @@ TARGET ?= libdiehard
 INCLUDES = -I. -Iinclude -Iinclude/util -Iinclude/hoard -Iinclude/superblocks -IHeap-Layers -IHeap-Layers/arch-specific -IHeap-Layers/wrappers -IHeap-Layers/utility -IHeap-Layers/locks -IHeap-Layers/threads -IHeap-Layers/heaps/buildingblock -IHeap-Layers/heaps/threads -IHeap-Layers/heaps/utility -IHeap-Layers/heaps/general -IHeap-Layers/heaps/combining -IHeap-Layers/heaps/objectrep -IHeap-Layers/heaps/top -IHeap-Layers/heaps/debug -IHeap-Layers/heaps/special
 
 
-ifeq (TARGET,libdieharder)
-INCLUDE := $(DIEHARDER_INCLUDE) $(INCLUDES)
+ifeq ($(TARGET),libdieharder)
+INCLUDE := $(DIEHARDER_INCLUDE) $(INCLUDES) -DDIEHARD_DIEHARDER=1
 else
-INCLUDE := $(DIEHARD_INCLUDE) $(INCLUDES)
+INCLUDE := $(DIEHARD_INCLUDE) $(INCLUDES) -DDIEHARD_DIEHARDER=0
 endif
 
 UNIX_SRC  = Heap-Layers/wrappers/gnuwrapper.cpp source/libdieharder.cpp
