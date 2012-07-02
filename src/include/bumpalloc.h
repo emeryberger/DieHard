@@ -1,5 +1,5 @@
-#ifndef _BUMPALLOC_H_
-#define _BUMPALLOC_H_
+#ifndef DH_BUMPALLOC_H
+#define DH_BUMPALLOC_H
 
 /**
  * @class BumpAlloc
@@ -8,8 +8,8 @@
  */
 
 template <int ChunkSize,
-	  class super>
-class BumpAlloc : public super {
+	  class Super>
+class BumpAlloc : public Super {
 public:
 
   enum { Alignment = 1 };
@@ -47,7 +47,7 @@ private:
     if (sz < ChunkSize) {
       sz = ChunkSize;
     }
-    _bump = (char *) super::malloc (sz);
+    _bump = (char *) Super::malloc (sz);
     _remaining = sz;
   }
 
