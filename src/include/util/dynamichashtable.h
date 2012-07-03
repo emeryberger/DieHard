@@ -18,6 +18,37 @@ template <class VALUE_TYPE,
 
 class DynamicHashTable {
 
+  class StoredObject {
+  public:
+
+    StoredObject()
+      : _isValid (false)
+    {}
+
+    StoredObject (const StoredObject& s) {
+      _isValid = s._isValid;
+      _value   = s._value;
+    }
+
+    void markValid() {
+      _isValid = true;
+    }
+    bool isValid() const {
+      return _isValid;
+    }
+    VALUE_TYPE& get() {
+      return _value;
+    }
+    void put (const VALUE_TYPE& v) {
+      _value = v;
+      markValid();
+    }
+      
+  private:
+    bool _isValid;
+    VALUE_TYPE _value;
+  };
+
   typedef unsigned int UINT;
 
   // The reciprocal of the maximum load factor for the hash table.  In
@@ -34,16 +65,15 @@ public:
   DynamicHashTable() :
     _size (INIT_SIZE / sizeof(VALUE_TYPE)),
     _mask (_size-1),
-    _entries (allocTable (_size))
+    _entries (allocTable (_size)),
+    _numElements (0)
   {
     CheckPowerOfTwo<ExpansionFactor> verify1;
     CheckPowerOfTwo<INIT_SIZE / sizeof(VALUE_TYPE)> verify2;
   }
   
   ~DynamicHashTable() {
-    for (UINT i = 0; i < _size; i++) {
-      _entries[i].~VALUE_TYPE();
-    }
+    _sh.free (_entries);
   }
 
   bool get (unsigned long k, VALUE_TYPE& value) {
@@ -85,7 +115,8 @@ private:
     // there since the load factor can't be 1.0
     for (int i = begin; i != lim; i = (i+1)&_mask) {
       if (!_entries[i].isValid()) {
-	_entries[i] = s;
+	_entries[i].put (s);
+	_entries[i].markValid();
 	return;
       }
     }
@@ -96,9 +127,17 @@ private:
 
   void grow() 
   {
+#if 0
+    {
+      char buf[255];
+      sprintf (buf, "GROWING, now %d/%d\n", _numElements, _size);
+      fprintf (stderr, buf);
+    }
+#endif
+
     // Save old values.
     size_t old_size = _size;
-    VALUE_TYPE * old_entries = _entries;
+    StoredObject * old_entries = _entries;
     unsigned int old_elt_count = _numElements;
     old_elt_count = old_elt_count;
 
@@ -115,7 +154,7 @@ private:
     for (unsigned int i = 0; i < old_size; i++) {
       if (old_entries[i].isValid()) {
         ct++;
-        insertOne (old_entries[i]);
+        insertOne (old_entries[i].get());
       }
     }
 
@@ -144,14 +183,10 @@ private:
 	printf (buf);
       }
 #endif
-      //fprintf(stderr,"address is %p\n",&_entries[i]);
-      ///fprintf(stderr,"content %d\n",*((int *)(&_entries[i])));
-
       if (_entries[i].isValid()) {
-        //fprintf(stderr,"address is %p\n",&_entries[i]);
 
-        if (_entries[i].hashCode() == key) {
-          value = _entries[i];
+        if (_entries[i].get().hashCode() == key) {
+          value = _entries[i].get();
 	  return true;
 	}
 
@@ -167,11 +202,11 @@ private:
     return 0;
   }
 
-  VALUE_TYPE * allocTable (int nElts)
+  StoredObject * allocTable (int nElts)
   {
     void * ptr = 
-      _sh.malloc (nElts * sizeof(VALUE_TYPE));
-    return new (ptr) VALUE_TYPE[nElts];
+      _sh.malloc (nElts * sizeof(StoredObject));
+    return new (ptr) StoredObject[nElts];
   }
 
   HL::PosixLockType _lock;
@@ -180,7 +215,7 @@ private:
   char * _addrspace;
   size_t _size;
   size_t _mask;
-  VALUE_TYPE * _entries;
+  StoredObject * _entries;
   size_t _numElements;
 };
 
