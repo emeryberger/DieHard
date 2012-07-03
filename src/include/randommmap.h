@@ -1,13 +1,14 @@
 // -*- C++ -*-
 
-#ifndef RANDOMMMAP_H_
-#define RANDOMMMAP_H_
+#ifndef DH_RANDOMMMAP_H
+#define DH_RANDOMMMAP_H
 
-#include "mmapheap.h"
-#include "mmapwrapper.h"
+#include "heaplayers.h"
+// #include "mmapwrapper.h"
+// #include "mmapheap.h"
+
 #include "madvisewrapper.h"
 #include "mwc64.h"
-// #include "randomnumbergenerator.h"
 
 
 class RandomMmap {

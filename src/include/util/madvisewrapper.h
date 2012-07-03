@@ -13,7 +13,9 @@
 #include <sys/mman.h>
 #endif
 
-#include "mmapwrapper.h"
+
+#include "heaplayers.h"
+// #include "mmapwrapper.h"
 
 class MadviseWrapper {
 public:
@@ -42,7 +44,7 @@ public:
 
   // Release the given range of memory to the OS (without unmapping it).
   static void discard (void * ptr, size_t sz) {
-    if ((size_t) ptr % MmapWrapper::Size == 0) {
+    if ((size_t) ptr % HL::MmapWrapper::Size == 0) {
       // Extra sanity check in case the declared alignment is wrong!
 #if defined(_WIN32)
       VirtualAlloc (ptr, sz, MEM_RESET, PAGE_NOACCESS);

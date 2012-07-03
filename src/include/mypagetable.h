@@ -1,15 +1,17 @@
 // -*- C++ -*-
 
-#ifndef MYPAGETABLE_H_
-#define MYPAGETABLE_H_
+#ifndef DH_MYPAGETABLE_H
+#define DH_MYPAGETABLE_H
 
-#include "mmapheap.h"
-#include "mmapwrapper.h"
+#include "heaplayers.h"
+// #include "mmapwrapper.h"
+// #include "singleton.h"
+// #include "cpuinfo.h"
+// #include "mmapheap.h"
+
 #include "madvisewrapper.h"
 #include "dynamichashtable.h"
 #include "pagetableentry.h"
-#include "singleton.h"
-#include "cpuinfo.h"
 
 #include "randommmap.h"
 

@@ -1,7 +1,7 @@
 // -*- C++ -*-
 
-#ifndef PAGETABLEENTRY_H_
-#define PAGETABLEENTRY_H_
+#ifndef DH_PAGETABLEENTRY_H
+#define DH_PAGETABLEENTRY_H
 
 class RandomMiniHeapBase;
 

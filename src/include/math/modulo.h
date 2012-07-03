@@ -1,11 +1,14 @@
 // -*- C++ -*-
 
-#ifndef _MODULO_H_
-#define _MODULO_H_
+#ifndef DH_MODULO_H
+#define DH_MODULO_H
 
 #include <stdlib.h>
+
+#include "heaplayers.h"
+
 #include "checkpoweroftwo.h"
-#include "sassert.h"
+// #include "sassert.h"
 
 // Use a fast modulus function if possible.
 

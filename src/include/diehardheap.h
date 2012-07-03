@@ -15,6 +15,9 @@
 
 #include <new>
 
+#include "heaplayers.h"
+// #include "sassert.h"
+
 #include "diefast.h"
 #include "staticforloop.h"
 #include "log2.h"
@@ -22,7 +25,6 @@
 #include "realrandomvalue.h"
 #include "randomheap.h"
 #include "randomminiheap.h"
-#include "sassert.h"
 #include "staticlog.h"
 
 // for DieHarder

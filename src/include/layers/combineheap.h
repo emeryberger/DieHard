@@ -1,9 +1,10 @@
 // -*- C++ -*-
 
-#ifndef _COMBINEHEAP_H_
-#define _COMBINEHEAP_H_
+#ifndef DH_COMBINEHEAP_H
+#define DH_COMBINEHEAP_H
 
-#include "gcd.h"
+#include "heaplayers.h"
+// #include "gcd.h"
 
 template <class SmallHeap,
 	  class BigHeap>

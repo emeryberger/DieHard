@@ -18,17 +18,19 @@
 //extern "C" void reportOverflowError (void);
 
 
+#include "heaplayers.h"
+
 #include "bitmap.h"
 #include "check.h"
 #include "checkedarray.h"
 #include "checkpoweroftwo.h"
-#include "cpuinfo.h"
+// #include "cpuinfo.h"
 #include "diefast.h"
 #include "madvisewrapper.h"
 #include "modulo.h"
 #include "mypagetable.h"
 #include "randomnumbergenerator.h"
-#include "sassert.h"
+// #include "sassert.h"
 #include "staticlog.h"
 
 class RandomMiniHeapBase {
@@ -357,8 +359,9 @@ private:
     return offset;
   }
 
-  /// @brief Checks if the predecessor or successor have been overflowed.
-  /// NOTE: Disabled since it currently does not take into account non-contiguity.
+  /// @brief Checks for overflows.
+  /// NOTE: Disabled for DieHarder since it currently
+  /// does not take into account non-contiguity.
   void checkOverflowError (void * ptr, unsigned int index)
   {
     ptr = ptr;
@@ -381,23 +384,6 @@ private:
       }
     }
 
-#if 0 // FIX ME temporarily disabled.
-    // Check predecessor.
-    if (!_miniHeapBitmap.isSet (index - 1)) {
-      void * p = (void *) (((ObjectStruct *) ptr) - 1);
-      if (DieFast::checkNot (p, ObjectSize, _freedValue)) {
-	//	reportOverflowError();
-      }
-    }
-    // Check successor.
-    if ((index < (NObjects - 1)) &&
-	(!_miniHeapBitmap.isSet (index + 1))) {
-      void * p = (void *) (((ObjectStruct *) ptr) + 1);
-      if (DieFast::checkNot (p, ObjectSize, _freedValue)) {
-	//	reportOverflowError();
-      }
-    }
-#endif
   }
 
   /// @return true iff the index is valid for this heap.

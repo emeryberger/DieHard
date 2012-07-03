@@ -1,11 +1,13 @@
 // -*- C++ -*-
 
-#ifndef _MMAPALLOC_H_
-#define _MMAPALLOC_H_
+#ifndef DH_MMAPALLOC_H
+#define DH_MMAPALLOC_H
 
 #include <stdio.h>
 
-#include "mmapwrapper.h"
+#include "heaplayers.h"
+
+// #include "mmapwrapper.h"
 
 /**
  * @class MmapAlloc

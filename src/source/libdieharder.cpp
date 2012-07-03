@@ -27,16 +27,18 @@ enum { Numerator = 4, Denominator = 3 };
 // enum { Numerator = 8, Denominator = 1 };
 // enum { Numerator = 16, Denominator = 1 };
 
-#include "diehard.h"
-#include "ansiwrapper.h"
+#include "heaplayers.h"
+// #include "ansiwrapper.h"
+// #include "mmapwrapper.h"
+// #include "lockedheap.h"
+// #include "posixlock.h"
+// #include "oneheap.h"
+
 #include "combineheap.h"
+#include "diehard.h"
 #include "randomnumbergenerator.h"
 #include "realrandomvalue.h"
 #include "largeheap.h"
-#include "mmapwrapper.h"
-#include "lockedheap.h"
-#include "posixlock.h"
-#include "oneheap.h"
 #include "diehardheap.h"
 // #include "reentrantheap.h"
 #include "version.h"

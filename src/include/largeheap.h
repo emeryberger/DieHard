@@ -1,16 +1,16 @@
-#ifndef _LARGEHEAP_H_
-#define _LARGEHEAP_H_
+#ifndef DH_LARGEHEAP_H
+#define DH_LARGEHEAP_H
 
 #include <assert.h>
 
-namespace HL {}
+#include "heaplayers.h"
 
-#include "checkpoweroftwo.h"
-#include "staticlog.h"
-#include "myhashmap.h"
-#include "bumpalloc.h"
-#include "freelistheap.h"
-#include "cpuinfo.h"
+//#include "checkpoweroftwo.h"
+//#include "staticlog.h"
+//#include "myhashmap.h"
+//#include "bumpalloc.h"
+//#include "freelistheap.h"
+//#include "cpuinfo.h"
 
 using namespace HL;
 
