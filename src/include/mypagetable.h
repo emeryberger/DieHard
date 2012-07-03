@@ -15,12 +15,12 @@
 
 #define WE_ALREADY_HAVE_ASLR 0
 
-class MyPageTableClass : public DynamicHashTable<uintptr_t, PageTableEntry, MmapHeap> {
+class MyPageTableClass {
 public:
 
-  PageTableEntry * getPageTableEntry (void * addr) {
+  bool getPageTableEntry (void * addr, PageTableEntry& pe) {
     uintptr_t pageNumber = computePageNumber (addr);
-    return DynamicHashTable<uintptr_t, PageTableEntry, MmapHeap>::get (pageNumber);
+    return _table.get (pageNumber, pe);
   }
 
   void * allocatePages (RandomMiniHeapBase * heap, unsigned int idx, size_t ct) {
@@ -32,7 +32,7 @@ public:
 #endif
     uintptr_t pageNumber = computePageNumber (ret);
     for (size_t i = 0; i < ct; i++) {
-      insert (PageTableEntry (pageNumber+i,heap,idx));
+      _table.insert (PageTableEntry (pageNumber+i, heap, idx));
     }
     return ret;
   }
@@ -44,6 +44,7 @@ private:
   }
 
   RandomMmap _mapper;
+  DynamicHashTable<PageTableEntry, 4096, MmapHeap> _table;
 
 };
 

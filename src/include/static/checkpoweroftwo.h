@@ -12,7 +12,9 @@
 #ifndef DH_CHECKPOWEROFTWO_H
 #define DH_CHECKPOWEROFTWO_H
 
-#include "sassert.h"
+#include "heaplayers.h"
+
+// #include "sassert.h"
 
 /**
  * @class IsPowerOfTwo

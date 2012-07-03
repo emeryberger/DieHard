@@ -6,14 +6,15 @@
 #include <new>
 #include <stdint.h>
 
-#include "guard.h"
-#include "posixlock.h"
+#include "heaplayers.h"
+
+//#include "guard.h"
+//#include "posixlock.h"
 #include "checkpoweroftwo.h"
 
-template <class KEY_TYPE,
-	  class VALUE_TYPE,
-	  class SourceHeap,
-	  size_t INIT_SIZE = 4096>
+template <class VALUE_TYPE,
+	  size_t INIT_SIZE = 4096,
+	  class SourceHeap = HL::MallocHeap>
 
 class DynamicHashTable {
 
@@ -45,23 +46,25 @@ public:
     }
   }
 
-  VALUE_TYPE * get (KEY_TYPE ptr) {
+  bool get (unsigned long k, VALUE_TYPE& value) {
     Guard<HL::PosixLockType> l (_lock);
 
-    VALUE_TYPE * ret = find (ptr);
-    return ret;
+    return find (k, value);
   }
 
-  /** Inserts the given site into the map.
-   *  Precondition: no site with a matching hash value is in the map.
-   */
-  // XXX: change to bitwise operations for speed
+  /// @brief Insert the given object into the map.
   void insert (const VALUE_TYPE& s) 
   {
     Guard<HL::PosixLockType> l (_lock);
-
-    //fprintf(stderr,"inserting, now %d/%d\n",_numElements,_size);
     
+#if 0
+    {
+      char buf[255];
+      sprintf (buf, "inserting, now %d/%d\n", _numElements, _size);
+      fprintf (stderr, buf);
+    }
+#endif
+
     if (LOAD_FACTOR_RECIPROCAL * (_numElements+1) > _size) {
       grow();
     } 
@@ -73,44 +76,39 @@ private:
 
   void insertOne (const VALUE_TYPE& s) 
   {
-    assert (!find (s));
     _numElements++;
 
-    int begin = s.getHashCode() & _mask;
+    int begin = s.hashCode() & _mask;
     int lim = (begin - 1 + _size) & _mask;
 
     // NB: we don't check slot lim, but we're actually guaranteed never to get 
     // there since the load factor can't be 1.0
     for (int i = begin; i != lim; i = (i+1)&_mask) {
-      if (_entries[i].isValid()) {
-        assert(_entries[i].getHashCode() != s.getHashCode());
-        continue;
-      } else {
+      if (!_entries[i].isValid()) {
 	_entries[i] = s;
 	return;
       }
     }
 
-    assert(false);
+    // We should never get here.
+    assert (false);
   }
 
   void grow() 
   {
-    //fprintf(stderr,"growing, old map size: %d\n",_numElements);
-
     // Save old values.
     size_t old_size = _size;
     VALUE_TYPE * old_entries = _entries;
     unsigned int old_elt_count = _numElements;
     old_elt_count = old_elt_count;
 
-    // Get a new hash table.
+    // Make room for a new table, growing the current one.
     _size *= ExpansionFactor;
     _mask = _size-1;
     _entries = allocTable (_size);
     _numElements = 0;
 	
-    // rehash
+    // Rehash all the elements.
 
     unsigned int ct = 0;
 
@@ -121,15 +119,13 @@ private:
       }
     }
 
-    //fprintf(stderr,"new map size: %d\n",_numElements);
-
     assert (ct == old_elt_count);
-
     _sh.free (old_entries);
   }
 
 
-  VALUE_TYPE * find (KEY_TYPE key)
+  /// @brief Find the entry for a given key.
+  bool find (unsigned long key, VALUE_TYPE& value)
   {
     int begin = key & _mask;
     int lim = (begin - 1 + _size) & _mask;
@@ -151,16 +147,17 @@ private:
       //fprintf(stderr,"address is %p\n",&_entries[i]);
       ///fprintf(stderr,"content %d\n",*((int *)(&_entries[i])));
 
-      if(_entries[i].isValid()) {
+      if (_entries[i].isValid()) {
         //fprintf(stderr,"address is %p\n",&_entries[i]);
 
-        if(_entries[i].getHashCode() == key) {
-          return &_entries[i];
-        } else { 
-          continue;
-        }
+        if (_entries[i].hashCode() == key) {
+          value = _entries[i];
+	  return true;
+	}
+
       } else {
-        return 0;
+	// Not found.
+        return false;
       }
     }
 
@@ -172,7 +169,6 @@ private:
 
   VALUE_TYPE * allocTable (int nElts)
   {
-    //fprintf(stderr,"allocating %d bytes\n",nElts*sizeof(VALUE_TYPE));
     void * ptr = 
       _sh.malloc (nElts * sizeof(VALUE_TYPE));
     return new (ptr) VALUE_TYPE[nElts];

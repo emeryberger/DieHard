@@ -147,9 +147,10 @@ public:
       // event, we don't own it, so return 0.
       return 0;
     } else {
-      PageTableEntry * entry = MyPageTable::getInstance().getPageTableEntry (ptr);
-      if (!entry) return 0;
-      else return entry->getHeap()->getSize(ptr);
+      PageTableEntry entry;
+      bool found = MyPageTable::getInstance().getPageTableEntry (ptr, entry);
+      if (!found) return 0;
+      else return entry.getHeap()->getSize(ptr);
     }
   }
   

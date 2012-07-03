@@ -17,7 +17,14 @@
 
 using namespace std;
 
+#include "heaplayers.h"
+
+using namespace HL;
+
+#if 0
 #include "bumpalloc.h"
+#endif
+
 #include "check.h"
 #include "log2.h"
 #include "mmapalloc.h"

@@ -20,6 +20,7 @@
 
 #include "bitmap.h"
 #include "check.h"
+#include "checkedarray.h"
 #include "checkpoweroftwo.h"
 #include "cpuinfo.h"
 #include "diefast.h"
@@ -35,7 +36,7 @@ public:
 
   virtual void * malloc (size_t) = 0; // { abort(); return 0; }
   virtual bool free (void *) = 0; // { abort(); return true; }
-  virtual size_t getSize (void *) const = 0; // { abort(); return 0; }
+  virtual size_t getSize (void *) = 0; // { abort(); return 0; }
   virtual void activate (void) = 0; // { abort(); }
   virtual ~RandomMiniHeapBase () {}
 };
@@ -64,11 +65,19 @@ class RandomMiniHeap : public RandomMiniHeapBase {
   /// Check values for sanity checking.
   enum { CHECK1 = 0xEEDDCCBB, CHECK2 = 0xBADA0101 };
   
-  enum { NumPages = (NObjects * ObjectSize) / CPUInfo::PageSize };
+  enum { NumPages =
+	 (NObjects * ObjectSize + CPUInfo::PageSize - 1)
+	 / CPUInfo::PageSize };
 
-  enum { ObjectsPerPage = StaticIf<(ObjectSize < CPUInfo::PageSize),
-				    CPUInfo::PageSize / ObjectSize,
-				    1>::VALUE };
+  enum { NumPointers =
+	 (ObjectSize <= CPUInfo::PageSize) ?
+	 (NumPages * 1) :
+	 NObjects };
+	
+  enum { ObjectsPerPage = 
+	 (ObjectSize <= CPUInfo::PageSize) ?
+	 CPUInfo::PageSize / ObjectSize :
+	 1 };
 
   /// A convenience struct.
   typedef struct {
@@ -82,23 +91,29 @@ public:
   RandomMiniHeap (void)
     : _check1 ((size_t) CHECK1),
       _freedValue (_random.next() | 1), // Enforce invalid pointer value.
-      _miniHeapMap (NULL),
-      _isHeapIntact (true),
+      _isHeapActivated (false),
       _check2 ((size_t) CHECK2)
   {
     Check<RandomMiniHeap *> sanity (this);
 
-    // Some sanity checking: all these need to be powers of two.
+    // All these need to be powers of two.
 
     CheckPowerOfTwo<ObjectSize>	invariant1;
-    invariant1 = invariant1; // to prevent warnings
-
     CheckPowerOfTwo<CPUInfo::PageSize> invariant2;
-    invariant2 = invariant2;
-    
     CheckPowerOfTwo<ObjectsPerPage> invariant3;
+
+    // Object size must be a multiple of page size (if they are bigger
+    // than a page).
+    sassert<((ObjectSize <= CPUInfo::PageSize)
+	     || CPUInfo::PageSize * (ObjectSize / CPUInfo::PageSize) == ObjectSize)>
+    invariant4;
+
+    invariant1 = invariant1;
+    invariant2 = invariant2;
     invariant3 = invariant3;
+    invariant4 = invariant4;
   }
+
 
   /// @return an allocated object of size ObjectSize
   /// @param sz   requested object size
@@ -106,7 +121,6 @@ public:
   inline void * malloc (size_t sz)
   {
     Check<RandomMiniHeap *> sanity (this);
-
     sz = sz; // to prevent warnings
 
     // Ensure size is reasonable.
@@ -115,7 +129,7 @@ public:
     void * ptr = NULL;
 
     // Try to allocate an object from the bitmap.
-    unsigned int index = (unsigned int) modulo<NObjects> (_random.next());
+    unsigned int index = modulo<NObjects> (_random.next());
 
     bool didMalloc = _miniHeapBitmap.tryToSet (index);
 
@@ -126,18 +140,18 @@ public:
     // Get the address of the indexed object.
     assert ((unsigned long) index < NObjects);
     ptr = getObject (index);
-    
-    assert (index == computeIndex(ptr));
+
+    unsigned int computedIndex = computeIndex (ptr);
+    assert (index == computedIndex);
     
     if (DieFastOn) {
       // Check to see if this object was overflowed.
       if (DieFast::checkNot (ptr, ObjectSize, _freedValue)) {
-	_isHeapIntact = false;
 	//	reportOverflowError();
       }
     }
 
-    assert (getSize(ptr) >= sz);
+    // Make sure the returned object is the right size.
     assert (getSize(ptr) == ObjectSize);
 
     return ptr;
@@ -146,7 +160,7 @@ public:
 
   /// @return the space remaining from this point in this object
   /// @nb Returns zero if this object is not managed by this heap.
-  inline size_t getSize (void * ptr) const {
+  inline size_t getSize (void * ptr) {
     Check<const RandomMiniHeap *> sanity (this);
 
     if (!inBounds(ptr)) {
@@ -161,7 +175,7 @@ public:
       if (ObjectSize <= CPUInfo::PageSize) {
 	remainingSize = ObjectSize - modulo<ObjectSize>(reinterpret_cast<uintptr_t>(ptr));
       } else {
-	uintptr_t start = (uintptr_t) _miniHeapMap[getPageIndex(ptr)];
+	uintptr_t start = (uintptr_t) _miniHeapMap(getPageIndex(ptr));
 	remainingSize = ObjectSize - ((uintptr_t) ptr - start);
       }
 
@@ -224,27 +238,17 @@ private:
 
   /// @brief Activates the heap, making it ready for allocations.
   NO_INLINE void activate (void) {
-    if (DieHarderOn) {
-      if (_miniHeapMap == NULL) {
-	// Compute the number of pointers to allocate (one per page or
-	// large object).
-	size_t numPointers = (ObjectSize <= CPUInfo::PageSize) ?
-	  (size_t) NumPages :
-	  NObjects;
+    if (!_isHeapActivated) {
+      if (DieHarderOn) {
+
+	_miniHeapBitmap.reserve (NObjects);
 	
-	_miniHeapMap = (void **)
-	  Allocator::malloc (numPointers * sizeof(void*));
-	
-	if (_miniHeapMap) {
-	  _miniHeapBitmap.reserve (NObjects);
-	  
-	  for (unsigned int i = 0; i < numPointers; i++) {
-	    activatePage (i);
-	  }
+	for (unsigned int i = 0; i < NumPointers; i++) {
+	  activatePage (i);
 	}
-      }
-    } else {
-      if (_miniHeap == NULL) {
+
+      } else {
+
 	// Go get memory for the heap and the bitmap, making it ready
 	// for allocations.
 	_miniHeap = (char *)
@@ -261,6 +265,7 @@ private:
 	  assert (0);
 	}
       }
+      _isHeapActivated = true;
     }
   }
 
@@ -271,26 +276,14 @@ private:
       return;
     }
 
-    void * page;
-    
-    if (ObjectSize <= CPUInfo::PageSize) {
-      // Get one page.
-      page = MyPageTable::getInstance().allocatePages (this, idx, 1);
-    } else {
-      // Get a number of pages.
-      page = MyPageTable::getInstance().allocatePages (this, idx, ObjectSize / CPUInfo::PageSize);
-      // Check that object size is an even multiple of page size.
-      assert (CPUInfo::PageSize * (ObjectSize / CPUInfo::PageSize) == ObjectSize);
-    }
+    void * pages = MyPageTable::getInstance().allocatePages (this, idx, NumPages);
 
-    _miniHeapMap[idx] = page;
+    _miniHeapMap(idx) = pages;
     
 #if 0
     if (DieFastOn) {
       // Fill the contents with a known value.
-      DieFast::fill (page, (ObjectSize < CPUInfo::PageSize) ?
-		     CPUInfo::PageSize :
-		     ObjectSize, _freedValue);
+      DieFast::fill (pages, NumPages * CPUInfo::PageSize, _freedValue);
     }
 #endif
   }
@@ -300,28 +293,29 @@ private:
   RandomMiniHeap& operator= (const RandomMiniHeap&);
 
   /// @return the object at the given index.
-  inline void * getObject (unsigned int index) const {
+  inline void * getObject (unsigned int index) {
     assert ((unsigned long) index < NObjects);
-
-    if (!DieHarderOn) {
-      assert (_miniHeap != NULL);
-      return (void *) &((ObjectStruct *) _miniHeap)[index];
+    if (!_isHeapActivated) {
+      return NULL;
     }
 
-    assert (_miniHeapMap != NULL);
-    
+    if (!DieHarderOn) {
+      return (void *) &((ObjectStruct *) _miniHeap)[index];
+    }
+   
     if (ObjectSize > CPUInfo::PageSize) {
-      return _miniHeapMap[index];
+      return _miniHeapMap(index);
     } else {
       unsigned int mapIdx = (index >> StaticLog<ObjectsPerPage>::VALUE);
-      return (void *) &((ObjectStruct *) _miniHeapMap[mapIdx])[index & (ObjectsPerPage-1)];
+      unsigned int whichObject = index & (ObjectsPerPage-1);
+      return (void *)
+	&((ObjectStruct *) _miniHeapMap(mapIdx))[whichObject];
     }
 
   }
 
   /// @return the index corresponding to the given object.
   inline unsigned int computeIndex (void * ptr) const {
-    assert (inBounds(ptr));
 
     if (!DieHarderOn) {
 
@@ -340,26 +334,21 @@ private:
 	return pageIdx;
       }
 
-      unsigned long offset = ((unsigned long)(ptr) & (CPUInfo::PageSize-1));
+      unsigned long offset = ((unsigned long) ptr) & (CPUInfo::PageSize-1);
       
-      //    fprintf (stderr,"pidx = %d, offset = %ld\n",pageIdx,offset);
-      
-      if (IsPowerOfTwo<ObjectSize>::VALUE) {
-	unsigned int ret = (unsigned int) ((pageIdx * ObjectsPerPage) + 
-					   (offset >> StaticLog<ObjectSize>::VALUE));
+      // Below calculation depends on ObjectSize being a power of two.
+
+      unsigned int ret =
+	(unsigned int) ((pageIdx * ObjectsPerPage) + 
+			(offset >> StaticLog<ObjectSize>::VALUE));
 	
-	assert (ret < NObjects);
-	return ret;
-      } else {
-	// We will never get here.
-	assert (false);
-      }
+      assert (ret < NObjects);
+      return ret;
     }
   }
 
   /// @return the distance of the object from the start of the heap.
   inline size_t computeOffset (void * ptr) const {
-    assert (inBounds(ptr));
     if (DieHarderOn) {
       assert (0);
       return 0;
@@ -397,7 +386,6 @@ private:
     if (!_miniHeapBitmap.isSet (index - 1)) {
       void * p = (void *) (((ObjectStruct *) ptr) - 1);
       if (DieFast::checkNot (p, ObjectSize, _freedValue)) {
-	_isHeapIntact = false;
 	//	reportOverflowError();
       }
     }
@@ -406,7 +394,6 @@ private:
 	(!_miniHeapBitmap.isSet (index + 1))) {
       void * p = (void *) (((ObjectStruct *) ptr) + 1);
       if (DieFast::checkNot (p, ObjectSize, _freedValue)) {
-	_isHeapIntact = false;
 	//	reportOverflowError();
       }
     }
@@ -425,43 +412,38 @@ private:
 
     } else {
 
-      if (_miniHeapMap == NULL) {
+      if (!_isHeapActivated) {
 	return false;
       }
 
-      PageTableEntry * entry = MyPageTable::getInstance().getPageTableEntry (ptr);
+      PageTableEntry entry;
+      bool result = MyPageTable::getInstance().getPageTableEntry (ptr, entry);
       
-      if (!entry) {
+      if (!result) {
 	return false;
       }
-      return (entry->getHeap() == this);
+
+      return (entry.getHeap() == this);
     }
   }
 
 
   /// @return true iff heap is currently active.
   inline bool isActivated (void) const {
-    if (DieHarderOn) {
-      return (_miniHeapMap != NULL);
-    } else {
-      return (_miniHeap != NULL);
-    }
+    return _isHeapActivated;
   }
   
   inline unsigned int getPageIndex (void * ptr) const {
-    PageTableEntry * entry = MyPageTable::getInstance().getPageTableEntry (ptr);
+    PageTableEntry entry;
+    bool result = MyPageTable::getInstance().getPageTableEntry (ptr, entry);
 
-    assert (entry != NULL);
-
-    if (entry) {
-      // EDB: is this actually necessary?
-      // assert (entry->getHeap() == this);
-      return entry->getPageIndex();
+    if (result) {
+      return entry.getPageIndex();
+    } else {
+      // This should never happen.
+      assert (false);
+      return 0;
     }
-
-    fprintf (stderr, "Something has run off the rails.\n");
-    abort(); 
-    return 0;
   }
 
   /// Sanity check value.
@@ -477,13 +459,13 @@ private:
   BitMap<Allocator> _miniHeapBitmap;
 
   /// Sparse page pointer structure (if DieHarderOn is true).
-  void ** _miniHeapMap;
+  CheckedArray<NumPointers, void *, Allocator> _miniHeapMap;
 
   /// The heap pointer (if DieHarderOn is false).
   char * _miniHeap;
 
-  /// True iff the heap is intact (and DieFastOn is true).
-  bool _isHeapIntact;
+  /// True iff the heap has been activated.
+  bool _isHeapActivated;
 
   /// Sanity check value.
   const size_t _check2;

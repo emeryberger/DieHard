@@ -14,7 +14,7 @@ public:
       _pageIndex (0)
   {}
 
-  PageTableEntry (uintptr_t pNum,
+  PageTableEntry (unsigned long pNum,
 		  RandomMiniHeapBase * b,
 		  unsigned int idx) 
     : _pageNumber (pNum),
@@ -43,12 +43,12 @@ public:
     return _heap != 0;
   }
   
-  uintptr_t getHashCode() const {
+  unsigned long hashCode() const {
     return _pageNumber;
   }
 
 private:
-  uintptr_t 		_pageNumber;
+  unsigned long		_pageNumber;
   RandomMiniHeapBase * 	_heap;
   unsigned int 		_pageIndex;
   uintptr_t 		_align; // EDB for alignment?
