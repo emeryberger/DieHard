@@ -1,6 +1,8 @@
 #include "dynamichashtable.h"
 
 #include <iostream>
+#include <sstream>
+
 using namespace std;
 
 //#include "heaplayers.h"
@@ -36,21 +38,15 @@ int
 main()
 {
   DynamicHashTable<Item, 128> dh;
-  
-  dh.insert (Item (1, "woo"));
-  dh.insert (Item (1, "bag"));
-  dh.insert (Item (2, "boo"));
-  dh.insert (Item (3, "doo"));
-  dh.insert (Item (4, "woom"));
-  dh.insert (Item (5, "bagm"));
-  dh.insert (Item (6, "boom"));
-  dh.insert (Item (7, "doom"));
-  for (int i = 0; i < 100; i++) {
-    dh.insert (Item (i + 7, "moop"));
+
+  for (int i = 0; i < 2000000; i++) {
+    stringstream ss;
+    ss << "foo:" << i;
+    dh.insert (Item (i, ss.str()));
   }
 
   Item k;
-  bool r = dh.get (1, k);
+  bool r = dh.get (555555, k);
 
   if (r) {
     cout << k.getString() << endl;

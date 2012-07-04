@@ -1,3 +1,5 @@
+// -*- C++ -*-
+
 #ifndef RANDOMMINIHEAP_CORE
 #define RANDOMMINIHEAP_CORE
 
@@ -50,6 +52,14 @@ public:
 	 (ObjectSize <= CPUInfo::PageSize) ?
 	 CPUInfo::PageSize / ObjectSize :
 	 1 };
+
+
+  /// The number of pages per object (or 1 if it is a small object).
+  enum { PagesPerObject = 
+	 (ObjectSize <= CPUInfo::PageSize) ?
+	 1 :
+	 ObjectSize / CPUInfo::PageSize };
+
 
   typedef RandomMiniHeapBase SuperHeap;
 

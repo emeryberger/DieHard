@@ -3,8 +3,6 @@
 #ifndef DH_PAGETABLEENTRY_H
 #define DH_PAGETABLEENTRY_H
 
-class RandomMiniHeapBase;
-
 class PageTableEntry {
 public:
 
@@ -15,7 +13,7 @@ public:
   {}
 
   PageTableEntry (unsigned long pNum,
-		  RandomMiniHeapBase * b,
+		  void * b,
 		  unsigned int idx) 
     : _pageNumber (pNum),
       _heap (b),
@@ -31,7 +29,7 @@ public:
   {
   }
 
-  RandomMiniHeapBase * getHeap() const {
+  void * getHeap() const {
     return _heap;
   }
 
@@ -49,7 +47,7 @@ public:
 
 private:
   unsigned long		_pageNumber;
-  RandomMiniHeapBase * 	_heap;
+  void * 		_heap;
   unsigned int 		_pageIndex;
   uintptr_t 		_align; // EDB for alignment?
 };

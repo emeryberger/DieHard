@@ -1,3 +1,5 @@
+// -*- C++ -*-
+
 #ifndef DH_RANDOMMINIHEAP_DIEHARD
 #define DH_RANDOMMINIHEAP_DIEHARD
 

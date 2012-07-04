@@ -15,7 +15,7 @@
 
 #include "randommmap.h"
 
-#define WE_ALREADY_HAVE_ASLR 0
+#define WE_ALREADY_HAVE_ASLR 1 // FIX ME WAS 0
 
 class MyPageTableClass {
 public:
@@ -26,12 +26,6 @@ public:
   }
 
   void * allocatePages (RandomMiniHeapBase * heap, unsigned int idx, size_t ct) {
-#if WE_ALREADY_HAVE_ASLR
-    void * ret = MmapWrapper::map (ct*CPUInfo::PageSize);
-    MadviseWrapper::random (ret, ct * CPUInfo::PageSize);
-#else
-    void * ret = _mapper.map (ct * CPUInfo::PageSize);
-#endif
     uintptr_t pageNumber = computePageNumber (ret);
     for (size_t i = 0; i < ct; i++) {
       _table.insert (PageTableEntry (pageNumber+i, heap, idx));
@@ -45,12 +39,11 @@ private:
     return (uintptr_t) addr >> StaticLog<CPUInfo::PageSize>::VALUE;
   }
 
-  RandomMmap _mapper;
-  DynamicHashTable<PageTableEntry, 4096, MmapHeap> _table;
+  //  RandomMmap _mapper;
+  DynamicHashTable<PageTableEntry, CPUInfo::PageSize, MmapHeap> _table;
 
 };
 
 
-class MyPageTable : public singleton<MyPageTableClass> {};
 
 #endif

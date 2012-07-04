@@ -28,7 +28,7 @@
 #include "staticlog.h"
 
 // for DieHarder
-#include "mypagetable.h"
+#include "dieharder-pagetable.h"
 #include "pagetableentry.h"
 
 template <int Numerator,
@@ -149,10 +149,9 @@ public:
       // event, we don't own it, so return 0.
       return 0;
     } else {
-      PageTableEntry entry;
-      bool found = MyPageTable::getInstance().getPageTableEntry (ptr, entry);
-      if (!found) return 0;
-      else return entry.getHeap()->getSize(ptr);
+      void * heap = DieHarder::pageTable.getInstance().getHeap (ptr);
+      if (heap == NULL) return 0;
+      else return ((RandomMiniHeapBase *) heap)->getSize(ptr);
     }
   }
   

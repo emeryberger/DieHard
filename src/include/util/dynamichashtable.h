@@ -95,19 +95,19 @@ public:
     }
 #endif
 
-    if (LOAD_FACTOR_RECIPROCAL * (_numElements+1) > _size) {
+    if ((_numElements+1) > _size / LOAD_FACTOR_RECIPROCAL) {
       grow();
     } 
     
     insertOne (s);
+    _numElements++;
+
   }
 
 private:
 
   void insertOne (const VALUE_TYPE& s) 
   {
-    _numElements++;
-
     int begin = s.hashCode() & _mask;
     int lim = (begin - 1 + _size) & _mask;
 
@@ -145,8 +145,10 @@ private:
     _size *= ExpansionFactor;
     _mask = _size-1;
     _entries = allocTable (_size);
-    _numElements = 0;
-	
+
+    if (_entries == NULL)
+      abort();
+
     // Rehash all the elements.
 
     unsigned int ct = 0;
@@ -158,7 +160,7 @@ private:
       }
     }
 
-    assert (ct == old_elt_count);
+    assert (ct == _numElements);
     _sh.free (old_entries);
   }
 
@@ -212,7 +214,6 @@ private:
   HL::PosixLockType _lock;
 
   SourceHeap _sh;
-  char * _addrspace;
   size_t _size;
   size_t _mask;
   StoredObject * _entries;

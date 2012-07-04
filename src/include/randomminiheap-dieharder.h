@@ -1,7 +1,10 @@
+// -*- C++ -*-
+
 #ifndef DH_RANDOMMINIHEAP_DIEHARDER
 #define DH_RANDOMMINIHEAP_DIEHARDER
 
 #include "randomminiheap-core.h"
+#include "dieharder-pagetable.h"
 
 template <int Numerator,
 	  int Denominator,
@@ -39,9 +42,9 @@ public:
 
 protected:
 
-  /// There is one pointer per object for large objects (bigger than a page),
-  /// and one per page for small objects.
-  enum { NumPointers =
+  // There is one bitmap entry per object for large objects (bigger
+  // than a page), and one per page for small objects.
+  enum { NumEntries =
 	 (ObjectSize <= CPUInfo::PageSize) ?
 	 (SuperHeap::NumPages * 1) :
 	 NObjects };
@@ -49,36 +52,52 @@ protected:
 
   void activate() {
     if (!SuperHeap::_isHeapActivated) {
+
       SuperHeap::_miniHeapBitmap.reserve (NObjects);
-      
-      for (unsigned int index = 0; index < NumPointers; index++) {
-	void * pages = 
-	  MyPageTable::getInstance().allocatePages (this, index, SuperHeap::NumPages);
+
+      for (int i = 0; i < NObjects; i += SuperHeap::ObjectsPerPage) {
 	
-	_miniHeapMap(index) = pages;
+	// Assume we already have full ASLR for now (FIX ME).
+	void * pagesAddr = MmapWrapper::map (SuperHeap::PagesPerObject * CPUInfo::PageSize);
 	
-#if 0
-	if (DieFastOn) {
-	  // Fill the contents with a known value.
-	  DieFast::fill (pages, NumPages * CPUInfo::PageSize, SuperHeap::_freedValue);
+	// Fill with a known value for DieFast. FIX ME
+	
+	// Now initialize info for each page.
+	
+	for (int p = 0; p < SuperHeap::PagesPerObject; p++) {
+	  
+	  void * pageAddr = (void *) ((char *) pagesAddr + p * CPUInfo::PageSize);
+	  
+	  // Add an entry in the heap map that points to this page.
+	  unsigned int mapIdx = (i >> StaticLog<SuperHeap::ObjectsPerPage>::VALUE);
+	  _miniHeapMap(mapIdx) = pageAddr;
+	  
+	  // Now add a reverse entry for this page to point to this object index.
+	  uintptr_t pageNumber = DieHarder::computePageNumber (pageAddr);
+	  DieHarder::pageTable.getInstance().insert (pageNumber, this, i * SuperHeap::ObjectsPerPage);
 	}
-#endif
       }
       SuperHeap::_isHeapActivated = true;
     }
   }
 
+  /// @return the index in the bitmap corresponding to the given object.
   unsigned int computeIndex (void * ptr) const {
+    // Look up the stored index for this page.
     unsigned int pageIdx = getPageIndex (ptr);
     
+    // If this was a big object, just return the index (since there is
+    // only one index entry for that object).
     if (SuperHeap::ObjectsPerPage == 1) {
       return pageIdx;
     }
-    
+
+    // ptr belongs to a small object.
+    // First, find out where it is on the page.
     unsigned long offset = ((unsigned long) ptr) & (CPUInfo::PageSize-1);
     
-    // Below calculation depends on ObjectSize being a power of two.
-    
+    // Now compute its index: the number of objects in PRECEDING pages
+    // PLUS the object index WITHIN the page.
     unsigned int ret =
       (unsigned int) ((pageIdx * SuperHeap::ObjectsPerPage) + 
 		      (offset >> StaticLog<ObjectSize>::VALUE));
@@ -95,23 +114,18 @@ protected:
       return NULL;
     }
 
-    unsigned int mapIdx = (index >> StaticLog<SuperHeap::ObjectsPerPage>::VALUE);
-    unsigned int whichObject = index & (SuperHeap::ObjectsPerPage-1);
-    return (void *)
-      &((typename SuperHeap::ObjectStruct *) _miniHeapMap(mapIdx))[whichObject];
+    if (ObjectSize > CPUInfo::PageSize) {
+      return _miniHeapMap(index);
+    } else {
+      unsigned int mapIdx = (index >> StaticLog<SuperHeap::ObjectsPerPage>::VALUE);
+      unsigned int whichObject = index & (SuperHeap::ObjectsPerPage-1);
+      return (void *)
+	&((typename SuperHeap::ObjectStruct *) _miniHeapMap(mapIdx))[whichObject];
+    }
   }
 
   inline unsigned int getPageIndex (void * ptr) const {
-    PageTableEntry entry;
-    bool result = MyPageTable::getInstance().getPageTableEntry (ptr, entry);
-
-    if (result) {
-      return entry.getPageIndex();
-    } else {
-      // This should never happen.
-      assert (false);
-      return 0;
-    }
+    return DieHarder::pageTable.getInstance().getPageIndex (ptr);
   }
 
   /// @return true iff the index is valid for this heap.
@@ -119,19 +133,11 @@ protected:
     if (!SuperHeap::_isHeapActivated) {
       return false;
     }
-    
-    PageTableEntry entry;
-    bool result = MyPageTable::getInstance().getPageTableEntry (ptr, entry);
-    
-    if (!result) {
-      return false;
-    }
-    
-    return (entry.getHeap() == this);
+    return (DieHarder::pageTable.getInstance().getHeap (ptr) == this);
   }
 
-  /// Sparse page pointer structure.
-  CheckedArray<NumPointers, void *, Allocator> _miniHeapMap;
+  /// Sparse page pointer structure: _miniHeapMap[i] = ith page.
+  CheckedArray<SuperHeap::NumPages, void *, Allocator> _miniHeapMap;
 
 };
 

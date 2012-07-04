@@ -24,9 +24,21 @@
 #include "diefast.h"
 #include "madvisewrapper.h"
 #include "modulo.h"
-#include "mypagetable.h"
+// #include "mypagetable.h"
 #include "randomnumbergenerator.h"
 #include "staticlog.h"
+
+#include "heaplayers.h"
+// #include "mmapwrapper.h"
+// #include "singleton.h"
+// #include "cpuinfo.h"
+// #include "mmapheap.h"
+
+#include "madvisewrapper.h"
+#include "dynamichashtable.h"
+#include "pagetableentry.h"
+
+#include "randommmap.h"
 
 
 #include "randomminiheap-core.h"
