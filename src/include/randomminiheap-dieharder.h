@@ -130,7 +130,7 @@ protected:
     return (entry.getHeap() == this);
   }
 
-  /// Sparse page pointer structure (if DieHarderOn is true).
+  /// Sparse page pointer structure.
   CheckedArray<NumPointers, void *, Allocator> _miniHeapMap;
 
 };
