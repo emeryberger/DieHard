@@ -59,11 +59,17 @@ private:
 	 objectIndex < NObjects;
 	 objectIndex += SuperHeap::ObjectsPerPage) {
       
-      // Assume we already have full ASLR for now (FIX ME).
-      // That is, that every map is randomly distributed through the address space.
-      // We will otherwise need to use RandomMmap.
-      void * pagesAddr =
-	MmapWrapper::map (SuperHeap::PagesPerObject * CPUInfo::PageSize);
+      void * pagesAddr;
+      const unsigned long bytesToAllocate = SuperHeap::PagesPerObject * CPUInfo::PageSize;
+
+#if WE_ALREADY_HAVE_FULL_ASLR
+      // If we have full ASLR, we can just use mmap.  That is, ASLR
+      // means that every map is randomly distributed through the
+      // address space.  We will otherwise need to use RandomMmap.
+      pagesAddr = MmapWrapper::map (bytesToAllocate);
+#else
+      pagesAddr = DieHarder::mapper.getInstance().map (bytesToAllocate);
+#endif
       
       // Add an entry in the heap map that points to the start of this object.
       setPageFromIndex (objectIndex, pagesAddr);

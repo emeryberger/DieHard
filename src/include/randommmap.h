@@ -15,19 +15,23 @@ class RandomMmap {
 public:
 
   RandomMmap()
+    : _pages (NULL)
   {
-    unsigned long long bytes = CPUInfo::PageSize * (unsigned long long) PAGES;
-    // Get a giant chunk of memory.
-    _pages = (void *) (MmapWrapper::map (bytes));
     if (_pages == NULL) {
-      // Map failed!
-      fprintf (stderr, "Unable to allocate memory.\n");
-      abort();
+      
+      unsigned long long bytes = CPUInfo::PageSize * (unsigned long long) PAGES;
+      // Get a giant chunk of memory.
+      _pages = (void *) (MmapWrapper::map (bytes));
+      if (_pages == NULL) {
+	// Map failed!
+	fprintf (stderr, "Unable to allocate memory.\n");
+	abort();
+      }
+      // Tell the OS that it's going to be randomly accessed.
+      MadviseWrapper::random (_pages, bytes);
+      // Initialize the bitmap.
+      _bitmap.reserve (PAGES);
     }
-    // Tell the OS that it's going to be randomly accessed.
-    MadviseWrapper::random (_pages, bytes);
-    // Initialize the bitmap.
-    _bitmap.reserve (PAGES);
   }
 
   void * map (size_t sz) {
@@ -88,6 +92,9 @@ public:
   }
 
 private:
+
+  RandomMmap(const RandomMmap& r);
+  RandomMmap& operator=(const RandomMmap& r);
   
   enum { BITS = 31 - StaticLog<CPUInfo::PageSize>::VALUE }; // size of address space, minus bits for pages.
   enum { PAGES = (1ULL << BITS) };
