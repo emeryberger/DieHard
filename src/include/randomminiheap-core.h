@@ -96,7 +96,7 @@ public:
   /// @return an allocated object of size ObjectSize
   /// @param sz   requested object size
   /// @note May return NULL even though there is free space.
-  inline void * malloc (size_t sz)
+  void * malloc (size_t sz)
   {
     Check<RandomMiniHeapCore *> sanity (this);
     sz = sz; // to prevent warnings
@@ -137,7 +137,7 @@ public:
 
   /// @brief Relinquishes ownership of this pointer.
   /// @return true iff the object was on this heap and was freed by this call.
-  inline bool free (void * ptr) {
+  bool free (void * ptr) {
     Check<RandomMiniHeapCore *> sanity (this);
 
     // Return false if the pointer is out of range.
