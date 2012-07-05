@@ -30,46 +30,10 @@ public:
 
   void activate() {
     if (!SuperHeap::_isHeapActivated) {
-
-      // First, set up the bitmap with one entry per object.
-      SuperHeap::_miniHeapBitmap.reserve (NObjects);
-
-      // Now map the pages. Small objects that fit on a page will live
-      // in separately-mapped individual page. Large objects are
-      // allocated one at a time (individual mmap calls).
-
-      for (int objectIndex = 0;
-	   objectIndex < NObjects;
-	   objectIndex += SuperHeap::ObjectsPerPage) {
-	
-	// Assume we already have full ASLR for now (FIX ME).
-	// That is, that every map is randomly distributed through the address space.
-	// We will otherwise need to use RandomMmap.
-	void * pagesAddr =
-	  MmapWrapper::map (SuperHeap::PagesPerObject * CPUInfo::PageSize);
-	
-	// Add an entry in the heap map that points to the start of this object.
-	setPageFromIndex (objectIndex, pagesAddr);
-	  
-	// Fill with a known value for DieFast. FIX ME
-
-	// Initialize bookkeeping information.
-
-	for (int p = 0; p < SuperHeap::PagesPerObject; p++) {
-	  
-	  void * pageAddr = (void *) ((char *) pagesAddr + p * CPUInfo::PageSize);
-	  
-	  // Now add a reverse entry for this page to point to this object index.
-	  // pageTable:: maps page number to (heap, page index).
-	  uintptr_t pageNumber = DieHarder::computePageNumber (pageAddr);
-	  DieHarder::pageTable.getInstance().insert (pageNumber,
-						     this,
-						     objectIndex);
-	}
-      }
-      SuperHeap::_isHeapActivated = true;
+      internalActivate();
     }
   }
+
 
 private:
 
@@ -81,12 +45,55 @@ private:
     return (DieHarder::pageTable.getInstance().getHeap (ptr) == this);
   }
 
+  void internalActivate() {
+    assert (!SuperHeap::_isHeapActivated);
+
+    // First, set up the bitmap with one entry per object.
+    SuperHeap::_miniHeapBitmap.reserve (NObjects);
+    
+    // Now map the pages. Small objects that fit on a page will live
+    // in separately-mapped individual pages. Large objects are
+    // allocated one at a time (individual mmap calls).
+    
+    for (unsigned int objectIndex = 0;
+	 objectIndex < NObjects;
+	 objectIndex += SuperHeap::ObjectsPerPage) {
+      
+      // Assume we already have full ASLR for now (FIX ME).
+      // That is, that every map is randomly distributed through the address space.
+      // We will otherwise need to use RandomMmap.
+      void * pagesAddr =
+	MmapWrapper::map (SuperHeap::PagesPerObject * CPUInfo::PageSize);
+      
+      // Add an entry in the heap map that points to the start of this object.
+      setPageFromIndex (objectIndex, pagesAddr);
+      
+      // Fill with a known value for DieFast. FIX ME
+      
+      // Initialize bookkeeping information:
+      // one entry in the page table for every page.
+      
+      for (int p = 0; p < SuperHeap::PagesPerObject; p++) {
+	
+	void * pageAddr = (void *) ((char *) pagesAddr + p * CPUInfo::PageSize);
+	
+	// Now add a reverse entry for this page to point to this object index.
+	// pageTable:: maps page number to (heap, page index).
+	uintptr_t pageNumber = DieHarder::computePageNumber (pageAddr);
+	DieHarder::pageTable.getInstance().insert (pageNumber,
+						   this,
+						   objectIndex);
+      }
+    }
+    SuperHeap::_isHeapActivated = true;
+  }
+
 protected:
 
   /// @return the index in the bitmap corresponding to the given object.
   unsigned int computeIndex (void * ptr) const {
     // Look up the stored index for this page.
-    unsigned int pageIdx = getPageIndex (ptr);
+    unsigned int pageIdx = getObjectIndex (ptr);
     
     // If this was a big object, just return the index (since there is
     // only one index entry for that object).
@@ -101,8 +108,7 @@ protected:
     // Now compute its index: the number of objects in PRECEDING pages
     // PLUS the object index WITHIN the page.
     unsigned int ret =
-      (unsigned int) ((pageIdx * SuperHeap::ObjectsPerPage) + 
-		      (offset >> StaticLog<ObjectSize>::VALUE));
+      pageIdx + (offset >> StaticLog<ObjectSize>::VALUE);
     
     assert (ret < NObjects);
     return ret;
@@ -119,7 +125,7 @@ protected:
     if (ObjectSize > CPUInfo::PageSize) {
       return getPageFromIndex (index);
     } else {
-      unsigned int mapIdx = (index >> StaticLog<SuperHeap::ObjectsPerPage>::VALUE);
+      //      unsigned int mapIdx = (index >> StaticLog<SuperHeap::ObjectsPerPage>::VALUE);
       unsigned int whichObject = index & (SuperHeap::ObjectsPerPage-1);
       return (void *)
 	&((typename SuperHeap::ObjectStruct *) getPageFromIndex (index))[whichObject];
@@ -133,22 +139,23 @@ protected:
   // - given the index of an object in the bitmap, find the object start
   //   (using _mapEntryToPage, for malloc()).
 
-  inline unsigned int getPageIndex (void * ptr) const {
-    return DieHarder::pageTable.getInstance().getPageIndex (ptr);
+  // Return the object index corresponding to this pointer.
+  inline unsigned int getObjectIndex (void * ptr) const {
+    return DieHarder::pageTable.getInstance().getObjectIndex (ptr);
   }
 
   //@brief Add an entry in the heap map that points to this page.
   void setPageFromIndex (unsigned int index, void * pageAddr) {
     assert (((uintptr_t) pageAddr & (CPUInfo::PageSize - 1)) == 0);
-    assert (modulo<SuperHeap::ObjectsPerPage>(index) == index);
-    _mapEntryToPage(index) = pageAddr;
+    assert (modulo<SuperHeap::ObjectsPerPage>(index) == 0);
+    _mapEntryToPage(index >> StaticLog<SuperHeap::ObjectsPerPage>::VALUE) = pageAddr;
   }
 
   //@brief Get the page corresponding to this object index.
   void * getPageFromIndex (unsigned int index) {
     // Pick the index that is at the start of a page.
     index -= modulo<SuperHeap::ObjectsPerPage>(index);
-    void * pageAddr = _mapEntryToPage(index);
+    void * pageAddr = _mapEntryToPage(index >> StaticLog<SuperHeap::ObjectsPerPage>::VALUE);
     assert (((uintptr_t) pageAddr & (CPUInfo::PageSize - 1)) == 0);
     return pageAddr;
   }
@@ -197,6 +204,7 @@ public:
   RandomMiniHeapDieHarderChoose()
   {
     sassert<(ObjectSize <= CPUInfo::PageSize)> verifySize;
+    verifySize = verifySize;
   }
 
   inline size_t getSize (void * ptr) {
@@ -230,6 +238,7 @@ public:
   RandomMiniHeapDieHarderChoose()
   {
     sassert<(ObjectSize >= CPUInfo::PageSize)> verifySize;
+    verifySize = verifySize;
   }
   
   inline size_t getSize (void * ptr) {

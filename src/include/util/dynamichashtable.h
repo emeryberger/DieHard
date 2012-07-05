@@ -70,6 +70,8 @@ public:
   {
     CheckPowerOfTwo<ExpansionFactor> verify1;
     CheckPowerOfTwo<INIT_SIZE / sizeof(VALUE_TYPE)> verify2;
+    verify1 = verify1;
+    verify2 = verify2;
   }
   
   ~DynamicHashTable() {

@@ -9,7 +9,7 @@ public:
   PageTableEntry ()
     : _pageNumber (0),
       _heap (0),
-      _pageIndex (0)
+      _objectIndex (0)
   {}
 
   PageTableEntry (unsigned long pNum,
@@ -17,7 +17,7 @@ public:
 		  unsigned int idx) 
     : _pageNumber (pNum),
       _heap (b),
-      _pageIndex (idx)
+      _objectIndex (idx)
   {
     //fprintf(stderr,"%p: %p, %d\n",pNum, b, idx);
   }
@@ -25,7 +25,7 @@ public:
  PageTableEntry (const PageTableEntry & rhs)
   : _pageNumber (rhs._pageNumber),
     _heap (rhs._heap),
-    _pageIndex (rhs._pageIndex)
+    _objectIndex (rhs._objectIndex)
   {
   }
 
@@ -33,8 +33,8 @@ public:
     return _heap;
   }
 
-  unsigned int getPageIndex() const {
-    return _pageIndex;
+  unsigned int getObjectIndex() const {
+    return _objectIndex;
   }
 
   bool isValid() const {
@@ -48,7 +48,7 @@ public:
 private:
   unsigned long		_pageNumber;
   void * 		_heap;
-  unsigned int 		_pageIndex;
+  unsigned int 		_objectIndex;
   uintptr_t 		_align; // EDB for alignment?
 };
 
