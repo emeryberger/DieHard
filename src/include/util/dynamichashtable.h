@@ -37,11 +37,14 @@ class DynamicHashTable {
       return _isValid;
     }
     VALUE_TYPE& get() {
+      if (!_isValid) {
+	abort();
+      }
       return _value;
     }
     void put (const VALUE_TYPE& v) {
       _value = v;
-      markValid();
+      _isValid = true;
     }
       
   private:

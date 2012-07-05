@@ -9,7 +9,8 @@ public:
   PageTableEntry ()
     : _pageNumber (0),
       _heap (0),
-      _objectIndex (0)
+      _objectIndex (0),
+      _align (0x1234)
   {}
 
   PageTableEntry (unsigned long pNum,
@@ -17,7 +18,8 @@ public:
 		  unsigned int idx) 
     : _pageNumber (pNum),
       _heap (b),
-      _objectIndex (idx)
+      _objectIndex (idx),
+      _align (0x1234)
   {
     //fprintf(stderr,"%p: %p, %d\n",pNum, b, idx);
   }
@@ -49,7 +51,7 @@ private:
   unsigned long		_pageNumber;
   void * 		_heap;
   unsigned int 		_objectIndex;
-  uintptr_t 		_align; // EDB for alignment?
+  uintptr_t 		_align;
 };
 
 #endif
