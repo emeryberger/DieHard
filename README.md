@@ -1,3 +1,6 @@
+__if downloading from GitHub, make sure to use `--recursive`, as in:__
+    `git clone --recursive https://github.com/emeryberger/DieHard`
+
 DieHard
 =======
 
