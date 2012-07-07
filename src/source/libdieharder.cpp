@@ -16,8 +16,6 @@
 #include <stdlib.h>
 #include <new>
 
-class std::bad_alloc;
-
 // The heap multiplier.
 
 enum { Numerator = 4, Denominator = 3 };
