@@ -19,8 +19,6 @@ University of Massachusetts, Amherst
 
 This distribution includes the source for three systems.
 
-**NOTE: Make sure to invoke git as follows: `git clone --recursive ...`**
-
    + **DieHard**: a system that increases RELIABILITY by allowing programs
    with memory errors to run correctly, with high probability.
 
