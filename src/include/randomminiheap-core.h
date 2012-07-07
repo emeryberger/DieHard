@@ -41,26 +41,6 @@ public:
   /// Check values for sanity checking.
   enum { CHECK1 = 0xEEDDCCBB, CHECK2 = 0xBADA0101 };
   
-  /// Rounded-up number of pages required to hold the requested number
-  /// of objects (NObjects) of the requested size (ObjectSize).
-  enum { NumPages =
-	 (NObjects * ObjectSize + CPUInfo::PageSize - 1)
-	 / CPUInfo::PageSize };
-
-  /// The number of objects on a page (or 1 if it is a large object).
-  enum { ObjectsPerPage = 
-	 (ObjectSize <= CPUInfo::PageSize) ?
-	 CPUInfo::PageSize / ObjectSize :
-	 1 };
-
-
-  /// The number of pages per object (or 1 if it is a small object).
-  enum { PagesPerObject = 
-	 (ObjectSize <= CPUInfo::PageSize) ?
-	 1 :
-	 ObjectSize / CPUInfo::PageSize };
-
-
   typedef RandomMiniHeapBase SuperHeap;
 
   // Note: we force the lowest bit to 1 make the _freedValue an invalid
@@ -78,18 +58,9 @@ public:
 
     CheckPowerOfTwo<ObjectSize>	invariant1;
     CheckPowerOfTwo<CPUInfo::PageSize> invariant2;
-    CheckPowerOfTwo<ObjectsPerPage> invariant3;
-
-    // Object size must be a multiple of page size (if they are bigger
-    // than a page).
-    sassert<((ObjectSize <= CPUInfo::PageSize)
-	     || CPUInfo::PageSize * (ObjectSize / CPUInfo::PageSize) == ObjectSize)>
-    invariant4;
 
     invariant1 = invariant1;
     invariant2 = invariant2;
-    invariant3 = invariant3;
-    invariant4 = invariant4;
   }
 
 
