@@ -8,8 +8,8 @@
  */
 
 
-#ifndef _PLATFORMSPECIFIC_H_
-#define _PLATFORMSPECIFIC_H_
+#ifndef DH_PLATFORMSPECIFIC_H
+#define DH_PLATFORMSPECIFIC_H
 
 #if defined(_WIN32)
 
