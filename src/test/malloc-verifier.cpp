@@ -220,6 +220,11 @@ main (int argc, char * argv[])
     return -1;
   }
 
+  if (argc == 3) {
+    numIterations = atoi(argv[2]);
+  }
+
+
   pthread_t t[numThreads];
 
   for (int i = 0; i < numThreads; i++) {
