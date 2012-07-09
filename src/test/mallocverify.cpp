@@ -16,15 +16,13 @@
 #include <iostream>
 using namespace std;
 
-#include "../include/rng/mwc.h" // random number generator
+#include "../include/rng/randomnumbergenerator.h"
 
 
 class AllocationDriver {
 public:
   AllocationDriver (long n)
-    : rng (8675309 * n, 5551213 * n),
-      rng2 (9715909 * n, 4132535 * n),
-      objectsAllocated (0)
+    : objectsAllocated (0)
   {
     for (int i = 0; i < MAX_OBJECTS; i++) {
       isAllocated[i] = false;
@@ -144,7 +142,7 @@ private:
   enum { MAX_SIZE = 128 };
   enum { MAX_FULL_FRACTION = 2 }; // 1/F = max fullness.
 
-  MWC rng, rng2;
+  RandomNumberGenerator rng, rng2;
   unsigned int objectsAllocated;
 
   bool isAllocated[MAX_OBJECTS];

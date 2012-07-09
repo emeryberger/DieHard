@@ -7,18 +7,13 @@
  * @note   Copyright (C) 2005 by Emery Berger, University of Massachusetts Amherst.
  */
 
-#ifndef _RANDOMNUMBERGENERATOR_H_
-#define _RANDOMNUMBERGENERATOR_H_
+#ifndef DH_RANDOMNUMBERGENERATOR_H
+#define DH_RANDOMNUMBERGENERATOR_H
 
-#define USE_MERSENNE 0
 
-#if USE_MERSENNE
-#include "mersennetwister.h"
-#else
 #include "mwc.h"
-#endif
-
 #include "realrandomvalue.h"
+
 
 class RandomNumberGenerator {
 public:
@@ -34,11 +29,8 @@ public:
 
 private:
 
-#if USE_MERSENNE
-  MersenneTwister mt;
-#else
    MWC mt;
-#endif
+
 };
 
 #endif
