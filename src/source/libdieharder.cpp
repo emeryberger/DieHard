@@ -48,23 +48,13 @@ class TheLargeHeap : public OneHeap<LargeHeap<MmapWrapper> > {};
 
 #include "debugheap.h"
 
-#if 1 // multi-threaded
-
-// typedef ANSIWrapper<LockedHeap<PosixLockType, DebugHeap<CombineHeap<DieHardHeap<Numerator, Denominator, 65536, (DIEHARD_DIEFAST == 1)>,
-//						   TheLargeHeap> > > >
-
-typedef ANSIWrapper<LockedHeap<PosixLockType, CombineHeap<DieHardHeap<Numerator, Denominator, 65536, (DIEHARD_DIEFAST == 1), (DIEHARD_DIEHARDER == 1)>,
-					 TheLargeHeap> > >
-  TheDieHardHeap;
-
-#else
-
-typedef ANSIWrapper<CombineHeap<DieHardHeap<Numerator, Denominator, 65536, (DIEHARD_DIEFAST == 1), (DIEHARD_DIEHARDER == 1)>,
-					 TheLargeHeap> >
-  TheDieHardHeap;
-
-#endif
-
+typedef ANSIWrapper<
+  LockedHeap<PosixLockType,
+	     CombineHeap<DieHardHeap<Numerator, Denominator, 65536,
+				     (DIEHARD_DIEFAST == 1),
+				     (DIEHARD_DIEHARDER == 1)>,
+			 TheLargeHeap> > >
+TheDieHardHeap;
 
 class TheCustomHeapType : public TheDieHardHeap {};
 
