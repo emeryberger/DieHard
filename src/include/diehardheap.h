@@ -104,11 +104,15 @@ public:
     // return an object allocated from that heap.
     int index = getIndex (sz);
     void * ptr = getHeap(index)->malloc (sz);
+
+    size_t actualSize = getClassSize (index);
     
     if (DieFastOn) {
       // Fill with special value.
-      size_t actualSize = getClassSize (index);
       DieFast::fill (ptr, actualSize, _localRandomValue);
+    } else {
+      // Fill with zeros.
+      DieFast::fill (ptr, actualSize, 0);
     }
     
     assert (((size_t) ptr % Alignment) == 0);
