@@ -90,6 +90,7 @@ public:
     ptr = getObject (index);
 
     unsigned int computedIndex = computeIndex (ptr);
+    computedIndex = computedIndex;
     assert (index == computedIndex);
     
     if (DieFastOn) {
