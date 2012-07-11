@@ -95,7 +95,7 @@ private:
       void * pagesAddr;
       const unsigned long bytesToAllocate = PagesPerObject * CPUInfo::PageSize;
 
-#if 1 //  WE_ALREADY_HAVE_FULL_ASLR
+#if 0 //  WE_ALREADY_HAVE_FULL_ASLR
       // If we have full ASLR, we can just use mmap.  That is, ASLR
       // means that every map is randomly distributed through the
       // address space.  We will otherwise need to use RandomMmap.
