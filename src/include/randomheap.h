@@ -26,6 +26,7 @@ using namespace HL;
 #endif
 
 #include "check.h"
+#include "checkpoweroftwo.h"
 #include "log2.h"
 #include "mmapalloc.h"
 #include "randomnumbergenerator.h"
@@ -38,9 +39,9 @@ public:
 
   virtual ~RandomHeapBase (void) {}
 
-  inline virtual void * malloc (size_t) = 0; // { abort(); return NULL; }
-  inline virtual bool free (void *) = 0; // { abort(); }
-  inline virtual size_t getSize (void *) const = 0; // { abort(); return 0; }
+  virtual void * malloc (size_t) = 0;
+  virtual bool free (void *) = 0;
+  virtual size_t getSize (void *) const = 0;
 
 };
 
@@ -131,8 +132,6 @@ public:
       getAnotherMiniHeap();
     }
 
-    //    assert (_miniHeapsInUse > 0);
-
     void * ptr = NULL;
     while (ptr == NULL) {
       ptr = getObject(sz);
@@ -214,17 +213,20 @@ private:
 
   // The allocator for the mini heaps.
 
-  template <class SuperHeap>
-  class RoundUpPage : public SuperHeap {
+  template <size_t Value, class SuperHeap>
+  class RoundUpHeap : public SuperHeap {
   public:
     void * malloc (size_t sz) {
+      CheckPowerOfTwo<Value> verifyPowTwo;
+      verifyPowTwo = verifyPowTwo;
       // Round up to the next multiple of a page.
-      sz = (sz + CPUInfo::PageSize - 1) & ~(CPUInfo::PageSize - 1);
+      sz = (sz + Value - 1) & ~(Value - 1);
       return SuperHeap::malloc (sz);
     }
   };
 
-  typedef OneHeap<RoundUpPage<BumpAlloc<CPUInfo::PageSize, MmapAlloc> > > TheAllocator;
+  typedef OneHeap<RoundUpHeap<CPUInfo::PageSize,
+			      BumpAlloc<CPUInfo::PageSize, MmapAlloc> > > TheAllocator;
 
   // The type of a mini heap.
   template <unsigned long Number> class MiniHeapType
