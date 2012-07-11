@@ -213,7 +213,18 @@ private:
   }
 
   // The allocator for the mini heaps.
-  typedef OneHeap<BumpAlloc<CPUInfo::PageSize, MmapAlloc> > TheAllocator;
+
+  template <class SuperHeap>
+  class RoundUpPage : public SuperHeap {
+  public:
+    void * malloc (size_t sz) {
+      // Round up to the next multiple of a page.
+      sz = (sz + CPUInfo::PageSize - 1) & ~(CPUInfo::PageSize - 1);
+      return SuperHeap::malloc (sz);
+    }
+  };
+
+  typedef OneHeap<RoundUpPage<BumpAlloc<CPUInfo::PageSize, MmapAlloc> > > TheAllocator;
 
   // The type of a mini heap.
   template <unsigned long Number> class MiniHeapType
