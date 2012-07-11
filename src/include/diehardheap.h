@@ -112,7 +112,7 @@ public:
       DieFast::fill (ptr, actualSize, _localRandomValue);
     } else {
       // Fill with zeros.
-      DieFast::fill (ptr, actualSize, 0);
+      ////      DieFast::fill (ptr, actualSize, 0);
     }
     
     assert (((size_t) ptr % Alignment) == 0);
