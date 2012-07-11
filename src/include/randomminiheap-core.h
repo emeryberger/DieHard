@@ -87,9 +87,11 @@ public:
     // Get the address of the indexed object.
     ptr = getObject (index);
 
+#ifndef NDEBUG
     unsigned int computedIndex = computeIndex (ptr);
     computedIndex = computedIndex;
     assert (index == computedIndex);
+#endif
     
     if (DieFastOn) {
       // Check to see if this object was overflowed.
