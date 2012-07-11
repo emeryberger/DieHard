@@ -13,6 +13,11 @@
 #ifndef DH_DIEHARDHEAP_H
 #define DH_DIEHARDHEAP_H
 
+
+
+#define USE_HALF_LOG 0
+
+
 #include <new>
 
 #include "heaplayers.h"
@@ -38,8 +43,9 @@ template <int Numerator,
 	  bool DieHarderOn>
 
 class DieHardHeap {
-
 public:
+
+  enum { MAX_SIZE = MaxSize };
 
 #if defined(__LP64__) || defined(_LP64) || defined(__APPLE__) || defined(_WIN64)
   enum { MinSize = 16 };
@@ -48,17 +54,6 @@ public:
   enum { MinSize   = 8 };
   enum { Alignment = 8 };
 #endif
-
-private:
-
-  /// The number of size classes managed by this heap.
-  enum { MAX_INDEX =
-	 StaticLog<MaxSize>::VALUE -
-	 StaticLog<Alignment>::VALUE + 1 };
-
-public:
-
-  enum { MAX_SIZE = MaxSize };
   
   DieHardHeap (void)
     : _localRandomValue (RealRandomValue::value())
@@ -71,8 +66,13 @@ public:
       verifyNoSizeDependencies;
 
     // Check to make sure the size specified by MaxSize is correct.
+#if USE_HALF_LOG
+    sassert<(StaticHalfPow2<MAX_INDEX-1>::VALUE) == MaxSize>
+      verifySizeFormulation;
+#else
     sassert<((1 << (MAX_INDEX-1)) * Alignment) == MaxSize>
       verifySizeFormulation;
+#endif
 
     // avoiding warnings here
     verifyNoSizeDependencies = verifyNoSizeDependencies;
@@ -103,10 +103,10 @@ public:
     // Compute the index corresponding to the size request, and
     // return an object allocated from that heap.
     int index = getIndex (sz);
-    void * ptr = getHeap(index)->malloc (sz);
-
     size_t actualSize = getClassSize (index);
-    
+
+    void * ptr = getHeap(index)->malloc (actualSize);
+
     if (DieFastOn) {
       // Fill with special value.
       DieFast::fill (ptr, actualSize, _localRandomValue);
@@ -161,19 +161,81 @@ public:
   
 private:
 
- 
+#if USE_HALF_LOG
+
+  template <size_t v>
+  class StaticLog2Ceiling {
+  public:
+    enum { VALUE = StaticIf<((1 << StaticLog<v>::VALUE) < v),
+				   StaticLog<v>::VALUE + 1,
+				   StaticLog<v>::VALUE>::VALUE };
+  };
+
+  template <size_t v>
+  class StaticHalfLog2 {
+  private:
+    enum { A = StaticLog2Ceiling<v>::VALUE };
+    enum { B = StaticLog2Ceiling<v - (1 << (A-1))>::VALUE };
+  public:
+    enum { VALUE = 2 * A + (B + 1 == A) - 1 };
+  };
+  
+  
+  template <int v>
+  class StaticHalfPow2 {
+  private:
+    enum { SZ1 = 1 << (v/2) };
+    enum { SZ2 = (v & 1) * (SZ1 / 2) };
+  public:
+    enum { VALUE = SZ1 + SZ2 };
+  };
+  
+  /// The number of size classes managed by this heap.
+  enum { MAX_INDEX =
+	 StaticHalfLog2<MaxSize>::VALUE + 1 };
+
+#else
+
+  /// The number of size classes managed by this heap.
+  enum { MAX_INDEX =
+	 StaticLog<MaxSize>::VALUE -
+	 StaticLog<Alignment>::VALUE + 1 };
+
+#endif
+
+private:
+
+  static int halflog2 (size_t v) {
+    int a = log2(v);
+    int b = log2(v - (1 << (a-1)));
+    return 2 * a + (b + 1 == a) - 1;
+  }
+  
+  static size_t halfpow2 (int v) {
+    size_t sz1 = 1 << (v/2);
+    return sz1 + ((v & 1) * (sz1 / 2));
+  }
+
   /// @return the maximum object size for the given index.
   static inline size_t getClassSize (int index) {
     assert (index >= 0);
     assert (index < MAX_INDEX);
+#if USE_HALF_LOG
+    return halfpow2 (index); //  * Alignment;
+#else
     return (1 << index) * Alignment;
+#endif
   }
 
   /// @return the index (size class) for the given size
   static inline int getIndex (size_t sz) {
     // Now compute the log.
     assert (sz >= Alignment);
+#if USE_HALF_LOG
+    int index = halflog2(sz); //  - StaticHalfLog2<Alignment>::VALUE;
+#else
     int index = log2(sz) - StaticLog<Alignment>::VALUE;
+#endif
     return index;
   }
 
@@ -184,7 +246,13 @@ private:
       new ((char *) buf + MINIHEAPSIZE * index)
 	RandomHeap<Numerator,
 	Denominator,
+#if USE_HALF_LOG
+		   // NOTE: wasting some indices up front here....
+
+	StaticHalfPow2<index>::VALUE, // NB: = getClassSize(index)
+#else
 	(1 << index) * Alignment, // NB: = getClassSize(index)
+#endif
 	MaxSize,
         RandomMiniHeap,
         DieFastOn,
