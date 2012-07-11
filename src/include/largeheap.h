@@ -66,12 +66,10 @@ private:
 
   inline size_t get (void * ptr) {
     size_t sz = _objectSize.get (ptr);
-    //    printf ("getting! %x = %d\n", ptr, sz);
     return sz;
   }
   
   inline void set (void * ptr, size_t sz) {
-    //    printf ("setting! %x = %d\n", ptr, sz);
     // Initialize a range with the actual size.
     size_t currSize = sz;
     int iterations = (sz + CPUInfo::PageSize - 1) / CPUInfo::PageSize;
