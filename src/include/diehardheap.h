@@ -92,6 +92,10 @@ public:
   /// @brief Allocate an object of the requested size.
   /// @return such an object, or NULL.
   inline void * malloc (size_t sz) {
+    assert (sz <= MaxSize);
+    assert (sz >= Alignment);
+
+#if 0
     // If the object request size is too big, just return NULL.
     if (sz > MaxSize) {
       return NULL;
@@ -99,7 +103,8 @@ public:
     if (sz < Alignment) {
       sz = Alignment;
     }
-    
+#endif
+
     // Compute the index corresponding to the size request, and
     // return an object allocated from that heap.
     int index = getIndex (sz);
