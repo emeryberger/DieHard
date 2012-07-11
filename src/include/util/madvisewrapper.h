@@ -1,7 +1,7 @@
 // -*- C++ -*-
 
-#ifndef MADVISEWRAPPER_H_
-#define MADVISEWRAPPER_H_
+#ifndef DH_MADVISEWRAPPER_H
+#define DH_MADVISEWRAPPER_H
 
 #if defined(_WIN32)
 #include <windows.h>
@@ -22,7 +22,8 @@ public:
 
   static void random (void * ptr, size_t sz) {
 #if defined(_WIN32)
-    // For now, do nothing. // FIX ME
+    // For now, do nothing; there is no equivalent functionality in
+    // Windows.
     ptr = ptr;
     sz = sz;
 #else
