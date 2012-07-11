@@ -35,13 +35,12 @@ public:
 
   bool free (void * ptr) {
     bool didFree = SuperHeap::free (ptr);
-    if (didFree) {
-      if (DieFastOn) {
-	// Check for overflows into adjacent objects,
-	// then fill the freed object with a known random value.
-	//	checkOverflowError (ptr, index);
-	DieFast::fill (ptr, ObjectSize, SuperHeap::_freedValue);
-      }
+    if (DieFastOn && didFree) {
+      // Check for overflows into adjacent objects,
+      // then fill the freed object with a known random value.
+      //	checkOverflowError (ptr, index);
+
+      DieFast::fill (ptr, ObjectSize, SuperHeap::_freedValue);
     }
     return didFree;
   }
