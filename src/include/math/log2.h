@@ -18,12 +18,14 @@
 #elif defined(__GNUC__) && defined(__i386__)
   static inline int log2 (size_t sz) 
   {
+    sz = (sz << 1) - 1;
     asm ("bsrl %0, %0" : "=r" (sz) : "0" (sz));
     return (int) sz;
   }
 #elif defined(__GNUC__) && defined(__x86_64__)
   static inline int log2 (size_t sz) 
   {
+    sz = (sz << 1) - 1;
     asm ("bsrq %0, %0" : "=r" (sz) : "0" (sz));
     return (int) sz;
   }
