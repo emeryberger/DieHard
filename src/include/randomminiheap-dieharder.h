@@ -165,7 +165,6 @@ protected:
     if (ObjectSize > CPUInfo::PageSize) {
       return getPageFromIndex (index);
     } else {
-      //      unsigned int mapIdx = (index >> StaticLog<ObjectsPerPage>::VALUE);
       unsigned int whichObject = index & (ObjectsPerPage-1);
       return (void *)
 	&((typename SuperHeap::ObjectStruct *) getPageFromIndex (index))[whichObject];
