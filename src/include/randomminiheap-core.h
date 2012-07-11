@@ -54,12 +54,10 @@ public:
   {
     Check<RandomMiniHeapCore *> sanity (this);
 
-    // All these need to be powers of two.
-
-    CheckPowerOfTwo<ObjectSize>	invariant1;
+    // NOTE: Not clear if this is strictly required but it is
+    // invariably true.
     CheckPowerOfTwo<CPUInfo::PageSize> invariant2;
 
-    invariant1 = invariant1;
     invariant2 = invariant2;
   }
 
