@@ -22,7 +22,7 @@ public:
     unsigned long long bytes = CPUInfo::PageSize * (unsigned long long) PAGES;
     // Get a giant chunk of memory.
 
-    _pages = (void *) (MmapWrapper::map (bytes));
+    _pages = (void *) MmapWrapper::map (bytes);
 
     if (_pages == NULL) {
       // Map failed!
@@ -31,6 +31,8 @@ public:
     }
     // Tell the OS that it's going to be randomly accessed.
     MadviseWrapper::random (_pages, bytes);
+    // Protect all the pages.
+    MmapWrapper::protect (_pages, bytes);
     // Initialize the bitmap.
     _bitmap.reserve (PAGES);
   }
@@ -43,42 +45,41 @@ public:
 
     // Randomly probe until we find a run of free pages.
     unsigned long index;
-    while (true) {
+    bool foundRun = false;
+
+    while (!foundRun) {
       index = _rng.next() & (PAGES - 1);
 
-      // If the chosen index is too far to the end (so it would
-      // overrun the bitmap), try again.
+      // Make sure the chosen index is not too far to the end (so it
+      // would overrun the bitmap).
 
-      if (index + npages - 1 > PAGES) {
-	continue;
-      }
+      if (index + npages - 1 < PAGES) {
 
-      bool foundRun = true;
-
-      // Go through each page and try to set the bit for each one.
-
-      unsigned int i;
-      for (i = 0; i < npages; i++) {
-	if (!_bitmap.tryToSet(index + i)) {
-	  // If I tried to set this bit but it was already set,
-	  // we did not find a run of enough free bits.
-	  foundRun = false;
-	  break;
+	// Go through each page and try to set the bit for each one.
+	
+	unsigned int i;
+	for (i = 0; i < npages; i++) {
+	  if (!_bitmap.tryToSet(index + i)) {
+	    // If I tried to set this bit but it was already set,
+	    // we did not find a run of enough free bits.
+	    // Reset all the bits up to i.
+	    for (unsigned long j = 0; j < i; j++) {
+	      _bitmap.reset (index + j);
+	    }
+	    break;
+	  }
 	}
-      }
 
-      if (foundRun) {
-	// Success!
-	break;
-      } else {
-	// We did not find a long enough run.
-	// Reset all the bits up to i and try again.
-	for (unsigned long j = 0; j < i; j++) {
-	  _bitmap.reset (index + j);
-	}
+	// If we set every bit, we are done.
+	if (i == npages)
+	  foundRun = true;
       }
     }
+
     void * addr = (void *) ((char *) _pages + index * CPUInfo::PageSize);
+
+    // Unprotect all the pages.
+    MmapWrapper::unprotect (addr, npages * CPUInfo::PageSize);
 
     // Return it.
     return addr;
@@ -102,6 +103,9 @@ public:
     for (unsigned long i = 0; i < npages; i++) {
       _bitmap.reset (index + i);
     }
+    // Re-protect the pages.
+    MmapWrapper::protect (ptr, npages * CPUInfo::PageSize);
+
   }
 
 private:
