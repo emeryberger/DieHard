@@ -1,5 +1,5 @@
-#ifndef _LOG2_H_
-#define _LOG2_H_
+#ifndef DH_LOG2_H
+#define DH_LOG2_H
 
 #include <stdlib.h>
 
@@ -18,12 +18,14 @@
 #elif defined(__GNUC__) && defined(__i386__)
   static inline int log2 (size_t sz) 
   {
-    int retval;
-    sz = (sz << 1) - 1;
-    asm volatile ("bsrl %1,%0"
-		  : "=r" (retval)
-		  : "r" (sz));
-    return retval;
+    asm ("bsrl %0, %0" : "=r" (sz) : "0" (sz));
+    return (int) sz;
+  }
+#elif defined(__GNUC__) && defined(__x86_64__)
+  static inline int log2 (size_t sz) 
+  {
+    asm ("bsrq %0, %0" : "=r" (sz) : "0" (sz));
+    return (int) sz;
   }
 #else
   static inline int log2 (size_t v) {
