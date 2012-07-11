@@ -16,7 +16,7 @@
 #include <iostream>
 using namespace std;
 
-#include "../include/rng/randomnumbergenerator.h"
+#include "../include/rng/mwc.h"
 
 
 unsigned long numIterations = 1000;
@@ -24,7 +24,9 @@ unsigned long numIterations = 1000;
 class AllocationDriver {
 public:
   AllocationDriver (long n)
-    : objectsAllocated (0)
+    : objectsAllocated (0),
+      memoryAllocated (0),
+      rng (1011, 2037)
   {
     for (int i = 0; i < MAX_OBJECTS; i++) {
       isAllocated[i] = false;
@@ -46,36 +48,30 @@ public:
     for (unsigned long i = 0; i < iterations; i++) {
 
       if (i % 1000 == 0) {
-	cout << "iteration " << i << ": objects = " << objectsAllocated << endl;
+	cout << "iteration " << i << ": objects = " << objectsAllocated << ", memory = " << memoryAllocated << endl;
+	checkValidity();
       }
-      unsigned long r = rng2.next();
+      unsigned long r = rng.next();
 
       if (r % 1000 == 0) {
 	// Periodically flush.
-	cout << "PERIODIC FLUSH." << endl;
-	for (int j = 0; j < rng.next() % objectsAllocated; j++) {
+	int numToFree = rng.next() % objectsAllocated;
+	cout << "PERIODIC FLUSH: Freeing " << numToFree << " objects." << endl;
+	for (int j = 0; j < numToFree; j++) {
 	  freeOne();
 	}
       }
 				  
       if (r % 2 == 0) {
-	if (!freeOne()) {
-	  cout << "REFILL." << endl;
-	  for (int j = 0; j < rng.next() % (MAX_OBJECTS / MAX_FULL_FRACTION); j++) {
-	    mallocOne();
-	  }
+	for (int j = 0; j < rng.next() % (MAX_OBJECTS / MAX_FULL_FRACTION); j++) {
+	  mallocOne();
 	}
-
       } else {
-	if (!mallocOne()) {
-	  cout << "FLUSH." << endl;
-	  for (int j = 0; j < rng.next() % objectsAllocated; j++) {
-	    freeOne();
-	  }
-	}
+	freeOne();
       }
-      checkValidity();
     }
+
+    cout << "objects = " << objectsAllocated << ", memory = " << memoryAllocated << endl;
   }
 
   
@@ -95,10 +91,13 @@ private:
 
 	delete [] objectMap[index];
 
+	objectsAllocated--;
+	memoryAllocated -= objectSize[index];
+
 	objectMap[index]   = 0;
 	objectSize[index]  = 0;
 	isAllocated[index] = false;
-	objectsAllocated--;
+
 	return true;
       }
     }
@@ -114,12 +113,19 @@ private:
       if (!isAllocated[index]) {
 	// Got one. Mark it as allocated and fill it with a sentinel value.
 
-	objectsAllocated++;
 	isAllocated[index] = true;
 
-	size_t sz = rng.next() % MAX_SIZE;
+	// FIX ME: we are now rounding to a power of two.
+	//	size_t sz = rng.next() % MAX_SIZE;
+
+	size_t sz = rng.next() % LOG_MAX_SIZE;
+	sz = 1 << sz;
+
 	objectMap[index]   = new char[sz];
 	objectSize[index]  = sz;
+
+	objectsAllocated++;
+	memoryAllocated += objectSize[index];
 
 	fill (index);
 
@@ -181,12 +187,14 @@ private:
     }
   }
 
-  enum { MAX_OBJECTS = 100000 };
+  enum { MAX_OBJECTS = 500000 };
   enum { MAX_SIZE = 128 };
+  enum { LOG_MAX_SIZE = 7 };
   enum { MAX_FULL_FRACTION = 2 }; // 1/F = max fullness.
 
-  RandomNumberGenerator rng, rng2;
+  MWC rng;
   unsigned int objectsAllocated;
+  unsigned long memoryAllocated;
 
   bool isAllocated[MAX_OBJECTS];
   char * objectMap[MAX_OBJECTS];
@@ -197,8 +205,8 @@ private:
 void * worker (void * v)
 {
   long n = (long) v;
-  AllocationDriver a (n);
-  a.run (); // never exits
+  AllocationDriver * a = new AllocationDriver (n);
+  a->run ();
   return NULL;
 }
 
