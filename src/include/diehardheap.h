@@ -25,12 +25,12 @@
 
 #include "diefast.h"
 #include "staticforloop.h"
+#include "halflog2.h"
 #include "log2.h"
 #include "platformspecific.h"
 #include "realrandomvalue.h"
 #include "randomheap.h"
 #include "randomminiheap.h"
-#include "staticlog.h"
 
 // for DieHarder
 #include "dieharder-pagetable.h"
@@ -168,32 +168,6 @@ private:
 
 #if USE_HALF_LOG
 
-  template <size_t v>
-  class StaticLog2Ceiling {
-  public:
-    enum { VALUE = StaticIf<((1 << StaticLog<v>::VALUE) < v),
-				   StaticLog<v>::VALUE + 1,
-				   StaticLog<v>::VALUE>::VALUE };
-  };
-
-  template <size_t v>
-  class StaticHalfLog2 {
-  private:
-    enum { A = StaticLog2Ceiling<v>::VALUE };
-    enum { B = StaticLog2Ceiling<v - (1 << (A-1))>::VALUE };
-  public:
-    enum { VALUE = 2 * A + (B + 1 == A) - 1 };
-  };
-  
-  
-  template <int v>
-  class StaticHalfPow2 {
-  private:
-    enum { SZ1 = 1 << (v/2) };
-    enum { SZ2 = (v & 1) * (SZ1 / 2) };
-  public:
-    enum { VALUE = SZ1 + SZ2 };
-  };
   
   /// The number of size classes managed by this heap.
   enum { MAX_INDEX =
@@ -210,16 +184,6 @@ private:
 
 private:
 
-  static int halflog2 (size_t v) {
-    int a = log2(v);
-    int b = log2(v - (1 << (a-1)));
-    return 2 * a + (b + 1 == a) - 1;
-  }
-  
-  static size_t halfpow2 (int v) {
-    size_t sz1 = 1 << (v/2);
-    return sz1 + ((v & 1) * (sz1 / 2));
-  }
 
   /// @return the maximum object size for the given index.
   static inline size_t getClassSize (int index) {
