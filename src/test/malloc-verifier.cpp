@@ -12,6 +12,7 @@
 
 #include <stdlib.h> // abort
 #include <limits.h>
+#include <malloc.h>
 
 #include <iostream>
 using namespace std;
@@ -41,15 +42,16 @@ public:
     for (int i = 0; i < MAX_OBJECTS; i++) {
       mallocOne();
     }
-    checkValidity();
 
     // Now run the iterations.
 
     for (unsigned long i = 0; i < iterations; i++) {
 
+      checkValidity();
+
       if (i % 1000 == 0) {
 	cout << "iteration " << i << ": objects = " << objectsAllocated << ", memory = " << memoryAllocated << endl;
-	checkValidity();
+	//	checkValidity();
       }
       unsigned long r = rng.next();
 
@@ -124,7 +126,9 @@ private:
 #endif
 
 	objectMap[index]   = new char[sz];
-	objectSize[index]  = sz;
+	objectSize[index]  = malloc_usable_size(objectMap[index]);
+	if (objectSize[index] < sz)
+	  abort();
 
 	objectsAllocated++;
 	memoryAllocated += objectSize[index];
