@@ -115,11 +115,13 @@ private:
 
 	isAllocated[index] = true;
 
-	// FIX ME: we are now rounding to a power of two.
-	//	size_t sz = rng.next() % MAX_SIZE;
-
+#if 1
+	size_t sz = rng.next() % MAX_SIZE;
+#else
+	// Round to a power of two.
 	size_t sz = rng.next() % LOG_MAX_SIZE;
 	sz = 1 << sz;
+#endif
 
 	objectMap[index]   = new char[sz];
 	objectSize[index]  = sz;
