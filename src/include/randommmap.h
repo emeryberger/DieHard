@@ -44,44 +44,37 @@ public:
     unsigned long npages = (sz + CPUInfo::PageSize - 1) / CPUInfo::PageSize;
 
     // Randomly probe until we find a run of free pages.
-    unsigned long index;
-    bool foundRun = false;
 
-    while (!foundRun) {
-      index = _rng.next() & (PAGES - 1);
-
-      // Make sure the chosen index is not too far to the end (so it
-      // would overrun the bitmap).
-
-      if (index + npages - 1 < PAGES) {
-
-	// Go through each page and try to set the bit for each one.
-	
-	unsigned int i;
-	for (i = 0; i < npages; i++) {
-	  if (!_bitmap.tryToSet(index + i)) {
-	    // If I tried to set this bit but it was already set,
-	    // we did not find a run of enough free bits.
-	    // Reset all the bits up to i.
-	    for (unsigned long j = 0; j < i; j++) {
-	      _bitmap.reset (index + j);
-	    }
-	    break;
-	  }
+  SEARCH_FOR_RUN_OF_FREE_PAGES:
+    
+    // Pick a random index that is not too close to the end
+    // (otherwise, it would overrun the bitmap).
+    unsigned long index = _rng.next() % (PAGES - npages + 1);
+    assert (index + npages - 1 < PAGES);
+    
+    // Go through each page and try to set the bit for each one.
+    
+    for (unsigned int i = 0; i < npages; i++) {
+      if (!_bitmap.tryToSet(index + i)) {
+	// If we tried to set this bit but it was already set,
+	// we did not find a run of enough free bits.
+	// Reset all the bits up to i and we'll try again.
+	for (unsigned long j = 0; j < i; j++) {
+	  _bitmap.reset (index + j);
 	}
-
-	// If we set every bit, we are done.
-	if (i == npages)
-	  foundRun = true;
+	goto SEARCH_FOR_RUN_OF_FREE_PAGES;
       }
     }
-
+      
+    // We successfully set npages' worth of bits.
+      
+    // Compute the location of the memory to be returned.
     void * addr = (void *) ((char *) _pages + index * CPUInfo::PageSize);
-
+    
     // Unprotect all the pages.
     MmapWrapper::unprotect (addr, npages * CPUInfo::PageSize);
-
-    // Return it.
+    
+    // Return the memory.
     return addr;
   }
   
