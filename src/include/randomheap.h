@@ -18,19 +18,15 @@
 using namespace std;
 
 #include "heaplayers.h"
+// #include "sassert.h"
 
 using namespace HL;
-
-#if 0
-#include "bumpalloc.h"
-#endif
 
 #include "check.h"
 #include "checkpoweroftwo.h"
 #include "log2.h"
 #include "mmapalloc.h"
 #include "randomnumbergenerator.h"
-// #include "sassert.h"
 #include "staticlog.h"
 
 template <int Numerator, int Denominator>
@@ -136,6 +132,20 @@ public:
     while (ptr == NULL) {
       ptr = getObject(sz);
     }
+
+    // Check to see if the object is all zeros. If not, we had an overflow.
+    // NB: Currently disabled as it is fairly expensive.
+#if 0
+    if (DieHarderOn)
+    {
+      for (unsigned int i = 0; i < ObjectSize / sizeof(long); i += sizeof(long)) {
+	if (((long *) ptr)[i] != 0) {
+	  fprintf (stderr, "DieHarder: Buffer overflow encountered.\n");
+	  abort();
+	}
+      }
+    }
+#endif
 
     // Bump up the amount of space in use and return.
     _inUse++;
