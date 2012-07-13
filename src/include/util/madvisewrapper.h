@@ -59,6 +59,12 @@ public:
     }
   }
 
+  static void huge (void * ptr, size_t sz) {
+#if defined(linux) && defined(MADV_HUGEPAGE)
+    madvise (ptr, sz, MADV_HUGEPAGE);
+#endif
+  }
+
 
 };
 
