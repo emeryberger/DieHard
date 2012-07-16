@@ -3,8 +3,11 @@
 #ifndef DH_HALFLOG2_H
 #define DH_HALFLOG2_H
 
+#include <stddef.h>
+
 #include "staticif.h"
 #include "staticlog.h"
+#include "log2.h"
 
 /*
   Static and dynamic functions to handle "half-log" size classes;
