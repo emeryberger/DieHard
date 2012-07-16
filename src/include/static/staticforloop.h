@@ -1,7 +1,7 @@
 // -*- C++ -*- 
 
-#ifndef _STATICFORLOOP_H_
-#define _STATICFORLOOP_H_
+#ifndef DH_STATICFORLOOP_H
+#define DH_STATICFORLOOP_H
 
 template <int From, int Iterations, template <int> class C, typename V>
 class StaticForLoop;
