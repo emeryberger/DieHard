@@ -3,83 +3,63 @@
 #ifndef DH_SHUFFLEHEAP_H
 #define DH_SHUFFLEHEAP_H
 
+#include <algorithm>
 #include <stdlib.h>
 
 #include "array.h"
+#include "modulo.h"
 #include "randomnumbergenerator.h"
 
-/*
-
-To initialize an array a to a randomly shuffled copy of source whose length is not known:
-  a[0] ← source.next
-  size = 1
-  while source.moreDataAvailable
-      j ← random integer with 0 ≤ j ≤ size
-      a[size] ← a[j]
-      a[j] ← source.next
-      size += 1
-
- */
-
-
-template <int NObjects, size_t Size, class SuperHeap>
+template <int NObjects,
+	  size_t Size,
+	  class SuperHeap>
 class ShuffleHeap : public SuperHeap {
 public:
 
   ShuffleHeap()
-    : _length (0)
-  {}
-  
-  void * malloc (size_t sz) {
-    assert (Size >= sz);
-    if (_length == 0) {
-      // Empty: try to refill.
-      if (!refill()) {
-	return NULL;
-      }
+  {
+    // Fill up the buffer from the superheap.
+    for (int i = 0; i < NObjects; i++) {
+      _buffer(i) = SuperHeap::malloc (Size);
     }
-    _length--;
-    void * ptr = _item(_length);
+    // Now shuffle it (Fisher-Yates).
+    for (int i = NObjects - 1; i >= 1; i--) {
+      // Pick a random integer, 0 ≤ j ≤ i, and swap with item i.
+      int j = _rng.next() % (i+1);
+      swap (_buffer(i), _buffer(j));
+    }
+  }
+
+
+  inline void * malloc (size_t sz) {
+    assert (sz <= Size);
+    // Get an item from the superheap and swap it with a
+    // randomly-chosen object from the array. This is one step of an
+    // in-place Fisher-Yates shuffle.
+    void * ptr = SuperHeap::malloc (Size);
+    int j = modulo<NObjects>(_rng.next());
+    swap (_buffer(j), ptr);
     return ptr;
   }
 
-  void free (void * ptr) {
-    if (_length == NObjects) {
-      // Full: free to the super heap.
-      SuperHeap::free (ptr);
-      return;
-    }
-    randomPlace (ptr);
+
+  inline void free (void * ptr) {
+    // Choose a random item and evict it to the superheap,
+    // replacing it with the one we are now freeing.
+    int j = modulo<NObjects>(_rng.next());
+    swap (_buffer(j), ptr);
+    SuperHeap::free (ptr);
   }
 
-  
+ 
 private:
 
-  void randomPlace (void * ptr) {
-    assert (_length < NObjects);
-    // Put the item into a random location in the array,
-    // swapping that item with the end of the array.
-    // This is one step of an in-place Fisher-Yates shuffle.
-    int j = _rng.next() % (_length + 1);
-    _item(_length) = _item(j);
-    _item(j)       = ptr;
-    _length++;
-  }
-
-  bool refill() {
-    for (int i = 0; i < NObjects; i++) {
-      void * ptr = SuperHeap::malloc (Size);
-      if (!ptr) {
-	return false;
-      }
-      free (ptr);
-    }
-    return true;
-  }
-
+  /// The random number generator, used for shuffling and random selection.
   RandomNumberGenerator 	_rng;
-  int 				_length;
-  Array<NObjects, void *> 	_item;
+
+  /// The buffer used to hold shuffled objects for heap requests.
+  Array<NObjects, void *> 	_buffer;
+
 };
 
 
