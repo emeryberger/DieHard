@@ -50,15 +50,43 @@ class TheLargeHeap : public OneHeap<LargeHeap<MmapWrapper> > {};
 
 #include "../test/brokenheap.h"
 
+
+// Temporarily testing spin locks.
+
+class PosixSpinLockType {
+public:
+
+  PosixSpinLockType()
+  {
+    pthread_spin_init (&_lock, 0);
+  }
+
+  ~PosixSpinLockType() {
+    pthread_spin_destroy (&_lock);
+  }
+
+  void lock() {
+    pthread_spin_lock (&_lock);
+  }
+
+  void unlock() {
+    pthread_spin_unlock (&_lock);
+  }
+
+
+private:
+  pthread_spinlock_t _lock;
+};
+
+
+
 typedef
-//BrokenHeap<
  ANSIWrapper<
-  LockedHeap<PosixLockType,
-	     CombineHeap<DieHardHeap<Numerator, Denominator, 65536,
+  LockedHeap<PosixSpinLockType, // PosixLockType,
+	     CombineHeap<DieHardHeap<Numerator, Denominator, 4096,
 				     (DIEHARD_DIEFAST == 1),
 				     (DIEHARD_DIEHARDER == 1)>,
 			 TheLargeHeap> > >
-//  >
 TheDieHardHeap;
 
 class TheCustomHeapType : public TheDieHardHeap {};
