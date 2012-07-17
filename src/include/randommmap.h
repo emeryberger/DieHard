@@ -31,6 +31,8 @@ public:
     }
     // Tell the OS that it's going to be randomly accessed.
     MadviseWrapper::random (_pages, bytes);
+    // And, if possible, that these pages should be mapped as superpages.
+    MadviseWrapper::huge (_pages, bytes);
     // Protect all the pages.
     MmapWrapper::protect (_pages, bytes);
     // Initialize the bitmap.
