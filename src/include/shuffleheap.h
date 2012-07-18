@@ -10,33 +10,41 @@
 #include "modulo.h"
 #include "randomnumbergenerator.h"
 
+#define FIXED_SIZE 0
+
 template <int NObjects,
+
+#if FIXED_SIZE
 	  size_t Size,
+#endif
+
 	  class SuperHeap>
 class ShuffleHeap : public SuperHeap {
 public:
 
   ShuffleHeap()
+    : _initialized (false)
   {
-    // Fill up the buffer from the superheap.
-    for (int i = 0; i < NObjects; i++) {
-      _buffer(i) = SuperHeap::malloc (Size);
-    }
-    // Now shuffle it (Fisher-Yates).
-    for (int i = NObjects - 1; i >= 1; i--) {
-      // Pick a random integer, 0 ≤ j ≤ i, and swap with item i.
-      int j = _rng.next() % (i+1);
-      swap (_buffer(i), _buffer(j));
-    }
+#if FIXED_SIZE
+    fill (Size);
+#endif
   }
 
 
   inline void * malloc (size_t sz) {
+#if FIXED_SIZE
     assert (sz <= Size);
+    const size_t reqSize = Size;
+#else
+    const size_t reqSize = sz;
+    if (!_initialized) {
+      fill (sz);
+    }
+#endif
     // Get an item from the superheap and swap it with a
     // randomly-chosen object from the array. This is one step of an
     // in-place Fisher-Yates shuffle.
-    void * ptr = SuperHeap::malloc (Size);
+    void * ptr = SuperHeap::malloc (reqSize);
     int j = modulo<NObjects>(_rng.next());
     swap (_buffer(j), ptr);
     return ptr;
@@ -53,6 +61,22 @@ public:
 
  
 private:
+
+  void fill (size_t sz) {
+    // Fill up the buffer from the superheap.
+    for (int i = 0; i < NObjects; i++) {
+      _buffer(i) = SuperHeap::malloc (sz);
+    }
+    // Now shuffle it (Fisher-Yates).
+    for (int i = NObjects - 1; i >= 1; i--) {
+      // Pick a random integer, 0 ≤ j ≤ i, and swap with item i.
+      int j = _rng.next() % (i+1);
+      swap (_buffer(i), _buffer(j));
+    }
+    _initialized = true;
+  }
+
+  bool _initialized;
 
   /// The random number generator, used for shuffling and random selection.
   RandomNumberGenerator 	_rng;
