@@ -36,9 +36,15 @@ public:
     assert (sz <= Size);
     const size_t reqSize = Size;
 #else
-    const size_t reqSize = sz;
+    static size_t reqSize = 0;
+    if (reqSize == 0) {
+      void * ptr = SuperHeap::malloc(sz);
+      size_t s   = SuperHeap::getSize(ptr);
+      SuperHeap::free (ptr);
+      reqSize = s;
+    }
     if (!_initialized) {
-      fill (sz);
+      fill (reqSize);
     }
 #endif
     // Get an item from the superheap and swap it with a
