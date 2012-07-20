@@ -23,7 +23,8 @@ class ShuffleHeap : public SuperHeap {
 public:
 
   ShuffleHeap()
-    : _initialized (false)
+    : _reqSize (0),
+      _initialized (false)
   {
 #if FIXED_SIZE
     fill (Size);
@@ -34,23 +35,24 @@ public:
   inline void * malloc (size_t sz) {
 #if FIXED_SIZE
     assert (sz <= Size);
-    const size_t reqSize = Size;
+    reqSize = Size;
 #else
-    static size_t reqSize = 0;
-    if (reqSize == 0) {
+    if (_reqSize == 0) {
       void * ptr = SuperHeap::malloc(sz);
       size_t s   = SuperHeap::getSize(ptr);
       SuperHeap::free (ptr);
-      reqSize = s;
+      _reqSize = s;
+      assert (sz <= s);
     }
     if (!_initialized) {
-      fill (reqSize);
+      fill (_reqSize);
     }
 #endif
+    assert (sz <= _reqSize);
     // Get an item from the superheap and swap it with a
     // randomly-chosen object from the array. This is one step of an
     // in-place Fisher-Yates shuffle.
-    void * ptr = SuperHeap::malloc (reqSize);
+    void * ptr = SuperHeap::malloc (_reqSize);
     int j = modulo<NObjects>(_rng.next());
     swap (_buffer(j), ptr);
     return ptr;
@@ -81,6 +83,8 @@ private:
     }
     _initialized = true;
   }
+
+  size_t _reqSize;
 
   bool _initialized;
 
