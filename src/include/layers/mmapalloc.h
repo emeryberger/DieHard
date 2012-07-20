@@ -7,8 +7,6 @@
 
 #include "heaplayers.h"
 
-// #include "mmapwrapper.h"
-
 /**
  * @class MmapAlloc
  * @brief Obtains memory from Mmap but doesn't allow it to be freed.
@@ -17,6 +15,9 @@
 
 class MmapAlloc {
 public:
+
+  enum { Alignment = HL::MmapWrapper::Alignment };
+
   virtual ~MmapAlloc (void) {}
 
   void * malloc (size_t sz) {
