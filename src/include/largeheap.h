@@ -48,6 +48,8 @@ private:
   template <class TheMapper>
   class MapAlloc {
   public:
+    enum { Alignment = TheMapper::Alignment };
+
     void * malloc (size_t sz) {
       void * ptr = TheMapper::map (sz);
       return ptr;
