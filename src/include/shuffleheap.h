@@ -43,8 +43,6 @@ public:
       SuperHeap::free (ptr);
       _reqSize = s;
       assert (sz <= s);
-    }
-    if (!_initialized) {
       fill (_reqSize);
     }
 #endif
