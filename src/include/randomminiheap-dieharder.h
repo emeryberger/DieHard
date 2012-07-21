@@ -40,13 +40,11 @@ public:
 
   RandomMiniHeapDieHarderBase()
   {
-    CheckPowerOfTwo<ObjectsPerPage> invariant3;
     // Object size must be a multiple of page size (if bigger than a
     // page).
     sassert<((ObjectSize <= CPUInfo::PageSize)
 	     || CPUInfo::PageSize * (ObjectSize / CPUInfo::PageSize) == ObjectSize)>
     invariant4;
-    invariant3 = invariant3;
     invariant4 = invariant4;
   }
 
