@@ -40,12 +40,17 @@ public:
 
   RandomMiniHeapDieHarderBase()
   {
+    // Must have a power of two objects in a page.
+    CheckPowerOfTwo<ObjectsPerPage> powerOfTwoObjectsPerPage;
+    powerOfTwoObjectsPerPage = powerOfTwoObjectsPerPage;
+
     // Object size must be a multiple of page size (if bigger than a
     // page).
     sassert<((ObjectSize <= CPUInfo::PageSize)
 	     || CPUInfo::PageSize * (ObjectSize / CPUInfo::PageSize) == ObjectSize)>
-    invariant4;
-    invariant4 = invariant4;
+      objectSizeMultipleOfPageSize;
+    objectSizeMultipleOfPageSize = objectSizeMultipleOfPageSize;
+
   }
 
   typedef RandomMiniHeapCore<Numerator, Denominator, ObjectSize, NObjects, Allocator, DieFastOn, true> SuperHeap;
