@@ -53,18 +53,17 @@ public:
   enum { Alignment = 16 };
 };
 
+
 #if 0 // USE HEAP LAYERS HEAP
 
 class Shuffler :
   public ANSIWrapper<
   LockedHeap<PosixLockType,
 	     KingsleyHeap<
-	       //	       ShuffleHeap<2,
-	       SizeHeap<FreelistHeap<MemSource>
-			     //			     >
+	       ShuffleHeap<2,
+			   SizeHeap<FreelistHeap<MemSource> >
 			   >,
 	       SizeHeap<MemSource> // mapHeap>
-	       
 	       > > > {};
 
 
@@ -80,7 +79,10 @@ class Shuffler :
 
 #endif
 
-class TheCustomHeapType : public LockedHeap<PosixLockType, TLSFHeap> {}; // Shuffler {};
+// Straight-up TLSF
+//class TheCustomHeapType : public LockedHeap<PosixLockType, TLSFHeap> {};
+
+class TheCustomHeapType : public Shuffler {};
 
 inline static TheCustomHeapType * getCustomHeap (void) {
   static char buf[sizeof(TheCustomHeapType)];
