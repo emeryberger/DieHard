@@ -12,41 +12,10 @@ to compile:
 #include <iostream>
 using namespace std;
 
+#include <heaplayers>
+
 #include "shuffleheap.h"
-#include "heaplayers.h"
-
-extern "C" {
-  void * tlsf_malloc (size_t);
-  void   tlsf_free (void *);
-  void * tlsf_memalign (size_t, size_t);
-  size_t tlsf_get_object_size (void *);
-  void   tlsf_activate();
-}
-
-class TLSFHeap {
-public:
-
-  TLSFHeap() {
-    tlsf_activate();
-  }
-
-  enum { Alignment = 16 }; // I assume.
-
-  void * malloc (size_t sz) {
-    return tlsf_malloc (sz);
-  }
-  void free (void * ptr) {
-    tlsf_free (ptr);
-  }
-  size_t getSize (void * ptr) {
-    return tlsf_get_object_size (ptr);
-  }
-  void * memalign (size_t alignment, size_t sz) {
-    return tlsf_memalign (alignment, sz);
-  }
-
-};
-
+#include "tlsfheap.h"
 
 class MemSource : public OneHeap<BumpAlloc<65536, MmapHeap, 16> > {
 public:
@@ -56,6 +25,7 @@ public:
 
 #if 0 // USE HEAP LAYERS HEAP
 
+// Shuffled freelist heap.
 class Shuffler :
   public ANSIWrapper<
   LockedHeap<PosixLockType,
@@ -67,22 +37,91 @@ class Shuffler :
 	       > > > {};
 
 
-#else // USE TLSF
+#endif
 
+#if 0
+
+// Shuffled TLSF heap
 class Shuffler :
   public ANSIWrapper<
   LockedHeap<PosixLockType,
 	     KingsleyHeap<
-	       ShuffleHeap<16, TLSFHeap>,
+	       ShuffleHeap<256, TLSFHeap>,
 	       // TLSFHeap,
 	       TLSFHeap > > > {};
 
 #endif
 
+#if 1
 // Straight-up TLSF
-//class TheCustomHeapType : public LockedHeap<PosixLockType, TLSFHeap> {};
+class Shuffler : public LockedHeap<PosixLockType, TLSFHeap> {};
+#endif
 
-class TheCustomHeapType : public Shuffler {};
+#include <unistd.h>
+#include <stdio.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+
+using namespace std;
+
+char *itob(unsigned long x)
+{
+  static char buff[sizeof(unsigned long) * 8 + 2];
+  int i;
+  unsigned long j = sizeof(unsigned long) * 8 - 1;
+  
+  // NUL terminator.
+  buff[sizeof(unsigned long) * 8] = 0;
+
+  for(i=0;i<sizeof(unsigned long) * 8; i++)
+    {
+      if (x & 1) {
+	buff[j] = '1';
+      } else {
+	buff[j] = '0';
+      }
+      x >>= 1;
+      j--;
+    }
+  return buff;
+}
+
+class TheCustomHeapType : public Shuffler {
+public:
+  TheCustomHeapType() {
+    char buf[255];
+    sprintf (buf, "output-%d", getpid());
+    fd = open (buf, O_CREAT | O_RDWR | O_APPEND, S_IRWXU);
+  }
+  void * malloc (size_t sz) {
+    static int allocs = 0;
+    ++allocs;
+
+    void * ptr = Shuffler::malloc (sz);
+
+    unsigned long val = ((size_t) ptr >> LO_INSIG_BITS);
+
+    char * b = itob(val);
+    char buf[255];
+    sprintf (buf, "%s\n", b);
+    char * p = (char *) &buf[(sizeof(unsigned long) * 8) - HI_SIG_BITS];
+    write (fd, p, strlen(p));
+
+    if (allocs == 1000) {
+      sync();
+      allocs = 0;
+    }
+    return ptr;
+  }
+private:    
+  // 64-byte blocks. (2^6 = 64)
+  enum { LO_INSIG_BITS = 6 }; 
+
+  // 4096 sets. (2^12 = 4096)
+  enum { HI_SIG_BITS = 12 };
+  int fd;
+};
 
 inline static TheCustomHeapType * getCustomHeap (void) {
   static char buf[sizeof(TheCustomHeapType)];
