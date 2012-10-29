@@ -1,0 +1,27 @@
+/*
+ *	Tim Rice	tim@trr.metro.net	Mon Jun  3 16:57:26 PDT 1996
+ *
+ *	a quick and dirty trancate()
+ *	Altos System V (5.3.1) does not have one
+ *	neither does SCO Open Server Enterprise 3.0
+ *
+ */
+
+truncate(fn, size)
+char    *fn ;
+long size ;
+{
+	int    fdes;
+	int    rc = -1 ;
+
+	if((fdes = open(fn, O_RDWR)) != -1)
+	{
+		rc = chsize(fdes, size) ;
+
+		if(close(fdes))
+			return(-1) ;
+	}
+	return(rc) ;
+}
+
+

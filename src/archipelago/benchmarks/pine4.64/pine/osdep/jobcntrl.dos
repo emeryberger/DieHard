@@ -1,0 +1,20 @@
+/*----------------------------------------------------------------------
+     This routine returns 1 if job control is available.  Note, thiis
+     could be some type of fake job control.  It doesn't have to be
+     real BSD-style job control.
+  ----*/
+have_job_control()
+{
+    return 1;
+}
+
+
+/*----------------------------------------------------------------------
+    This isn't even called in DOS.
+  ----*/
+void
+stop_process()
+{
+}
+
+

@@ -1,0 +1,391 @@
+.TH pine 1 "Version 4.64"
+.SH NAME
+pine \- a Program for Internet News and Email
+.SH SYNTAX 
+
+.B pine
+[
+.I options
+] [
+.I address
+,
+.I address
+] 
+
+.B pinef
+[
+.I options
+] [
+.I address
+,
+.I address
+]
+.SH DESCRIPTION
+
+Pine is a screen-oriented message-handling tool.  In its default 
+configuration, Pine offers an intentionally limited set of 
+functions geared toward the novice user, but it also has a growing 
+list of optional "power-user" and personal-preference features.
+.I pinef 
+is a variant of Pine that uses function keys rather than mnemonic 
+single-letter commands.
+Pine's basic feature set includes:
+.IP
+View, Save, Export, Delete, Print, Reply and Forward messages.
+.IP
+Compose messages in a simple editor (Pico) with word-wrap and a spelling
+checker.  Messages may be postponed for later completion.
+.IP
+Full-screen selection and management of message folders.
+.IP
+Address book to keep a list of long or frequently-used addresses.
+Personal distribution lists may be defined.
+Addresses may be taken into the address book from
+incoming mail without retyping them. 
+.IP
+New mail checking and notification occurs automatically every 2.5 minutes
+and after certain commands, e.g. refresh-screen (Ctrl-L).
+.IP
+On-line, context-sensitive help screens.
+.PP
+Pine supports MIME (Multipurpose Internet Mail Extensions), an Internet
+Standard for representing multipart and multimedia data in email.
+Pine allows you to save MIME objects to files, and in some 
+cases, can also initiate the correct program for viewing the object.
+It uses the system's
+.I mailcap 
+configuration file to determine what program can process a particular MIME
+object type. 
+Pine's message composer does not have integral multimedia capability, but
+any type of data file --including multimedia-- can be attached to a text
+message and sent using MIME's encoding rules.  This allows any group of
+individuals with MIME-capable mail software (e.g. Pine, PC-Pine, or many
+other programs) to exchange formatted documents, spread-sheets, image
+files, etc, via Internet email. 
+.PP
+Pine uses the 
+.I c-client
+messaging API to access local and remote mail folders. This
+library provides a variety of low-level message-handling functions, 
+including drivers
+for a variety of different mail file formats, as well as routines
+to access remote mail and news servers, using IMAP (Internet Message
+Access Protocol) and NNTP (Network News Transport Protocol).  Outgoing mail
+is usually handed-off to the Unix
+.IR sendmail ,
+program but it can optionally be posted directly via SMTP 
+(Simple Mail Transfer Protocol).
+.SH OPTIONS
+.if n .ta 2.8i
+.if t .ta 2.1i
+
+The command line options/arguments are:
+.IP \fIaddress\fR 20
+Send mail to 
+.I address.
+This will cause Pine to go directly into the message composer.
+.IP \fB-attach\ \fIfile\fR 20
+Send mail with the listed
+.I file
+as an attachment.
+.IP \fB-attachlist\ \fIfile-list\fR 20
+Send mail with the listed
+.I file-list
+as an attachments.
+.IP \fB-attach_and_delete\ \fIfile\fR 20
+Send mail with the listed
+.I file
+as an attachment, and remove the file
+after the message is sent.
+.IP \fB-aux\ \fIlocal_directory\fR 20
+PC-Pine only. When using a remote configuration (-p <remote_config>) this tells
+PC-Pine the local directory to use for storing auxiliary files, like debug
+files, address books, and signature files.
+.IP \fB-bail\fR 20
+Exit if the pinerc file does not exist. This might be useful if the config
+file is accessed using some remote filesystem protocol. If the remote mount
+is missing this will cause Pine to quit instead of creating a new pinerc.
+.IP \fB-c\ \fIcontext-number\fR 20
+context-number is the number corresponding to the 
+folder-collection to which the
+.I -f
+command line argument should be applied.  By default the
+.I -f
+argument is applied to the first defined folder-collection.
+.IP \fB-conf\fR 20
+Produce a sample/fresh copy of the 
+system-wide configuration file,
+.I pine.conf,
+on the standard output. This is distinct from the per-user
+.I .pinerc
+file.
+.IP \fB-convert_sigs\ \fI-p\ pinerc\fR 20
+Convert signature files into literal signatures.
+.IP \fB-copy_abook\ <\fIlocal_abook\fR>\ <\fIremote_abook\fR> 20
+Copy the local address book file to a remote address book folder.
+.IP \fB-copy_pinerc\ <\fIlocal_pinerc\fR>\ <\fIremote_pinerc\fR> 20
+Copy the local pinerc file to a remote pinerc folder.
+.IP \fB-create_lu\ \fIaddrbook\ \fIsort-order\fR 20
+Creates auxiliary index (look-up) file for 
+.I addrbook
+and sorts 
+.I addrbook
+in
+.IR sort-order ,
+which may be
+.IR dont-sort ,
+.IR nickname ,
+.IR fullname ,
+.IR nickname-with-lists-last ,
+or
+.IR fullname-with-lists-last .
+Useful when creating global or shared address books.
+After creating the index file in this way, the file should be moved or
+copied in a way which preserves the mtime of the address book file.
+The mtime of the address book file at the time the index file was built is
+stored inside the index file and a comparison between that stored value and
+the current mtime of the address book file is done when somebody runs pine.
+If the mtime has changed since the index file was made, then pine will
+want to rebuild the index file.
+In other words, don't build the index file with this option and then copy
+the address book to its final destination in a way which changes the
+file's mtime.
+.IP \fB-d\ \fIdebug-level\fR 20
+Output diagnostic info at
+.I debug-level
+(0-9) to the current
+.I .pine-debug[1-4]
+file.  A value of 0 turns debugging off and suppresses the
+.I .pine-debug
+file.
+.IP \fB-d\ \fIkey[=val]\fR 20
+Fine tuned output of diagnostic messages where "flush" causes
+debug file writing without buffering, "timestamp" appends
+each message with a timestamp, "imap=n" where n is between
+0 and 4 representing none to verbose IMAP telemetry reporting,
+"numfiles=n" where n is between 0 and 31 corresponding to the
+number of debug files to maintain, and "verbose=n" where n is
+between 0 and 9 indicating an inverse threshold for message
+output.
+.IP \fB-f\ \fIfolder\fR 20
+Open 
+.I folder 
+(in first defined folder collection, use 
+.I -c n
+to specify another collection) instead of INBOX.
+.IP \fB-F\ \fIfile\fR 20
+Open named text file and view with Pine's browser.
+.IP \fB-h\fR 20
+Help: list valid command-line options.
+.IP \fB-i\fR 20
+Start up in the FOLDER INDEX screen.
+.IP \fB-I\ \fIkeystrokes\fR 20
+Initial (comma separated list of) keystrokes which Pine should execute
+on startup.
+.IP \fB-install\fR 20
+For PC-Pine only, this option causes PC-Pine to prompt for some basic
+setup information, then exits.
+.IP \fB-k\fR 20
+Use function keys for commands. This is the same as running the command
+.IR pinef .
+.IP \fB-n\ \fInumber\fR 20
+Start up with current message-number set to 
+.I number.
+.IP \fB-o\fR 20
+Open first folder read-only.
+.IP \fB-p\ \fIconfig-file\fR 20
+Use 
+.I config-file
+as the personal configuration file instead of the default 
+.IR .pinerc .
+.IP \fB-P\ \fIconfig-file\fR 20
+Use 
+.I config-file
+as the configuration file instead of default
+system-wide configuration file 
+.IR pine.conf .
+.IP \fB-pinerc\ \fIfile\fR 20
+Output fresh pinerc configuration to 
+.I file, preserving the settings of variables that the user has made.
+Use \fIfile\fR set to ``-'' to make output go to standard out.
+<IP> \fB-registry\ \fIcmd\fR 20
+For PC-Pine only, this option affects the values of 
+Pine's registry entries.
+Possible values for \fIcmd\fR are set, clear, and dump.
+\fISet\fR will always reset Pine's registry 
+entries according to its current settings.
+\fIClear\fR will clear the registry values.
+\fIClearsilent\fR will silently clear the registry values.
+\fIDump\fR will display the values of current registry settings.
+Note that the dump command is currently disabled.
+Without the -registry option, PC-Pine will write values into
+the registry only if there currently aren't any values set.
+.IP \fB-r\fR 20
+Use restricted/demo mode.
+.I Pine
+will only send mail to itself
+and functions like save and export are restricted.
+.IP \fB-sort\ \fIorder\fR
+Sort the FOLDER INDEX display in one of the following orders: 
+.I arrival, date, subject, orderedsubj, thread, from, size, score, to, cc,
+or
+.I reverse. Arrival 
+order is the default. 
+The OrderedSubj choice simulates a threaded sort.
+Any sort may be reversed by adding 
+.I /reverse
+to it.
+.I Reverse
+by itself is the same as
+.IR arrival/reverse .
+.IP \fB-supported\fR 20
+Some options may or may not be supported depending on how Pine
+was compiled.
+This is a way to determine which options are supported in the particular
+copy of Pine you are using.
+.IP \fB-url\ \fIurl\fR 20
+Open the given
+.I url.
+Cannot be used with 
+.I -f
+or
+.I -F
+options.
+.IP \fB-v\fR 20
+Version: Print version information.
+.IP \fB-version\fR 20
+Version: Print version information.
+.IP \fB-x\ \fIconfig\fR 20
+Use configuration exceptions in
+.I config.
+Exceptions are used to override your default pinerc
+settings for a particular platform, can be a local file or
+a remote folder.
+.IP \fB-z\fR 20
+Enable ^Z and SIGTSTP so pine may be suspended.
+.IP \fI-option\=\fIvalue\fR 20
+Assign 
+.I value
+to the config option 
+.I option
+e.g. -signature-file=sig1 or -feature-list=signature-at-bottom 
+(Note: feature-list values are additive) 
+.SH CONFIGURATION
+
+There are several levels of Pine configuration.  Configuration values at 
+a given level over-ride corresponding values at lower levels.  In order of 
+increasing precedence:
+
+ o built-in defaults.
+.br
+ o system-wide 
+.I pine.conf 
+file.
+.br
+ o personal 
+.I .pinerc 
+file (may be set via built-in Setup/Config menu.)
+.br
+ o command-line options.
+.br
+ o system-wide 
+.I pine.conf.fixed 
+file.
+
+There is one exception to the rule that configuration values are replaced
+by the value of the same option in a higher-precedence file: the
+feature-list variable has values that are additive, but can be negated by
+prepending "no-" in front of an individual feature name. Unix Pine also
+uses the following environment variables: 
+
+  TERM
+.br
+  DISPLAY     (determines if Pine can display IMAGE attachments.)
+.br
+  SHELL       (if not set, default is /bin/sh )
+.br
+  MAILCAPS    (semicolon delimited list of path names to mailcap files)
+.SH FILES
+.if n .ta 2.8i
+.if t .ta 2.1i
+
+/usr/spool/mail/xxxx	Default folder for incoming mail.
+.br
+~/mail	Default directory for mail folders.
+.br
+~/.addressbook	Default address book file.
+.br
+~/.addressbook.lu	Default address book index file.
+.br
+~/.pine-debug[1-4]	Diagnostic log for debugging.
+.br
+~/.pinerc	Personal pine config file.
+.br
+~/.newsrc	News subscription/state file.
+.br
+~/.signature	Default signature file.
+.br
+~/.mailcap	Personal mail capabilities file.
+.br
+~/.mime.types	Personal file extension to MIME type mapping
+.br
+/etc/mailcap	System-wide mail capabilities file.
+.br
+/etc/mime.types	System-wide file ext. to MIME type mapping
+.br
+/usr/local/lib/pine.info	Local pointer to system administrator.
+.br
+/usr/local/lib/pine.conf	System-wide configuration file.
+.br
+/usr/local/lib/pine.conf.fixed	 Non-overridable configuration file.
+.br
+/tmp/.\\usr\\spool\\mail\\xxxx	Per-folder mailbox lock files.
+.br
+~/.pine-interrupted-mail	Message which was interrupted.
+.br
+~/mail/postponed-msgs	For postponed messages.
+.br
+~/mail/sent-mail	Outgoing message archive (FCC).
+.br
+~/mail/saved-messages	Default destination for Saving messages.
+.SH "SEE ALSO"
+
+pico(1), binmail(1), aliases(5), mailaddr(7), sendmail(8), spell(1), imapd(8)
+
+.br
+Newsgroup:  comp.mail.pine
+.br
+Pine Information Center:  http://www.washington.edu/pine
+.br
+Source distribution:  ftp://ftp.cac.washington.edu/pine/pine.tar.Z
+.br
+Pine Technical Notes, included in the source distribution.
+.br
+C-Client messaging API library, included in the source distribution.
+.SH ACKNOWLEDGMENTS
+.na 
+.nf
+
+The University of Washington Pine development team (part of the UW Office 
+of Computing & Communications) includes:
+ 
+ Project Leader:           Mike Seibel
+ Principal authors:        Mike Seibel, Steve Hubert, Laurence Lundblade*
+ C-Client library & IMAPd: Mark Crispin
+ Pico, the PIne COmposer:  Mike Seibel
+ Documentation:            Many people!
+ PC-Pine for Windows:      Tom Unger, Mike Seibel
+ Project oversight:        Terry Gray, Lori Stevens
+ Principal Patrons:        Ron Johnson, Mike Bryant
+ Additional support:       NorthWestNet
+ Initial Pine code base:   Elm, by Dave Taylor & USENET Community Trust
+ Initial Pico code base:   MicroEmacs 3.6, by Dave G. Conroy
+ User Interface design:    Inspired by UCLA's "Ben" mailer for MVS
+ Suggestions/fixes/ports:  Folks from all over!
+
+   *Emeritus
+
+Copyright 1989-2005 by the University of Washington.
+Pine and Pico are trademarks of the University of Washington.
+
+$Date: 2005-09-15 14:01:32 -0700 (Thu, 15 Sep 2005) $

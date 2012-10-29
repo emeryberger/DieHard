@@ -1,0 +1,648 @@
+/*
+ *
+ * $Id: term.dos 7884 1998-02-28 00:15:44Z hubert $
+ *
+ * Program:	IBM PC specific routine
+ *
+ *
+ * Michael Seibel
+ * Networks and Distributed Computing
+ * Computing and Communications
+ * University of Washington
+ * Administration Builiding, AG-44
+ * Seattle, Washington, 98195, USA
+ * Internet: mikes@cac.washington.edu
+ *
+ * Please address all bugs and comments to "pine-bugs@cac.washington.edu"
+ *
+ *
+ * Pine and Pico are registered trademarks of the University of Washington.
+ * No commercial use of these trademarks may be made without prior written
+ * permission of the University of Washington.
+ * 
+ * Pine, Pico, and Pilot software and its included text are Copyright
+ * 1989-1998 by the University of Washington.
+ * 
+ * The full text of our legal notices is contained in the file called
+ * CPYRIGHT, included with this distribution.
+ *
+ */
+
+/*
+ * The routines in this file provide support for the IBM-PC and other
+ * compatible terminals. It goes directly to the graphics RAM to do
+ * screen output. It compiles into nothing if not an IBM-PC driver
+ */
+
+#include	<conio.h>
+#if     IBMPC
+#define	termdef	1			/* don't define "term" external */
+
+int  ibmmove PROTO((int, int));
+int  ibmeeol PROTO((void));
+int  ibmputc PROTO((int));
+int  ibmoutc PROTO((char));
+int  ibmeeop PROTO((void));
+int  ibmrev PROTO((int));
+void beep PROTO((unsigned int, unsigned int));
+int  cutebeep PROTO((void));
+int  ibmbeep PROTO((void));
+int  ibmopen PROTO((void));
+int  ibmclose PROTO((void));
+
+
+#define	MARGIN	8		/* size of minimim margin and	*/
+#define	SCRSIZ	64		/* scroll size for extended lines */
+#define	MROW	2		/* rows in menu                 */
+
+
+#define	 SET_COLOR(fore,back)	((((back) & 0xf) << 4) | ((fore) & 0xf))
+
+int	 nfcolor = 7;		/* current forground color */
+int	 nbcolor = 1;		/* current background color */
+int	 rfcolor = 0;		/* reverse forground color */
+int	 rbcolor = 3;		/* reverse background color */
+unsigned cattr;			/* current combined attribute */
+
+/*
+ * Standard terminal interface dispatch table. Most of the fields point into
+ * "termio" code.
+ */
+TERM    term    = {
+        NROW-1,
+        NCOL,
+	MARGIN,
+	SCRSIZ,
+	MROW,
+        ibmopen,
+	NULL,
+        ibmclose,
+        ttgetc,
+	ibmputc,
+        ttflush,
+        ibmmove,
+        ibmeeol,
+        ibmeeop,
+        ibmbeep,
+	ibmrev
+};
+
+
+#ifdef DOS
+extern union REGS rg;
+static unsigned display_mode;	/*  */
+#endif
+
+
+static char *colist[] = {
+	"black",
+	"blue",
+	"green",
+	"cyan",
+	"red",
+	"magenta",
+	"yellow",
+	"white",
+        "BLACK",
+        "BLUE",
+        "GREEN",
+        "CYAN",
+        "RED",
+        "MAGENTA",
+        "YELLOW",
+        "WHITE" };
+
+/*
+ * pico_setcolor - given the color name, return the color's value
+ */
+int
+setcolor(s)
+char *s;
+{
+    int i;
+
+    for (i=0; i<16; i++)
+      if (!strcmp(colist[i],s))
+	return(i);
+
+    return(7);
+}
+
+
+/*
+ * pico_XXcolor() - each function sets a particular attribute
+ */
+pico_nfcolor(s)
+char *s;
+{
+    nfcolor = setcolor(s);
+}
+
+pico_nbcolor(s)
+char *s;
+{
+    nbcolor = setcolor(s);
+}
+
+pico_rfcolor(s)
+char *s;
+{
+    rfcolor = setcolor(s);
+}
+
+pico_rbcolor(s)
+char *s;
+{
+    rbcolor = setcolor(s);
+}
+
+#ifdef OS2
+static VIOMODEINFO display_mode;
+static BYTE *oldscreen =NULL;
+static USHORT origRow, origCol;
+static USHORT origLen =0;
+#ifdef FASTVIO
+extern HMOU Mouse_Handle;
+extern int mouse_state;
+static int was_mouse_state=-1;
+static int _moved=0, _line=0, _col=0;
+static USHORT usVidbufLength =0;
+static USHORT usRows =0, usCols =0;
+static USHORT * pusVidBuffer =NULL;
+static USHORT fCell=(USHORT)-1,
+              lCell=(USHORT)-1;
+
+static HEV  hvUpdate =(HEV)0;
+static HMTX hxUpdate =(HMTX)0;
+static TID threadID;
+static NOPTRRECT noptr = { 0, 0, (USHORT)-1, (USHORT)-1 };
+
+static void update_thread(ULONG args)
+{
+  while (DosWaitEventSem(hvUpdate, -1)==0) {
+    DosResetEventSem(hvUpdate, &args);
+    if (fCell!=(USHORT)-1) {
+      DosRequestMutexSem(hxUpdate,-1);
+      if (was_mouse_state && Mouse_Handle!=(HMOU)-1)
+	MouRemovePtr(&noptr, Mouse_Handle);
+      /* Update the screen, if required */
+      VioShowBuf(fCell*2,(lCell-fCell+1)*2, 0);
+      fCell=lCell=(USHORT)-1;
+      DosReleaseMutexSem(hxUpdate);
+      if (mouse_state && Mouse_Handle!=(HMOU)-1)
+	MouDrawPtr(Mouse_Handle);
+    }
+    else if (mouse_state != was_mouse_state && Mouse_Handle!=(HMOU)-1) {
+      if (mouse_state)
+	MouDrawPtr(Mouse_Handle);
+      else
+	MouRemovePtr(&noptr, Mouse_Handle);
+    }
+    was_mouse_state=mouse_state;
+    if (_moved) {
+      _moved=0;
+      VioSetCurPos((USHORT)_line,(USHORT)_col,0);
+    }
+    DosSleep(1);
+  }
+}
+
+static void vidCell(USHORT row, USHORT col)
+{
+  USHORT cell=(row*usCols)+col;
+
+  DosRequestMutexSem(hxUpdate,-1);
+  /* Always update first cell */
+  if (fCell==(USHORT)-1)
+    fCell=lCell=cell;
+  else {
+    /* Otherwise stretch limits if necessary */
+    if (cell<fCell)
+      fCell=cell;
+    if (cell>lCell)
+      lCell=cell;
+  }
+  DosReleaseMutexSem(hxUpdate);
+}
+
+/* These seek to do minimal screen update
+ * by keeping track of the first and last
+ * cells written to the video buffer
+ */
+
+void vidUpdate()
+{
+  if (hvUpdate == (HEV)0) {
+    VIOMODEINFO mi;
+
+    DosCreateEventSem(NULL, &hvUpdate, 0, FALSE);
+    DosCreateMutexSem(NULL, &hxUpdate, 0, FALSE);
+    DosCreateThread(&threadID,update_thread,0,0,8192);
+    mi.cb = sizeof mi;
+    VioGetMode(&mi, 0);
+    noptr.cRow = mi.row-1;
+    noptr.cCol = mi.col-1;
+  }
+  DosPostEventSem(hvUpdate);
+}
+
+static void vidArea(USHORT frow, USHORT fcol, USHORT lrow, USHORT lcol)
+{
+  vidCell(frow,fcol);
+  vidCell(lrow,lcol);
+}
+#endif
+#endif
+
+
+/*
+ * ibmmove - Use BIOS video services, function 2h to set cursor postion
+ */
+ibmmove(row, col)
+int row, col;
+{
+#ifdef OS2
+#ifdef FASTVIO
+  if (_line!=row || _col!=col) {
+    _line=row;
+    _col=col;
+    _moved=1;
+  }
+#else
+  VioSetCurPos((USHORT)row, (USHORT)col, 0);
+#endif
+#else
+    rg.h.ah = 2;		/* set cursor position function code */
+    rg.h.bh = 0;		/* set screen page number */
+    rg.h.dl = col;
+    rg.h.dh = row;
+    int86(BIOS_VIDEO, &rg, &rg);
+#endif
+}
+
+
+/*
+ * ibmeeol - erase to the end of the line
+ */
+ibmeeol()
+{
+#ifdef OS2
+  USHORT row, col;
+  BYTE chattr[2];
+  chattr[0] = ' ';
+  chattr[1] = (BYTE)cattr;
+
+#ifdef FASTVIO
+  row=(USHORT)_line;
+  col=(USHORT)_col;
+  vidCell(row,col);
+  vidCell(row,usCols-1);
+  row=(row*usCols)+col;
+  col=usCols-col;
+  while(col--)
+    pusVidBuffer[row++] = *(USHORT *)chattr;
+#else
+  /* find the current cursor position */
+  VioGetCurPos(&row, &col, 0);
+  VioWrtNCell(chattr, NCOL-col, row, col, 0);
+#endif
+#else
+    int col, row, page;
+
+    /* find the current cursor position */
+    rg.h.ah = 3;		/* read cursor position function code */
+    int86(BIOS_VIDEO, &rg, &rg);
+    page = rg.h.bh;
+    col = rg.h.dl;		/* record current column */
+    row = rg.h.dh;		/* and row */
+
+    rg.h.ah = 0x09;		/* write char to screen with new attrs */
+    rg.h.al = ' ';
+    rg.h.bl = cattr;
+    rg.h.bh = page;
+    rg.x.cx = NCOL-col;
+    int86(BIOS_VIDEO, &rg, &rg);
+#endif
+}
+
+
+/*
+ * ibmputc - put a character at the current position in the
+ *	     current colors
+ */
+ibmputc(ch)
+int ch;
+{
+#ifdef OS2
+  USHORT row, col;
+
+  /* first, get current position */
+#ifdef FASTVIO
+  row=(USHORT)_line;
+  col=(USHORT)_col;
+#else
+  VioGetCurPos(&row, &col, 0);
+#endif
+  if (ch == '\b') {
+    if (col > 0)
+      ibmmove(row, --col);
+  }
+  else {
+    BYTE chattr[2];
+    chattr[0]=(BYTE)ch;
+    chattr[1]=(BYTE)cattr;
+#if FASTVIO
+    vidCell(row,col);
+    pusVidBuffer[(row*usCols)+col] = *(USHORT *)chattr;
+    if (col < usCols)
+#else
+      VioWrtNCell(chattr, 1, row, col, 0);
+    if (col < NCOL)
+#endif
+      ibmmove(row, ++col);
+  }
+#else
+    int col, row, page;
+
+    rg.h.ah = 0x03;			/* first, get current position */
+    int86(BIOS_VIDEO, &rg, &rg);
+    page = rg.h.bh;
+    row = rg.h.dh;
+    col = rg.h.dl;
+    
+    if(ch == '\b'){
+	if(col > 0)		/* advance the cursor */
+	  ibmmove(row, --col);
+    }
+    else{
+	rg.h.ah = 0x09;		/* write char to screen with new attrs */
+	rg.h.al = ch;
+	rg.h.bl = cattr;		/* inverting if needed */
+	rg.h.bh = page;
+	rg.x.cx = 1;		/* only once */
+	int86(BIOS_VIDEO, &rg, &rg);
+
+	if(col < 80)		/* advance the cursor */
+	  ibmmove(row, ++col);
+    }
+#endif
+}
+
+
+/* 
+ * ibmgetc - output a single character with the right attributes, but
+ *           don't advance the cursor
+ */
+ibmgetc(c)
+char *c;
+{
+#ifdef OS2
+  /* first, get current position */
+#if FASTVIO
+  *c=(BYTE)pusVidBuffer[(_line*usCols)+_col];
+#else
+  USHORT row, col, n = 1;
+
+  VioGetCurPos(&row, &col, 0);
+  VioReadCharStr(c, 1, &n, row, col, 0);
+#endif
+#else
+    rg.h.ah = 8;			/* vid services, read char at cursor */
+    rg.h.bh = 0;
+    int86(0x10, &rg, &rg);
+    *c = rg.h.al;
+#endif
+}
+
+
+/*
+ * ibmeeop - clear from cursor to end of page
+ */
+ibmeeop()
+{
+#ifdef OS2
+#if FASTVIO
+  USHORT atofs;
+#endif
+  BYTE chattr[2];
+  chattr[0] = ' ';
+  chattr[1] = (BYTE)cattr;
+
+#ifdef FASTVIO
+  vidArea(0,0,usRows-1,usCols-1);
+  for (atofs=0; atofs < usVidbufLength;++atofs)
+	pusVidBuffer[atofs] = *(USHORT *)chattr;
+#else
+  VioScrollUp(0, 0, -1, -1, -1, chattr, 0);
+#endif
+#else
+    rg.h.ah = 6;		/* scroll page up function code */
+    rg.h.al = 0;		/* # lines to scroll (clear it) */
+    rg.x.cx = 0;		/* upper left corner of scroll */
+    rg.x.dx = (term.t_nrow << 8) | (term.t_ncol - 1);
+    rg.h.bh = cattr;
+    int86(BIOS_VIDEO, &rg, &rg);
+#endif
+    ibmmove(0, 0);
+}
+
+
+/*
+ * ibmrev - change reverse video state
+ */
+ibmrev(state)
+int state;
+{
+    cattr = (state) ? SET_COLOR(rfcolor, rbcolor)
+		    : SET_COLOR(nfcolor, nbcolor);
+}
+
+
+/*
+ * getrevstate - return the current reverse state
+ */
+getrevstate()
+{
+    return(cattr == SET_COLOR(rfcolor, rbcolor));
+}
+
+
+/* 
+ * beep - make the speaker sing!
+ */
+void
+beep(freq, dur)
+unsigned freq, dur;
+{
+#ifdef OS2
+  if (freq)
+	DosBeep(freq, dur);
+#else
+    unsigned oport;
+
+    if(!freq)
+	return;
+
+    freq = (unsigned)(1193180 / freq);
+    /* set up the timer */
+    outp(0x43, 0xb6);			/* set timer channel 2 registers */
+    outp(0x42, (0xff&freq));		/* low order byte of count */
+    outp(0x42, (freq>>8));		/* hi order byte of count */
+
+    /* make the sound */
+    oport = inp(0x61);
+    outp(0x61, oport | 0x03);
+    ssleep((clock_t)((dur < 75) ? 75 : dur));
+    outp(0x61, oport);
+#endif
+}
+
+
+/*
+ * cutebeep - make the speeker sing the way we want!
+ */
+cutebeep()
+{
+    beep(575, 50);
+#ifndef OS2
+    ssleep((clock_t)25);
+#endif
+    beep(485, 90);
+}
+
+
+/*
+ * ibmbeep - system beep...
+ */
+ibmbeep()
+{
+    cutebeep();
+}
+
+
+/*
+ * enter_text_mode - get current video mode, saving to be restored 
+ *                   later, then explicitly set 80 col text mode.
+ *
+ *     NOTE: this gets kind of weird.  Both pine and pico call this
+ *           during initialization.  To make sure it's only invoked once
+ *           it only responds if passed NULL which pico only does if not
+ *           called from in pine, and pine does all the time.  make sense?
+ *           thought not.
+ */
+void
+enter_text_mode(p)
+PICO *p;
+{
+#ifdef OS2
+    if (!p) {
+#ifdef FASTVIO
+	ULONG pBuf;
+#endif
+	display_mode.cb = sizeof display_mode;
+	VioGetMode(&display_mode, 0);
+	term.t_ncol = display_mode.col;
+	term.t_nrow = display_mode.row - 1;
+	origLen = display_mode.row * display_mode.col * sizeof(USHORT);
+	if (oldscreen)
+	  free(oldscreen);
+	oldscreen = malloc(origLen);
+	if (oldscreen)
+	  VioReadCellStr(oldscreen, &origLen, 0, 0, 0);
+	VioGetCurPos(&origRow, &origCol, 0);
+#ifdef FASTVIO
+	_line=origRow;
+	_col=origCol;
+#endif
+#ifdef FASTVIO
+	usRows = display_mode.row;
+	usCols = display_mode.col;
+	VioGetBuf(&pBuf,&usVidbufLength,0);
+	pusVidBuffer = _emx_16to32((_far16ptr)pBuf);
+	/* OS2 2.1+ VIO bug (viobuf not initialised) workaround */
+	memcpy(pusVidBuffer,oldscreen,usVidbufLength);
+	usVidbufLength /= 2;  /* Cells, not bytes */
+#endif
+    }
+#else
+    static int i = 0;
+    if(!p && !i++){
+	rg.h.ah = 0x0f;			/* save old mode */
+	int86(BIOS_VIDEO, &rg, &rg);
+	display_mode = rg.h.al;
+
+	rg.h.ah = 0;			/* then set text mode */
+	rg.h.al = 2;
+	int86(BIOS_VIDEO, &rg, &rg);		/* video services */
+    }
+#endif
+}
+
+
+/*
+ * exit_text_mode - leave text mode by restoring saved original 
+ *                  video mode.
+ */
+void
+exit_text_mode(p)
+PICO *p;
+{
+
+#ifdef OS2
+    if (!p) {
+    	turnmouseoff(); /* Make sure mouse is off while display is updated */
+	VioSetMode(&display_mode, 0);
+	if (!oldscreen)
+	{
+	  ibmeeop();
+	  VioSetCurPos(display_mode.row-1, 0, 0);
+	}
+	else
+	{
+	  VioWrtCellStr(oldscreen, origLen, 0, 0, 0);
+	  VioSetCurPos(origRow, origCol, 0);
+	}
+    }
+#else
+    static int i = 0;
+    if(!p && !i++){			/* called many, invoke once! */
+	rg.h.ah = 0;			/* just restore old mode */
+	rg.h.al = display_mode;
+	int86(BIOS_VIDEO, &rg, &rg);
+    }
+#endif
+}
+
+
+/*
+ * ibmopen - setup text mode and setup key labels...
+ */
+ibmopen()
+{
+
+    enter_text_mode(Pmaster);
+
+    cattr    = SET_COLOR(nfcolor, nbcolor);
+    revexist = TRUE;
+    inschar  = delchar = 0;
+
+    ttopen();
+}
+
+
+ibmclose()
+{
+#if	COLOR
+    ibmfcol(7);
+    ibmbcol(0);
+#endif
+#ifdef MOUSE
+    mouseoff();
+#endif
+    exit_text_mode(Pmaster);
+
+    ttclose();
+}
+#endif
+
+

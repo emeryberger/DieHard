@@ -1,0 +1,271 @@
+/*----------------------------------------------------------------------
+    Routines used to hand off messages to local agents for sending/posting
+
+ The two exported routines are:
+
+    1) smtp_command()  -- used to get local transport agent to invoke
+    2) post_handoff()  -- used to pass messages to local posting agent
+
+ ----*/
+
+
+
+/*
+ * Protos for "sendmail" internal functions
+ */
+static char *mta_parse_post PROTO((METAENV *, BODY *, char *, char *, size_t));
+static long  pine_pipe_soutr_nl PROTO((void *, char *));
+
+
+
+/* ----------------------------------------------------------------------
+   Figure out command to start local SMTP agent
+
+  Args: errbuf   -- buffer for reporting errors (assumed non-NULL)
+
+  Returns an alloc'd copy of the local SMTP agent invocation or NULL
+
+  ----*/
+char *
+smtp_command(errbuf)
+    char *errbuf;
+{
+#if	defined(SENDMAIL) && defined(SENDMAILFLAGS)
+    char tmp[256];
+
+    sprintf(tmp, "%.*s %.*s", (sizeof(tmp)-3)/2, SENDMAIL,
+	    (sizeof(tmp)-3)/2, SENDMAILFLAGS);
+    return(cpystr(tmp));
+#else
+    strcpy(errbuf, "No default posting command.");
+    return(NULL);
+#endif
+}
+
+
+
+/*----------------------------------------------------------------------
+   Hand off given message to local posting agent
+
+  Args: envelope -- The envelope for the BCC and debugging
+        header   -- The text of the message header
+        errbuf   -- buffer for reporting errors (assumed non-NULL)
+	len      -- Length of errbuf
+     
+   ----*/
+int
+mta_handoff(header, body, errbuf, len)
+    METAENV    *header;
+    BODY       *body;
+    char       *errbuf;
+    size_t      len;
+{
+#ifdef	DF_SENDMAIL_PATH
+    char  cmd_buf[256];
+#endif
+    char *cmd = NULL;
+
+    /*
+     * A bit of complicated policy implemented here.
+     * There are two posting variables sendmail-path and smtp-server.
+     * Precedence is in that order.
+     * They can be set one of 4 ways: fixed, command-line, user, or globally.
+     * Precedence is in that order.
+     * Said differently, the order goes something like what's below.
+     * 
+     * NOTE: the fixed/command-line/user precendence handling is also
+     *	     indicated by what's pointed to by ps_global->VAR_*, but since
+     *	     that also includes the global defaults, it's not sufficient.
+     */
+
+    if(ps_global->FIX_SENDMAIL_PATH
+       && ps_global->FIX_SENDMAIL_PATH[0]){
+	cmd = ps_global->FIX_SENDMAIL_PATH;
+    }
+    else if(!(ps_global->FIX_SMTP_SERVER
+	      && ps_global->FIX_SMTP_SERVER[0])){
+	if(ps_global->COM_SENDMAIL_PATH
+	   && ps_global->COM_SENDMAIL_PATH[0]){
+	    cmd = ps_global->COM_SENDMAIL_PATH;
+	}
+	else if(!(ps_global->COM_SMTP_SERVER
+		  && ps_global->COM_SMTP_SERVER[0])){
+	    if((ps_global->vars[V_SENDMAIL_PATH].post_user_val.p
+	        && ps_global->vars[V_SENDMAIL_PATH].post_user_val.p[0]) ||
+	       (ps_global->vars[V_SENDMAIL_PATH].main_user_val.p
+	        && ps_global->vars[V_SENDMAIL_PATH].main_user_val.p[0])){
+		if(ps_global->vars[V_SENDMAIL_PATH].post_user_val.p
+		   && ps_global->vars[V_SENDMAIL_PATH].post_user_val.p[0])
+		  cmd = ps_global->vars[V_SENDMAIL_PATH].post_user_val.p;
+		else
+		  cmd = ps_global->vars[V_SENDMAIL_PATH].main_user_val.p;
+	    }
+	    else if(!((ps_global->vars[V_SMTP_SERVER].post_user_val.l
+	               && ps_global->vars[V_SMTP_SERVER].post_user_val.l[0]) ||
+		      (ps_global->vars[V_SMTP_SERVER].main_user_val.l
+	               && ps_global->vars[V_SMTP_SERVER].main_user_val.l[0]))){
+		if(ps_global->GLO_SENDMAIL_PATH
+		   && ps_global->GLO_SENDMAIL_PATH[0]){
+		    cmd = ps_global->GLO_SENDMAIL_PATH;
+		}
+#ifdef	DF_SENDMAIL_PATH
+		/*
+		 * This defines the default method of posting.  So,
+		 * unless we're told otherwise use it...
+		 */
+		else if(!(ps_global->GLO_SMTP_SERVER
+			  && ps_global->GLO_SMTP_SERVER[0])){
+		    strncpy(cmd = cmd_buf, DF_SENDMAIL_PATH, sizeof(cmd_buf)-1);
+		    cmd_buf[sizeof(cmd_buf)-1] = '\0';
+		}
+#endif
+	    }
+	}
+    }
+
+    *errbuf = '\0';
+    if(cmd){
+	dprint(4, (debugfile, "call_mailer via cmd: %s\n", cmd ? cmd : "?"));
+
+	(void) mta_parse_post(header, body, cmd, errbuf, len);
+	return(1);
+    }
+    else
+      return(0);
+}
+
+
+
+/*----------------------------------------------------------------------
+   Hand off given message to local posting agent
+
+  Args: envelope -- The envelope for the BCC and debugging
+        header   -- The text of the message header
+        errbuf   -- buffer for reporting errors (assumed non-NULL)
+	len      -- Length of errbuf
+     
+  Fork off mailer process and pipe the message into it
+  Called to post news via Inews when NNTP is unavailable
+  
+   ----*/
+char *
+post_handoff(header, body, errbuf, len)
+    METAENV    *header;
+    BODY       *body;
+    char       *errbuf;
+    size_t      len;
+{
+    char *err = NULL;
+#ifdef	SENDNEWS
+    char *s;
+    char  tmp[200];
+
+    if(s = strstr(header->env->date," (")) /* fix the date format for news */
+      *s = '\0';
+
+    if(err = mta_parse_post(header, body, SENDNEWS, errbuf, len)){
+	strncpy(tmp, err, sizeof(tmp)-1);
+	tmp[sizeof(tmp)-1] = '\0';
+	sprintf(err = errbuf, "News not posted: \"%.*s\": %.*s",
+		(len-30)/2, SENDNEWS, (len-30)/2, tmp);
+    }
+
+    if(s)
+      *s = ' ';				/* restore the date */
+
+#else /* !SENDNEWS */  /* this is the default case */
+    strncpy(err = errbuf, "Can't post, NNTP-server must be defined!", len-1);
+    err[len-1] = '\0';
+#endif /* !SENDNEWS */
+    return(err);
+}
+
+
+
+/*----------------------------------------------------------------------
+   Hand off message to local MTA; it parses recipients from 822 header
+
+  Args: header -- struct containing header data
+        body  -- struct containing message body data
+	cmd -- command to use for handoff (%s says where file should go)
+	errs -- pointer to buf to hold errors
+
+   ----*/
+static char *
+mta_parse_post(header, body, cmd, errs, len)
+    METAENV *header;
+    BODY    *body;
+    char    *cmd;
+    char    *errs;
+    size_t   len;
+{
+    char   *result = NULL;
+    PIPE_S *pipe;
+
+    dprint(1, (debugfile, "=== mta_parse_post(%s) ===\n", cmd ? cmd : "?"));
+
+    if(pipe = open_system_pipe(cmd, &result, NULL,
+		 PIPE_STDERR|PIPE_WRITE|PIPE_PROT|PIPE_NOSHELL|PIPE_DESC, 0)){
+	if(!pine_rfc822_output(header, body, pine_pipe_soutr_nl,
+			       (TCPSTREAM *) pipe))
+	  strncpy(errs, "Error posting.", len-1);
+
+	if(close_system_pipe(&pipe, NULL, 0) && !*errs){
+	    sprintf(errs, "Posting program %.*s returned error", len-40, cmd);
+	    if(result)
+	      display_output_file(result, "POSTING ERRORS", errs, 1);
+	}
+    }
+    else
+      sprintf(errs, "Error running \"%.*s\"", len-20, cmd);
+
+    if(result){
+	unlink(result);
+	fs_give((void **)&result);
+    }
+
+    return(*errs ? errs : NULL);
+}
+
+
+/* 
+ * pine_pipe_soutr - Replacement for tcp_soutr that writes one of our
+ *		     pipes rather than a tcp stream
+ */
+static long
+pine_pipe_soutr_nl (stream,s)
+     void *stream;
+     char *s;
+{
+    long    rv = T;
+    char   *p;
+    size_t  n;
+
+    while(*s && rv){
+	if(n = (p = strstr(s, "\015\012")) ? p - s : strlen(s))
+	  while((rv = write(((PIPE_S *)stream)->out.d, s, n)) != n)
+	    if(rv < 0){
+		if(errno != EINTR){
+		    rv = 0;
+		    break;
+		}
+	    }
+	    else{
+		s += rv;
+		n -= rv;
+	    }
+
+	if(p && rv){
+	    s = p + 2;			/* write UNIX EOL */
+	    while((rv = write(((PIPE_S *)stream)->out.d,"\n",1)) != 1)
+	      if(rv < 0 && errno != EINTR){
+		  rv = 0;
+		  break;
+	      }
+	}
+	else
+	  break;
+    }
+
+    return(rv);
+}

@@ -1,0 +1,15 @@
+;
+; SunOS 4.0 os-s40.ic file for building os-s40.c.
+;
+; Boilerplate header.
+include(header)
+
+include(unix)
+
+include(spell.unx)
+
+include(read.sel)
+
+include(raw.brk)
+
+include(term.cap)

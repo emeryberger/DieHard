@@ -1,0 +1,172 @@
+#line 2 "osdep/debuging.os2"
+#ifdef DEBUG
+/*----------------------------------------------------------------------
+     Initialize debugging - open the debug log file
+
+  Args: none
+
+ Result: opens the debug logfile for dprints
+  ----*/
+void
+init_debug()
+{
+    char *p;
+    char filename[MAXPATH+1];
+
+    if(!(debug || ps_global->debug_imap))
+      return;
+
+    /*
+     * we can't assume anything about root or home dirs, so
+     * just plunk it down in the same place as the pinerc
+     */
+    
+    if(ps_global->pinerc)
+      sprintf(filename, "%.*s%s",
+	      last_cmpnt(ps_global->pinerc) - ps_global->pinerc,
+	      ps_global->pinerc, DEBUGFILE);
+    else if((p=getenv("PINEHOME"))!=NULL || (p=getenv("HOME"))!=NULL)
+      build_path(filename, p, DEBUGFILE, sizeof(filename));
+    else{
+	strncpy(filename, DEBUGFILE, sizeof(filename)-1);
+	filename[sizeof(filename)-1] = '\0';
+    }
+
+    unlink(filename);
+
+    debugfile = fopen(filename, "w");
+    if(debugfile != NULL){
+	time_t now = time((time_t *)0);
+	if(ps_global->debug_flush)
+	  setbuf(debugfile, NULL);
+	dprint(0, (debugfile, "Debug output of the Pine program (debug=%d debug_imap=%d). Version %s (%s)\n%s\n",
+	       debug, ps_global->debug_imap, pine_version, SYSTYPE,
+	       ctime(&now)));
+    }
+}
+
+
+void
+save_debug_on_crash(dfile)
+FILE *dfile;
+{
+    char *crashname = CRASHFILE;
+    char *filename = DEBUGFILE;
+    int status;
+    char msg[256];
+    time_t now = time((time_t *)0);
+
+    fprintf(dfile, "\nsave_debug_on_crash: Version %s: debug level %d\n",
+	pine_version, debug);
+    fprintf(dfile, "\n                   : %s\n", ctime(&now));
+    fprintf(dfile, "\nAttempting to save debug file to %s\n", crashname);
+
+    fclose(dfile);
+
+    unlink (crashname);
+    status = rename (filename, crashname);
+
+#ifdef _WINDOWS
+    sprintf (msg, "Pine debugging information saved in file:  %s",
+    	status == 0 ? crashname : filename);
+    mswin_messagebox (msg);
+#endif
+}
+
+
+#define CHECK_EVERY_N_TIMES 100
+#define MAX_DEBUG_FILE_SIZE 200000L
+/*
+ * This is just to catch runaway Pines that are looping spewing out
+ * debugging (and filling up a file system).  The stop doesn't have to be
+ * at all precise, just soon enough to hopefully prevent filling the
+ * file system.  If the debugging level is high (9 for now), then we're
+ * presumably looking for some problem, so don't truncate.
+ */
+int
+do_debug(debug_fp)
+FILE *debug_fp;
+{
+    static int counter = CHECK_EVERY_N_TIMES;
+    static int ok = 1;
+    long filesize;
+
+    if(debug < 9 && ok && --counter <= 0){
+	if((filesize = fp_file_size(debug_fp)) != -1L)
+	  ok = (unsigned long)filesize < (unsigned long)MAX_DEBUG_FILE_SIZE;
+
+	counter = CHECK_EVERY_N_TIMES;
+	if(!ok){
+	    fprintf(debug_fp, "\n\n --- No more debugging ---\n");
+	    fprintf(debug_fp,
+		"     (debug file growing too large - over %ld bytes)\n\n",
+		MAX_DEBUG_FILE_SIZE);
+	    fflush(debug_fp);
+	}
+    }
+
+    if(ok && ps_global->debug_timestamp)
+      fprintf(debug_fp, "\n%s\n", debug_time(0, ps_global->debug_timestamp));
+
+    return(ok);
+}
+
+
+/*
+ * Returns a pointer to static string for a timestamp.
+ *
+ * If include_date is set the date is appended.
+ */
+char *
+debug_time(include_date, include_subseconds)
+    int include_date;
+    int include_subseconds;
+{
+    time_t          t;
+    struct tm      *tm_now;
+    static char     timestring[23];
+    char            datestr[7];
+
+    timestring[0] = '\0';
+    t = time((time_t *)0);
+    if(include_date){
+	tm_now = localtime(&t);
+	sprintf(datestr, " %d/%d", tm_now->tm_mon+1, tm_now->tm_mday);
+    }
+    else
+      datestr[0] = '\0';
+
+    sprintf(timestring, "%.8s%s", ctime(&t)+11, datestr);
+
+    return(timestring);
+}
+#endif /* DEBUG */
+
+
+/*
+ * This version just returns -1 because this system doesn't have gettimeofday.
+ *
+ * Returns 0 if ok
+ *        -1 if can't do it
+ */
+int
+get_time(our_time_val)
+    TIMEVAL_S *our_time_val;
+{
+    return -1;
+}
+
+
+/*
+ * Returns the difference between the two values, in microseconds.
+ * Value returned is first - second.
+ */
+long
+time_diff(first, second)
+    TIMEVAL_S *first,
+              *second;
+{
+    return(1000000L*(first->sec - second->sec) + (first->usec - second->usec));
+}
+
+

@@ -1,0 +1,751 @@
+/*
+ * Program:	Display routines
+ *
+ *
+ * Donn Cave
+ * Networks and Distributed Computing
+ * Computing and Communications
+ * University of Washington
+ * Administration Builiding, AG-44
+ * Seattle, Washington, 98195, USA
+ * Internet: donn@cac.washington.edu
+ *
+ * Please address all bugs and comments to "pine-bugs@cac.washington.edu"
+ *
+ *
+ * Pine and Pico are registered trademarks of the University of Washington.
+ * No commercial use of these trademarks may be made without prior written
+ * permission of the University of Washington.
+ * 
+ * Pine, Pico, and Pilot software and its included text are Copyright
+ * 1989-2001 by the University of Washington.
+ * 
+ * The full text of our legal notices is contained in the file called
+ * CPYRIGHT, included with this distribution.
+ *
+ */
+/*
+ *      tinfo - substitute for tcap, on systems that have terminfo.
+ */
+
+#define	termdef	1			/* don't define "term" external */
+
+#if defined(USE_TERMINFO)
+extern char *tigetstr ();
+
+#define	MARGIN	8
+#define	SCRSIZ	64
+#define	MROW	2
+
+static int      tinfomove PROTO((int, int));
+static int      tinfoeeol PROTO((void));
+static int      tinfoeeop PROTO((void));
+static int      tinfobeep PROTO((void));
+static int      tinforev PROTO((int));
+static int      tinfoopen PROTO((void));
+static int      tinfoterminalinfo PROTO((int));
+static int      tinfoclose PROTO((void));
+static void     setup_dflt_esc_seq PROTO((void));
+static void     tinfoinsert PROTO((int));
+static void     tinfodelete PROTO((void));
+
+extern int      tput();
+
+/**
+ ** Note: The tgoto calls should really be replaced by tparm calls for
+ ** modern terminfo. tgoto(s, x, y) == tparm(s, y, x).
+ **/
+
+int	_tlines, _tcolumns;
+char	*_clearscreen, *_moveto, *_up, *_down, *_right, *_left,
+	*_setinverse, *_clearinverse,
+	*_setunderline, *_clearunderline,
+	*_setbold, *_clearallattr,	/* there is no clear only bold! */
+	*_cleartoeoln, *_cleartoeos,
+	*_deleteline,		/* delete line */
+	*_insertline,		/* insert line */
+	*_scrollregion,		/* define a scrolling region, vt100 */
+	*_insertchar,		/* insert character, preferable to : */
+	*_startinsert,		/* set insert mode and, */
+	*_endinsert,		/* end insert mode */
+	*_deletechar,		/* delete character */
+	*_startdelete,		/* set delete mode and, */
+	*_enddelete,		/* end delete mode */
+	*_scrolldown,		/* scroll down */
+	*_scrollup,		/* scroll up */
+	*_termcap_init,		/* string to start termcap */
+        *_termcap_end,		/* string to end termcap */
+	*_op, *_oc, *_setaf, *_setab, *_setf, *_setb, *_scp;
+int	_colors, _pairs, _bce;
+char     term_name[40];
+
+TERM term = {
+        NROW-1,
+        NCOL,
+	MARGIN,
+	SCRSIZ,
+	MROW,
+        tinfoopen,
+        tinfoterminalinfo,
+        tinfoclose,
+        ttgetc,
+        ttputc,
+        ttflush,
+        tinfomove,
+        tinfoeeol,
+        tinfoeeop,
+        tinfobeep,
+        tinforev
+};
+
+
+/*
+ * Add default keypad sequences to the trie.
+ */
+static void
+setup_dflt_esc_seq()
+{
+    /*
+     * this is sort of a hack [no kidding], but it allows us to use
+     * the function keys on pc's running telnet
+     */
+
+    /* 
+     * UW-NDC/UCS vt10[02] application mode.
+     */
+    kpinsert("\033OP", F1, 1);
+    kpinsert("\033OQ", F2, 1);
+    kpinsert("\033OR", F3, 1);
+    kpinsert("\033OS", F4, 1);
+    kpinsert("\033Op", F5, 1);
+    kpinsert("\033Oq", F6, 1);
+    kpinsert("\033Or", F7, 1);
+    kpinsert("\033Os", F8, 1);
+    kpinsert("\033Ot", F9, 1);
+    kpinsert("\033Ou", F10, 1);
+    kpinsert("\033Ov", F11, 1);
+    kpinsert("\033Ow", F12, 1);
+
+    /*
+     * DEC vt100, ANSI and cursor key mode.
+     */
+    kpinsert("\033OA", KEY_UP, 1);
+    kpinsert("\033OB", KEY_DOWN, 1);
+    kpinsert("\033OC", KEY_RIGHT, 1);
+    kpinsert("\033OD", KEY_LEFT, 1);
+
+    /*
+     * special keypad functions
+     */
+    kpinsert("\033[4J", KEY_PGUP, 1);
+    kpinsert("\033[3J", KEY_PGDN, 1);
+    kpinsert("\033[2J", KEY_HOME, 1);
+    kpinsert("\033[N",  KEY_END, 1);
+
+    /*
+     * vt220?
+     */
+    kpinsert("\033[5~", KEY_PGUP, 1);
+    kpinsert("\033[6~", KEY_PGDN, 1);
+    kpinsert("\033[1~", KEY_HOME, 1);
+    kpinsert("\033[4~", KEY_END, 1);
+
+    /*
+     * konsole, XTerm (XFree 4.x.x) keyboard setting
+     */
+    kpinsert("\033[H", KEY_HOME, 1);
+    kpinsert("\033[F", KEY_END, 1);
+
+    /* 
+     * gnome-terminal 2.6.0, don't know why it
+     * changed from 2.2.1
+     */
+    kpinsert("\033OH", KEY_HOME, 1);
+    kpinsert("\033OF", KEY_END, 1);
+
+    /*
+     * "\033[2~" was common for KEY_HOME in a quick survey
+     *  of terminals (though typically the Insert key).
+     *  Teraterm 2.33 sends the following escape sequences,
+     *  which is quite incompatible with everything
+     *  else:
+     *    Home: "\033[2~" End: "\033[5~" PgUp: "\033[3~"
+     *    PgDn: "\033[6~"
+     *  The best thing to do would be to fix TeraTerm
+     *  keymappings or to tweak terminfo.
+     */
+
+    /* 
+     * ANSI mode.
+     */
+    kpinsert("\033[=a", F1, 1);
+    kpinsert("\033[=b", F2, 1);
+    kpinsert("\033[=c", F3, 1);
+    kpinsert("\033[=d", F4, 1);
+    kpinsert("\033[=e", F5, 1);
+    kpinsert("\033[=f", F6, 1);
+    kpinsert("\033[=g", F7, 1);
+    kpinsert("\033[=h", F8, 1);
+    kpinsert("\033[=i", F9, 1);
+    kpinsert("\033[=j", F10, 1);
+    kpinsert("\033[=k", F11, 1);
+    kpinsert("\033[=l", F12, 1);
+
+    /*
+     * DEC vt100, ANSI and cursor key mode reset.
+     */
+    kpinsert("\033[A", KEY_UP, 1);
+    kpinsert("\033[B", KEY_DOWN, 1);
+    kpinsert("\033[C", KEY_RIGHT, 1);
+    kpinsert("\033[D", KEY_LEFT, 1);
+
+    /*
+     * DEC vt52 mode.
+     */
+    kpinsert("\033A", KEY_UP, 1);
+    kpinsert("\033B", KEY_DOWN, 1);
+    kpinsert("\033C", KEY_RIGHT, 1);
+    kpinsert("\033D", KEY_LEFT, 1);
+
+    /*
+     * DEC vt52 application keys, and some Zenith 19.
+     */
+    kpinsert("\033?r", KEY_DOWN, 1);
+    kpinsert("\033?t", KEY_LEFT, 1);
+    kpinsert("\033?v", KEY_RIGHT, 1);
+    kpinsert("\033?x", KEY_UP, 1);
+
+    /*
+     * Sun Console sequences.
+     */
+    kpinsert("\033[1",   KEY_SWALLOW_Z, 1);
+    kpinsert("\033[215", KEY_SWAL_UP, 1);
+    kpinsert("\033[217", KEY_SWAL_LEFT, 1);
+    kpinsert("\033[219", KEY_SWAL_RIGHT, 1);
+    kpinsert("\033[221", KEY_SWAL_DOWN, 1);
+
+    /*
+     * Kermit App Prog Cmd, gobble until ESC \ (kermit should intercept this)
+     */
+    kpinsert("\033_", KEY_KERMIT, 1);
+
+    /*
+     * Fake a control character.
+     */
+    kpinsert("\033\033", KEY_DOUBLE_ESC, 1);
+}
+
+
+static int
+tinfoterminalinfo(termcap_wins)
+    int termcap_wins;
+{
+    char   *_ku, *_kd, *_kl, *_kr,
+	   *_kppu, *_kppd, *_kphome, *_kpend, *_kpdel,
+	   *_kf1, *_kf2, *_kf3, *_kf4, *_kf5, *_kf6,
+	   *_kf7, *_kf8, *_kf9, *_kf10, *_kf11, *_kf12;
+    char   *ttnm;
+
+    if (Pmaster) {
+	/*
+	 *		setupterm() automatically retrieves the value
+	 *		of the TERM variable.
+	 */
+	int err;
+	ttnm = getenv("TERM");
+	if(!ttnm)
+	  return(-1);
+
+	strcpy(term_name, ttnm);
+	setupterm (0, 1, &err);
+	if (err != 1) return(err-2);
+    }
+    else {
+	/*
+	 *		setupterm() issues a message and exits, if the
+	 *		terminfo data base is gone or the term type is
+	 *		unknown, if arg2 is 0.
+	 */
+	setupterm (0, 1, 0);
+    }
+
+    _clearscreen	= tigetstr("clear");
+    _moveto		= tigetstr("cup");
+    _up			= tigetstr("cuu1");
+    _down		= tigetstr("cud1");
+    _right		= tigetstr("cuf1");
+    _left		= tigetstr("cub1");
+    _setinverse		= tigetstr("smso");
+    _clearinverse	= tigetstr("rmso");
+    _setunderline	= tigetstr("smul");
+    _clearunderline	= tigetstr("rmul");
+    _setbold		= tigetstr("bold");
+    _clearallattr	= tigetstr("sgr0");
+    _cleartoeoln	= tigetstr("el");
+    _cleartoeos		= tigetstr("ed");
+    _deletechar		= tigetstr("dch1");
+    _insertchar		= tigetstr("ich1");
+    _startinsert	= tigetstr("smir");
+    _endinsert		= tigetstr("rmir");
+    _deleteline		= tigetstr("dl1");
+    _insertline		= tigetstr("il1");
+    _scrollregion	= tigetstr("csr");
+    _scrolldown		= tigetstr("ind");
+    _scrollup		= tigetstr("ri");
+    _termcap_init	= tigetstr("smcup");
+    _termcap_end	= tigetstr("rmcup");
+    _startdelete	= tigetstr("smdc");
+    _enddelete		= tigetstr("rmdc");
+    _ku			= tigetstr("kcuu1");
+    _kd			= tigetstr("kcud1");
+    _kl			= tigetstr("kcub1");
+    _kr			= tigetstr("kcuf1");
+    _kppu		= tigetstr("kpp");
+    _kppd		= tigetstr("knp");
+    _kphome		= tigetstr("khome");
+    _kpend		= tigetstr("kend");
+    _kpdel		= tigetstr("kdch1");
+    _kf1		= tigetstr("kf1");
+    _kf2		= tigetstr("kf2");
+    _kf3		= tigetstr("kf3");
+    _kf4		= tigetstr("kf4");
+    _kf5		= tigetstr("kf5");
+    _kf6		= tigetstr("kf6");
+    _kf7		= tigetstr("kf7");
+    _kf8		= tigetstr("kf8");
+    _kf9		= tigetstr("kf9");
+    _kf10		= tigetstr("kf10");
+    _kf11		= tigetstr("kf11");
+    _kf12		= tigetstr("kf12");
+
+    _colors		= tigetnum("colors");
+    _pairs		= tigetnum("pairs");
+    _setaf		= tigetstr("setaf");
+    _setab		= tigetstr("setab");
+    _setf		= tigetstr("setf");
+    _setb		= tigetstr("setb");
+    _scp		= tigetstr("scp");
+    _op			= tigetstr("op");
+    _oc			= tigetstr("oc");
+    _bce		= tigetflag("bce");
+
+    _tlines = tigetnum("lines");
+    if(_tlines == -1){
+	char *er;
+	int   rr;
+
+	/* tigetnum failed, try $LINES */
+	er = getenv("LINES");
+	if(er && (rr = atoi(er)) > 0)
+	  _tlines = rr;
+    }
+
+    _tcolumns = tigetnum("cols");
+    if(_tcolumns == -1){
+	char *ec;
+	int   cc;
+
+	/* tigetnum failed, try $COLUMNS */
+	ec = getenv("COLUMNS");
+	if(ec && (cc = atoi(ec)) > 0)
+	  _tcolumns = cc;
+    }
+    
+    /*
+     * Add default keypad sequences to the trie.
+     * Since these come first, they will override any conflicting termcap
+     * or terminfo escape sequences defined below.  An escape sequence is
+     * considered conflicting if one is a prefix of the other.
+     * So, without TERMCAP_WINS, there will likely be some termcap/terminfo
+     * escape sequences that don't work, because they conflict with default
+     * sequences defined here.
+     */
+    if(!termcap_wins)
+      setup_dflt_esc_seq();
+
+    /*
+     * add termcap/info escape sequences to the trie...
+     */
+
+    if(_ku != NULL && _kd != NULL && _kl != NULL && _kr != NULL){
+	kpinsert(_ku, KEY_UP, termcap_wins);
+	kpinsert(_kd, KEY_DOWN, termcap_wins);
+	kpinsert(_kl, KEY_LEFT, termcap_wins);
+	kpinsert(_kr, KEY_RIGHT, termcap_wins);
+    }
+
+    if(_kppu != NULL && _kppd != NULL){
+	kpinsert(_kppu, KEY_PGUP, termcap_wins);
+	kpinsert(_kppd, KEY_PGDN, termcap_wins);
+    }
+
+    kpinsert(_kphome, KEY_HOME, termcap_wins);
+    kpinsert(_kpend,  KEY_END, termcap_wins);
+    kpinsert(_kpdel,  KEY_DEL, termcap_wins);
+
+    kpinsert(_kf1,  F1, termcap_wins);
+    kpinsert(_kf2,  F2, termcap_wins);
+    kpinsert(_kf3,  F3, termcap_wins);
+    kpinsert(_kf4,  F4, termcap_wins);
+    kpinsert(_kf5,  F5, termcap_wins);
+    kpinsert(_kf6,  F6, termcap_wins);
+    kpinsert(_kf7,  F7, termcap_wins);
+    kpinsert(_kf8,  F8, termcap_wins);
+    kpinsert(_kf9,  F9, termcap_wins);
+    kpinsert(_kf10, F10, termcap_wins);
+    kpinsert(_kf11, F11, termcap_wins);
+    kpinsert(_kf12, F12, termcap_wins);
+
+    /*
+     * Add default keypad sequences to the trie.
+     * Since these come after the termcap/terminfo escape sequences above,
+     * the termcap/info sequences will override any conflicting default
+     * escape sequences defined here.
+     * So, with TERMCAP_WINS, some of the default sequences will be missing.
+     * This means that you'd better get all of your termcap/terminfo entries
+     * correct if you define TERMCAP_WINS.
+     */
+    if(termcap_wins)
+      setup_dflt_esc_seq();
+
+    if(Pmaster)
+      return(0);
+    else
+      return(TRUE);
+}
+
+static int
+tinfoopen()
+{
+    int     row, col;
+
+    /*
+     * determine the terminal's communication speed and decide
+     * if we need to do optimization ...
+     */
+    optimize = ttisslow();
+    
+    col = _tcolumns;
+    row = _tlines;
+    if(row >= 0)
+      row--;
+
+    ttgetwinsz(&row, &col);
+    term.t_nrow = (short) row;
+    term.t_ncol = (short) col;
+
+    eolexist = (_cleartoeoln != NULL);	/* able to use clear to EOL? */
+    revexist = (_setinverse != NULL);
+    if(_deletechar == NULL && (_startdelete == NULL || _enddelete == NULL))
+      delchar = FALSE;
+    if(_insertchar == NULL && (_startinsert == NULL || _endinsert == NULL))
+      inschar = FALSE;
+    if((_scrollregion == NULL || _scrolldown == NULL || _scrollup == NULL)
+       && (_deleteline == NULL || _insertline == NULL))
+      scrollexist = FALSE;
+
+    if(_clearscreen == NULL || _moveto == NULL || _up == NULL){
+	if(Pmaster == NULL){
+	    puts("Incomplete terminfo entry\n");
+	    exit(1);
+	}
+    }
+
+    ttopen();
+
+    if(_termcap_init && !Pmaster) {
+	putpad(_termcap_init);		/* any init terminfo requires */
+	if (_scrollregion)
+	  putpad(tgoto(_scrollregion, term.t_nrow, 0)) ;
+    }
+
+    /*
+     * Initialize UW-modified NCSA telnet to use its functionkeys
+     */
+    if(gmode&MDFKEY && Pmaster == NULL)
+      puts("\033[99h");
+
+    /* return ignored */
+    return(0);
+}
+
+
+static tinfoclose()
+{
+    if(!Pmaster){
+	if(gmode&MDFKEY)
+	  puts("\033[99l");		/* reset UW-NCSA telnet keys */
+
+	if(_termcap_end)		/* any clean up terminfo requires */
+	  putpad(_termcap_end);
+    }
+
+    ttclose();
+    
+    /* return ignored */
+    return(0);
+}
+
+
+/*
+ * tinfoinsert - insert a character at the current character position.
+ *               _insertchar takes precedence.
+ */
+static void
+tinfoinsert(ch)
+register int	ch;
+{
+    if(_insertchar != NULL){
+	putpad(_insertchar);
+	ttputc(ch);
+    }
+    else{
+	putpad(_startinsert);
+	ttputc(ch);
+	putpad(_endinsert);
+    }
+}
+
+
+/*
+ * tinfodelete - delete a character at the current character position.
+ */
+static void
+tinfodelete()
+{
+    if(_startdelete == NULL && _enddelete == NULL)
+      putpad(_deletechar);
+    else{
+	putpad(_startdelete);
+	putpad(_deletechar);
+	putpad(_enddelete);
+    }
+}
+
+
+/*
+ * o_scrolldown() - open a line at the given row position.
+ *               use either region scrolling or deleteline/insertline
+ *               to open a new line.
+ */
+o_scrolldown(row, n)
+register int row;
+register int n;
+{
+    register int i;
+
+    if(_scrollregion != NULL){
+	putpad(tgoto(_scrollregion, term.t_nrow - (term.t_mrow+1), row));
+	tinfomove(row, 0);
+	for(i = 0; i < n; i++)
+	  putpad((_scrollup != NULL && *_scrollup != '\0') ? _scrollup : "\n" );
+	putpad(tgoto(_scrollregion, term.t_nrow, 0));
+	tinfomove(row, 0);
+    }
+    else{
+	/*
+	 * this code causes a jiggly motion of the keymenu when scrolling
+	 */
+	for(i = 0; i < n; i++){
+	    tinfomove(term.t_nrow - (term.t_mrow+1), 0);
+	    putpad(_deleteline);
+	    tinfomove(row, 0);
+	    putpad(_insertline);
+	}
+#ifdef	NOWIGGLYLINES
+	/*
+	 * this code causes a sweeping motion up and down the display
+	 */
+	tinfomove(term.t_nrow - term.t_mrow - n, 0);
+	for(i = 0; i < n; i++)
+	  putpad(_deleteline);
+	tinfomove(row, 0);
+	for(i = 0; i < n; i++)
+	  putpad(_insertline);
+#endif
+    }
+
+    /* return ignored */
+    return(0);
+}
+
+
+/*
+ * o_scrollup() - open a line at the given row position.
+ *               use either region scrolling or deleteline/insertline
+ *               to open a new line.
+ */
+o_scrollup(row, n)
+register int row;
+register int n;
+{
+    register int i;
+
+    if(_scrollregion != NULL){
+	putpad(tgoto(_scrollregion, term.t_nrow - (term.t_mrow+1), row));
+	/* setting scrolling region moves cursor to home */
+	tinfomove(term.t_nrow-(term.t_mrow+1), 0);
+	for(i = 0;i < n; i++)
+	  putpad((_scrolldown == NULL || _scrolldown[0] == '\0') ? "\n"
+								 : _scrolldown);
+	putpad(tgoto(_scrollregion, term.t_nrow, 0));
+	tinfomove(2, 0);
+    }
+    else{
+	for(i = 0; i < n; i++){
+	    tinfomove(row, 0);
+	    putpad(_deleteline);
+	    tinfomove(term.t_nrow - (term.t_mrow+1), 0);
+	    putpad(_insertline);
+	}
+#ifdef  NOWIGGLYLINES
+	/* see note above */
+	tinfomove(row, 0);
+	for(i = 0; i < n; i++)
+	  putpad(_deleteline);
+	tinfomove(term.t_nrow - term.t_mrow - n, 0);
+	for(i = 0;i < n; i++)
+	  putpad(_insertline);
+#endif
+    }
+
+    /* return ignored */
+    return(0);
+}
+
+
+
+/*
+ * o_insert - use terminfo to optimized character insert
+ *            returns: true if it optimized output, false otherwise
+ */
+o_insert(c)
+int c;
+{
+    if(inschar){
+	tinfoinsert(c);
+	return(1);			/* no problems! */
+    }
+
+    return(0);				/* can't do it. */
+}
+
+
+/*
+ * o_delete - use terminfo to optimized character insert
+ *            returns true if it optimized output, false otherwise
+ */
+o_delete()
+{
+    if(delchar){
+	tinfodelete();
+	return(1);			/* deleted, no problem! */
+    }
+
+    return(0);				/* no dice. */
+}
+
+
+static tinfomove(row, col)
+register int row, col;
+{
+    putpad(tgoto(_moveto, col, row));
+
+    /* return ignored */
+    return(0);
+}
+
+
+static tinfoeeol()
+{
+    int   c, starting_col, starting_line;
+    char *last_bg_color;
+
+    /*
+     * If the terminal doesn't have back color erase, then we have to
+     * erase manually to preserve the background color.
+     */
+    if(pico_usingcolor() && (!_bce || !_cleartoeoln)){
+	extern int ttcol, ttrow;
+
+	starting_col  = ttcol;
+	starting_line = ttrow;
+	last_bg_color = pico_get_last_bg_color();
+	pico_set_nbg_color();
+	for(c = ttcol; c < term.t_ncol; c++)
+	  ttputc(' ');
+	
+        tinfomove(starting_line, starting_col);
+	if(last_bg_color){
+	    pico_set_bg_color(last_bg_color);
+	    free(last_bg_color);
+	}
+    }
+    else if(_cleartoeoln)
+      putpad(_cleartoeoln);
+
+    /* return ignored */
+    return(0);
+}
+
+
+static tinfoeeop()
+{
+    int i, starting_col, starting_row;
+
+    /*
+     * If the terminal doesn't have back color erase, then we have to
+     * erase manually to preserve the background color.
+     */
+    if(pico_usingcolor() && (!_bce || !_cleartoeos)){
+	extern int ttcol, ttrow;
+
+	starting_col = ttcol;
+	starting_row = ttrow;
+	tinfoeeol();				  /* rest of this line */
+	for(i = ttrow+1; i <= term.t_nrow; i++){  /* the remaining lines */
+	    tinfomove(i, 0);
+	    tinfoeeol();
+	}
+
+	tinfomove(starting_row, starting_col);
+    }
+    else if(_cleartoeos)
+      putpad(_cleartoeos);
+
+    /* return ignored */
+    return(0);
+}
+
+
+static tinforev(state)		/* change reverse video status */
+int state;			/* FALSE = normal video, TRUE = rev video */
+{
+    if(state)
+      StartInverse();
+    else
+      EndInverse();
+
+    return(1);
+}
+
+
+static tinfobeep()
+{
+    ttputc(BELL);
+
+    /* return ignored */
+    return(0);
+}
+
+
+static void
+putpad(str)
+char    *str;
+{
+    tputs(str, 1, ttputc);
+}
+
+#endif /* USE_TERMINFO */
+
+

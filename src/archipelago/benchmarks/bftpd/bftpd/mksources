@@ -1,0 +1,27 @@
+#!/bin/sh
+
+if [ -f mksources.finished ]; then
+    exit 0
+fi
+
+touch mksources.finished
+    
+if [ ! "$1" = "" ]; then
+    cd $1 && (
+    cat Makefile.in | sed -e 's/$(CC) $(OFILES)/#&/' > Makefile.foo
+    mv Makefile.foo Makefile.in
+    cat pax.c | sed -e s/pax_main/main/g > pax.c.foo
+    cat pax.c.foo | sed -e s/main/pax_main/g > pax.c
+    rm pax.c.foo
+    for f in *.c *.h; do
+        cat $f | sed -e s/pax_warn/warn/g > $f.foo
+        cat $f.foo | sed -e s/warn/pax_warn/g > $f
+        rm $f.foo
+    done
+    if [ ! -f config.status ]; then
+        ./configure
+    fi
+    make pax
+)
+cd ..
+fi

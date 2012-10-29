@@ -1,0 +1,41 @@
+#line 2 "osdep/canacces.dos"
+
+
+/*----------------------------------------------------------------------
+       Check if we can access a file in a given way in the given path
+
+   Args: path     -- The path to look for "file" in
+	 file      -- The file to check
+         mode      -- The mode ala the access() system call, see ACCESS_EXISTS
+                      and friends in pine.h.
+
+ Result: returns 0 if the user can access the file according to the mode,
+         -1 if he can't (and errno is set).
+ ----*/
+can_access_in_path(path, file, mode)
+    char *path, *file;
+    int   mode;
+{
+    char tmp[MAXPATH], *path_copy, *p, *t;
+    int  rv = -1;
+
+    if(!path || !*path || *file == '\\'
+       || (isalpha(*file) && *(file+1) == '\\')){
+	rv = can_access(file, mode);
+    }
+    else if((rv = can_access(file, mode)) < 0){
+	/* first is current working directory, then path */
+	for(p = path_copy = cpystr(path); p && *p; p = t){
+	    if(t = strindex(p, ';'))
+	      *t++ = '\0';
+
+	    sprintf(tmp, "%s\\%s", p, file);
+	    if((rv = can_access(tmp, mode)) == 0)
+	      break;
+	}
+
+	fs_give((void **)&path_copy);
+    }
+
+    return(rv);
+}

@@ -1,0 +1,14 @@
+The os-xxx.h files are created totally by hand.  Start with os-gen.h,
+the generic version of the os.h file.
+
+The os-xxx.c files may be created by hand or you may use the simple include
+method that is used here.  The os.c files are made by creating an
+os-xxx.ic file which lists all of the files it includes, and then
+running make os-xxx.c.  There is an os-gen.ic generic version of the
+.ic file.
+
+You will also need to create a makefile.xxx in the parent directory.  There
+are other makefiles to inspect there, including a generic makefile.gen.
+
+The names of all the included files here have to be eight characters or less
+for DOS, hence the stupid names.

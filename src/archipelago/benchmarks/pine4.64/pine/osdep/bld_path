@@ -1,0 +1,56 @@
+/*----------------------------------------------------------------------
+      Paste together two pieces of a file name path
+
+  Args: pathbuf      -- Put the result here
+        first_part   -- of path name
+        second_part  -- of path name
+	len          -- Length of pathbuf
+ 
+ Result: New path is in pathbuf.  Note that
+	 we don't have to check for /'s at end of first_part and beginning
+	 of second_part since multiple slashes are ok.
+
+BUGS:  This is a first stab at dealing with fs naming dependencies, and others 
+still exist.
+  ----*/
+void
+build_path(pathbuf, first_part, second_part, len)
+    char *pathbuf, *first_part, *second_part;
+    size_t len;
+{
+    if(!first_part){
+	strncpy(pathbuf, second_part, len-1);
+	pathbuf[len-1] = '\0';
+    }
+    else{
+	size_t fpl = 0;
+
+	strncpy(pathbuf, first_part, len-2);
+	pathbuf[len-2] = '\0';
+	if(*pathbuf && pathbuf[(fpl=strlen(pathbuf))-1] != '/'){
+	    pathbuf[fpl++] = '/';
+	    pathbuf[fpl] = '\0';
+	}
+
+	strncat(pathbuf, second_part, len-1-fpl);
+	pathbuf[len-1] = '\0';
+    }
+}
+
+
+/*----------------------------------------------------------------------
+  Test to see if the given file path is absolute
+
+  Args: file -- file path to test
+
+ Result: TRUE if absolute, FALSE otw
+
+  ----*/
+int
+is_absolute_path(path)
+    char *path;
+{
+    return(path && (*path == '/' || *path == '~'));
+}
+
+

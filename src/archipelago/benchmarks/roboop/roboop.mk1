@@ -1,0 +1,43 @@
+!define BLANK ""
+comp_dq.obj : source\comp_dq.cpp .AUTODEPEND
+ *wpp386 source\comp_dq.cpp $(CFLAGS)
+
+comp_dqp.obj : source\comp_dqp.cpp .AUTODEPEND
+ *wpp386 source\comp_dqp.cpp $(CFLAGS)
+delta_t.obj : source\delta_t.cpp .AUTODEPEND
+ *wpp386 source\delta_t.cpp $(CFLAGS)
+
+dynamics.obj : source\dynamics.cpp .AUTODEPEND
+ *wpp386 source\dynamics.cpp $(CFLAGS)
+
+gnugraph.obj : source\gnugraph.cpp .AUTODEPEND
+ *wpp386 source\gnugraph.cpp $(CFLAGS)
+
+homogen.obj : source\homogen.cpp .AUTODEPEND
+ *wpp386 source\homogen.cpp $(CFLAGS)
+
+kinemat.obj : source\kinemat.cpp .AUTODEPEND
+ *wpp386 source\kinemat.cpp $(CFLAGS)
+
+robot.obj : source\robot.cpp .AUTODEPEND
+ *wpp386 source\robot.cpp $(CFLAGS)
+
+sensitiv.obj : source\sensitiv.cpp .AUTODEPEND
+ *wpp386 source\sensitiv.cpp $(CFLAGS)
+
+utils.obj : source\utils.cpp .AUTODEPEND
+ *wpp386 source\utils.cpp $(CFLAGS)
+
+roboop.lib : comp_dq.obj comp_dqp.obj delta_t.obj dynamics.obj hom&
+ogen.obj gnugraph.obj kinemat.obj robot.obj sensitiv.obj utils.obj .AUTODEPEND
+ %create roboop.lb1
+!ifneq BLANK "comp_dq.obj comp_dqp.obj delta_t.obj dynamics.obj homogen.obj &
+gnugraph.obj kinemat.obj robot.obj sensitiv.obj utils.obj"
+ @for %i in (comp_dq.obj comp_dqp.obj delta_t.obj dynamics.obj homogen.obj k&
+inemat.obj gnugraph.obj robot.obj sensitiv.obj utils.obj) do @%append roboop.lb1 +'%i'
+!endif
+!ifneq BLANK ""
+ @for %i in () do @%append roboop.lb1 +'%i'
+!endif
+ *wlib -b -c -n -q -p=512 roboop.lib @roboop.lb1
+

@@ -1,0 +1,48 @@
+#line 2 "osdep/domnames.dos"
+
+/*----------------------------------------------------------------------
+       Get the current host and domain names
+
+    Args: hostname   -- buffer to return the hostname in
+          hsize      -- size of buffer above
+          domainname -- buffer to return domain name in
+          dsize      -- size of buffer above
+
+  Result: The system host and domain names are returned. If the full host
+          name is akbar.cac.washington.edu then the domainname is
+          cac.washington.edu.
+
+On Internet connected hosts this look up uses /etc/hosts and DNS to
+figure all this out. On other less well connected machines some other
+file may be read. If there is no notion of a domain name the domain
+name may be left blank. On a PC where there really isn't a host name
+this should return blank strings. The .pinerc will take care of
+configuring the domain names. That is, this should only return the
+native system's idea of what the names are if the system has such
+a concept.
+ ----*/
+void
+getdomainnames(hostname, hsize, domainname, dsize)
+     char *hostname, *domainname;
+     int   hsize, dsize;
+{
+    char *p;
+
+    hostname[0] = domainname[0] = '\0';
+    if(p = mylocalhost())
+      sprintf(hostname, "%.*s", hsize - 1, p);
+
+#if	!defined(LWP) && !defined(_WINDOWS)
+    if(getdomainname(domainname, dsize-1) > 0)
+      return;
+#endif
+
+    sprintf(domainname, "%.*s", dsize-1, 
+	    (hostname[0] && hostname[0] != '[' && (p = strindex(hostname,'.')))
+	      ? p+1 : hostname);
+	      
+    hostname[hsize-1] = '\0';
+    domainname[dsize-1] = '\0';
+}
+
+

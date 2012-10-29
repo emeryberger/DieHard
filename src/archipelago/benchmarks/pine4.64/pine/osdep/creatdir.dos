@@ -1,0 +1,15 @@
+/*----------------------------------------------------------------------
+      Create the mail subdirectory.
+
+  Args: dir -- Name of the directory to create
+ 
+ Result: Directory is created.  Returns 0 on success, else -1 on error
+	 and errno is valid.
+  ----*/
+create_mail_dir(dir)
+    char *dir;
+{
+    return((mkdir(dir) < 0) ? -1 : 0);
+}
+
+

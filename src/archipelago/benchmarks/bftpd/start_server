@@ -1,0 +1,87 @@
+#!/bin/bash
+
+BASEDIR=`dirname ${0}`
+
+if [[ ${BASEDIR:0:1} != / ]]
+    then
+    BASEDIR=`pwd`/${BASEDIR}
+fi
+
+ARCH=${BASEDIR}/../../libsparseheaps.so
+REPORT=${BASEDIR}/../../libreport.so
+DIEHARD2=${BASEDIR}/../../../diehard/src/libdiehard-2.so
+DIEHARD1024=${BASEDIR}/../../../diehard/src/libdiehard-1024.so
+EFENCE=${BASEDIR}/../../../electric-fence-2.1.13/libefence.so
+MTRACE=${BASEDIR}/../../tools/libmalloctrace.so
+PTIME=${BASEDIR}/../../tools/pmem.py
+BFTPD=${BASEDIR}/bftpd/bftpd
+CONF_FILE=${BASEDIR}/bftpd/bftpd.conf
+CMD="${BFTPD} -c ${CONF_FILE} -D"
+PIDFILE=/tmp/mybftpd.pid
+CHECK_PID="ps hp"
+ARGS="-p ${PIDFILE}" #-f '%.2fsec %uk %uk %uk'"
+WS_DIR=${BASEDIR}/../.jail/ftp
+PASSWD=${BASEDIR}/ftpdpassword
+WS_LINK=/tmp/ftp
+PASSWD_LINK=/tmp/ftpdpassword
+
+
+while [[ $# > 0 ]]
+  do
+  case $1 in
+      "-m")
+	  ARGS="${ARGS} -e LD_PRELOAD=${MTRACE}"
+	  ;;
+      "-r" | "--report" )
+	  ARGS="${ARGS} -e LD_PRELOAD=${REPORT}"
+	  ;;          
+      "-a" | "--archipelago" )
+	  if [[ -z "${USE_DIEHARD}" ]]
+	      then 
+	      USE_ARCH=1
+	      ARGS="${ARGS} -e LD_PRELOAD=${ARCH}"
+	  fi
+	  shift
+	  ;;
+      "-d2" | "--diehard-2" )
+	  if [[ -z "${USE_ARCH}" ]]
+	      then 
+	      USE_DIEHARD2=1
+	      ARGS="${ARGS} -e LD_PRELOAD=${DIEHARD2}"
+	  fi
+	  shift
+	  ;;
+      "-d1024" | "--diehard-1024" )
+	  if [[ -z "${USE_ARCH}" ]]
+	      then 
+	      USE_DIEHARD1024=1
+ 	      ARGS="${ARGS} -e LD_PRELOAD=${DIEHARD1024}"
+	  fi
+	  shift
+	  ;;
+      "-e" | "--efence")
+	  ARGS="${ARGS} -e LD_PRELOAD=${EFENCE}"
+	  shift
+	  ;;
+      "-o" | "--outfile")
+	  ARGS="${ARGS} -o ${2}"
+	  shift;shift
+	  ;;
+  esac
+done
+      
+rm -f ${PIDFILE}
+
+ln -s ${WS_DIR} ${WS_LINK}
+ln -s ${PASSWD} ${PASSWD_LINK}
+
+eval ${PTIME} ${ARGS} ${CMD} &
+
+sleep 1
+
+pid=`cat ${PIDFILE}`
+
+if [[ -z `${CHECK_PID} ${pid}` ]]
+    then
+    echo "Error starting bFTPd"
+fi

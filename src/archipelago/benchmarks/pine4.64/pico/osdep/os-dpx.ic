@@ -1,0 +1,15 @@
+;
+; Bull DPX/2 B.O.S os-dpx.ic file for building os-dpx.c.
+;
+; Boilerplate header.
+include(header)
+
+include(unix)
+
+include(spell.unx)
+
+include(read.sel)
+
+include(raw.ios)
+
+include(term.cap)

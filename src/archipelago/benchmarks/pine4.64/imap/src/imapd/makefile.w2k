@@ -1,0 +1,47 @@
+# Program:	IMAPD Makefile for Windows 2000
+#
+# Author:	Mark Crispin
+#		Networks and Distributed Computing
+#		Computing & Communications
+#		University of Washington
+#		Administration Building, AG-44
+#		Seattle, WA  98195
+#		Internet: MRC@CAC.Washington.EDU
+#
+# Date:		5 November 1990
+# Last Edited:	29 June 2004
+#
+# The IMAP toolkit provided in this Distribution is
+# Copyright 1988-2004 University of Washington.
+#
+# The full text of our legal notices is contained in the file called
+# CPYRIGHT, included with this Distribution.
+
+
+ALERT=\\imapd.alert
+USERALERT=alert.txt
+SHUTDOWN=\\nologin
+ANO=\\anonymous.newsgroups
+NNTP=\\imapd.nntp
+
+
+C = ..\c-client
+CCLIENTLIB = $C\cclient.lib
+LIBS = $(CCLIENTLIB) wsock32.lib winmm.lib advapi32.lib secur32.lib crypt32.lib
+CFLAGS= -I$C /MT /W3 /DWIN32 -nologo $(EXTRACFLAGS) -DALERTFILE=\"$(ALERT)\" -DNNTPFILE=\"$(NNTP)\" -DUSERALERTFILE=\"$(USERALERT)\" -DANOFILE=\"$(ANO)\" -DSHUTDOWNFILE=\"$(SHUTDOWN)\"
+
+imapd: $(CCLIENTLIB) imapd.obj
+	LINK /NOLOGO /DEF:imapd.def imapd.obj $(LIBS)
+
+imapd.obj: $C\mail.h $C\misc.h $C\osdep.h
+
+$(CCLIENTLIB):
+	@echo Make c-client first
+	false
+
+clean:
+	del *.obj *.exe *.lib *.exp || rem
+
+# A monument to a hack of long ago and far away...
+love:
+	@echo not war?

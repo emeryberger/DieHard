@@ -1,0 +1,117 @@
+/*
+ * Pine and Pico are registered trademarks of the University of Washington.
+ * No commercial use of these trademarks may be made without prior written
+ * permission of the University of Washington.
+ * 
+ * Pine, Pico, and Pilot software and its included text are Copyright
+ * 1989-1998 by the University of Washington.
+ * 
+ * The full text of our legal notices is contained in the file called
+ * CPYRIGHT, included with this distribution.
+ */
+
+#ifdef	SPELLER
+
+/*
+ * spell - fork off an spell checker
+ * this is different for OS/2 with ispell; here, the document
+ * correction and interface is provided by ispell itself
+ */
+#define MAXARGS 10
+spell(f, n)
+    int f, n;
+{
+  char   sp[NLINE];				/* buf holding spell command */
+  char   *fn;					/* tmp holder for file name */
+  char   *cp;
+  char   *args[MAXARGS];			/* ptrs into edit command */
+  int    child, rc, i, done = 0;
+  long   l;
+  int    stat;
+  FILE   *p;
+
+  if(Pmaster == NULL)
+    return(-1);
+
+  if((fn = writetmp(0, NULL)) == NULL){
+    emlwrite("Can't write temp file for spell checker");
+    return(-1);
+  }
+  if((cp = (char *)getenv("SPELL")) == NULL)
+    cp = SPELLER;
+  strcpy(sp,cp);
+
+  if((fn=writetmp(1, NULL)) == NULL){		/* get temp file */
+    emlwrite("Problem writing temp file for spell checker", NULL);
+    return(-1);
+  }
+
+  strcat(sp, " ");
+  strcat(sp, fn);
+
+  cp = sp;
+  for(i=0; *cp != '\0';i++) {			/* build args array */
+    if(i < MAXARGS) {
+      args[i] = NULL;			/* in case we break out */
+    }
+    else{
+      emlwrite("Too many args for command!", NULL);
+      return(-1);
+    }
+
+    while(isspace((unsigned char)(*cp)))
+      if(*cp != '\0')
+	cp++;
+      else break;
+
+    args[i] = cp;
+    while(!isspace((unsigned char)(*cp)))
+      if(*cp != '\0')
+	cp++;
+      else
+	break;
+
+    if(*cp != '\0')
+      *cp++ = '\0';
+  }
+
+  args[i] = NULL;
+
+  (*Pmaster->tty_fix)(0);
+
+  emlwrite("Invoking spell checker...", NULL);
+
+  {
+    void (*ohup)() = signal(SIGHUP, SIG_IGN);	/* ignore signals for now */
+    void (*oint)() = signal(SIGINT, SIG_IGN);
+    cp=args[0];
+    rc = spawnvp(P_WAIT, cp, args);
+    signal(SIGHUP, ohup);	/* restore signals */
+    signal(SIGINT, oint);
+  }
+
+  (*Pmaster->tty_fix)(1);
+  dont_interrupt();
+
+  if (rc==-1) {  /* Can't run it */
+	  emlwrite("error attempting to run speller", NULL);
+  }
+  /*
+   * replace edited text with new text 
+   */
+  else{
+    rc = 0;
+    curbp->b_flag &= ~BFCHG;		/* make sure old text gets blasted */
+    readin(fn, 0, 0);			/* read new text overwriting old */
+    curbp->b_flag |= BFCHG;		/* mark dirty for packbuf() */
+  }
+  unlink(fn);				/* blast temp file */
+
+  ttopen();				/* reset the signals */
+  pico_refresh(0, 1);			/* redraw */
+  return(rc);
+}
+
+#endif	/* SPELLER */
+
+

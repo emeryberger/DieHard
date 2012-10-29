@@ -1,0 +1,226 @@
+/*
+ * Internal prototypes
+ */
+int       osx_build_mime_type_cmd PROTO((char *, char *, int *));
+int       osx_build_mime_ext_cmd PROTO((char *, char *, int, int *));
+
+/*----------------------------------------------------------------------
+       Can we display this type/subtype?
+
+   Args: type       -- the MIME type to check
+         subtype    -- the MIME subtype
+         params     -- parameters
+	 use_viewer -- tell caller he should run external viewer cmd to view
+
+ Result: Returns:
+
+	 MCD_NONE	if we can't display this type at all
+	 MCD_INTERNAL	if we can display it internally
+	 MCD_EXTERNAL	if it can be displayed via an external viewer
+
+ ----*/
+mime_can_display(type, subtype, params)
+    int       type;
+    char      *subtype;
+    PARAMETER *params;
+{
+    return((mailcap_can_display(type, subtype, params, 0)
+	      ? MCD_EXTERNAL 
+	    : (mailcap_can_display(type, subtype, params, 1) 
+	       ? (MCD_EXT_PROMPT | MCD_EXTERNAL) : MCD_NONE))
+	   | ((type == TYPETEXT || type == TYPEMESSAGE
+	       || MIME_VCARD(type,subtype))
+	        ? MCD_INTERNAL : MCD_NONE));
+}
+
+
+/*
+ * Determine if there is an OS-specific mechanism for accessing
+ * MIME and extension data.  In the general *nix case this is all
+ * done through mailcap and mime.types files.
+ *
+ * Returns: 0 if there is no support (most *nix cases)
+ *          1 if there is support (Mac OS X, Windows)
+ */
+int
+mime_os_specific_access()
+{
+    return 1;
+}
+
+/*
+ * Return the command based on either the mimetype or the file
+ * extension.  Mime-type always takes precedence.
+ *
+ *   mime_type - mime-type of the file we're looking at
+ *   mime_ext  - file extension given us by the mime data
+ *   cmd       - buffer to copy the resulting command into
+ *   chk       - whether or not we should check the file extension
+ *
+ *   Returns: 1 on success, 0 on failure
+ */
+int
+mime_get_os_mimetype_command(mime_type, mime_ext, cmd, clen, chk, sp_hndlp)
+    char *mime_type, *mime_ext, *cmd;
+    int   clen, chk, *sp_hndlp;
+{
+    /* mswin_reg_viewer */
+    /* 
+     * if we wanted to be more like PC-Pine, we'd try checking
+     * the mime-type of mime_ext and seeing if that matches
+     * with our mime-type, which is safe for opening
+     */
+    return(osx_build_mime_type_cmd(mime_type, cmd, clen, sp_hndlp)
+	   || (chk && mime_ext && *mime_ext &&
+	       osx_build_mime_ext_cmd(mime_ext, cmd, clen, sp_hndlp)));
+}
+
+/*
+ * Given a file extension, return the mime-type if there is one
+ *
+ * Returns: 1 on success, 0 on failure
+ */
+int
+mime_get_os_mimetype_from_ext(file_ext, mime_type, mime_type_len)
+    char *file_ext, *mime_type;
+    int mime_type_len;
+{
+#if defined(MAC_OS_X_VERSION_MIN_REQUIRED) && defined(MAC_OS_X_VERSION_10_3) && MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_3
+    CFStringRef mime_ref = NULL, type_id_ref = NULL, ext_ref = NULL;
+    char buf[1024];
+
+    if(!file_ext || !*file_ext)
+      return 0;
+
+    /* This for if we built on OS X >= 10.3 but run on < 10.3 */
+    if(&UTTypeCreatePreferredIdentifierForTag == NULL)
+      return 0;
+    if((ext_ref = CFStringCreateWithCString(NULL, *file_ext == '.' ?
+					    file_ext + 1 : file_ext,
+				    kCFStringEncodingASCII)) == NULL)
+      return 0;
+    if((type_id_ref 
+	= UTTypeCreatePreferredIdentifierForTag(kUTTagClassFilenameExtension,
+						ext_ref, NULL)) == NULL)
+      return 0;
+
+    if((mime_ref = UTTypeCopyPreferredTagWithClass(type_id_ref,
+				   kUTTagClassMIMEType)) == NULL)
+      return 0;
+    if(CFStringGetCString(mime_ref, mime_type,
+			   (CFIndex)mime_type_len - 1,
+			   kCFStringEncodingASCII) == false)
+      return 0;
+
+    mime_type[mime_type_len - 1] = '\0';
+
+    return 1;
+#else
+    return 0;
+#endif /* MAC_OS_X_VERSION_10_3 */
+}
+
+/*
+ * Given a mime-type, return the file extension if there is one
+ *
+ * Returns: 1 on success, 0 on failure
+ */
+int
+mime_get_os_ext_from_mimetype(mime_type, file_ext, file_ext_len)
+    char *mime_type, *file_ext;
+    int file_ext_len;
+{
+#if defined(MAC_OS_X_VERSION_MIN_REQUIRED) && defined(MAC_OS_X_VERSION_10_3) && MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_3
+    CFStringRef mime_ref = NULL, type_id_ref = NULL, ext_ref = NULL;
+
+    if(!mime_type || !*mime_type)
+      return 0;
+    /* This for if we built on OS X >= 10.3 but run on < 10.3 */
+    if(&UTTypeCreatePreferredIdentifierForTag == NULL)
+      return 0;
+    if((mime_ref = CFStringCreateWithCString(NULL, mime_type,
+				    kCFStringEncodingASCII)) == NULL)
+      return 0;
+    if((type_id_ref 
+	= UTTypeCreatePreferredIdentifierForTag(kUTTagClassMIMEType,
+						mime_ref, NULL)) == NULL)
+      return 0;
+
+    if((ext_ref = UTTypeCopyPreferredTagWithClass(type_id_ref,
+				   kUTTagClassFilenameExtension)) == NULL)
+      return 0;
+    if((CFStringGetCString(ext_ref, file_ext, (CFIndex)file_ext_len - 1,
+			   kCFStringEncodingASCII)) == false)
+      return 0;
+
+    file_ext[file_ext_len - 1] = '\0';
+
+    return 1;
+#else
+    return 0;
+#endif /* MAC_OS_X_VERSION_10_3 */
+}
+
+
+/* returns: 1 if success, 0 if failure */
+int
+osx_build_mime_type_cmd(mime_type, cmd, cmdlen, sp_hndlp)
+    char *mime_type, *cmd;
+    int   cmdlen, *sp_hndlp;
+{
+    CFStringRef str_ref = NULL, ret_str_ref = NULL;
+    CFURLRef url_ref = NULL;
+    int rv = 0;
+
+#if defined(MAC_OS_X_VERSION_MIN_REQUIRED) && defined(MAC_OS_X_VERSION_10_2) && MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_2
+    if(&LSCopyApplicationForMIMEType == NULL)
+      return 0;
+    if((str_ref = CFStringCreateWithCString(NULL, mime_type, 
+					kCFStringEncodingASCII)) == NULL)
+      return 0;
+    if(LSCopyApplicationForMIMEType(str_ref, kLSRolesViewer, &url_ref)
+       != kLSApplicationNotFoundErr){
+	if((ret_str_ref = CFURLGetString(url_ref)) == NULL)
+	  return 0;
+	if(CFStringGetCString(ret_str_ref, cmd, (CFIndex)cmdlen,
+			      kCFStringEncodingASCII) == false)
+	  return 0;
+	if(sp_hndlp)
+	  *sp_hndlp = 1;
+	rv = 1;
+	if(url_ref)
+	  CFRelease(url_ref);
+    }
+#endif /* MAC_OS_X_VERSION_10_2 */
+    return rv;
+}
+
+/* returns: 1 if success, 0 if failure */
+int
+osx_build_mime_ext_cmd(mime_ext, cmd, cmdlen, sp_hndlp)
+    char *mime_ext, *cmd;
+    int   cmdlen, *sp_hndlp;
+{
+    CFStringRef str_ref = NULL, ret_str_ref = NULL;
+    CFURLRef url_ref = NULL;
+    int rv = 0;
+
+    if((str_ref = CFStringCreateWithCString(NULL, mime_ext,
+					kCFStringEncodingASCII)) == NULL)
+      return 0;
+    if(LSGetApplicationForInfo(kLSUnknownType, kLSUnknownCreator,
+			       str_ref, kLSRolesAll, NULL, &url_ref) 
+       != kLSApplicationNotFoundErr){
+	if((ret_str_ref = CFURLGetString(url_ref)) == NULL)
+	  return 0;
+	if(CFStringGetCString(ret_str_ref, cmd, (CFIndex)cmdlen,
+			      kCFStringEncodingASCII) == false)
+	  return 0;
+	if(sp_hndlp)
+	  *sp_hndlp = 1;
+	rv = 1;
+	if(url_ref)
+	  CFRelease(url_ref);
+    }
+    return rv;
+}

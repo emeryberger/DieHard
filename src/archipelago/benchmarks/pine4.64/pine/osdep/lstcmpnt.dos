@@ -1,0 +1,28 @@
+/*----------------------------------------------------------------------
+      Return pointer to last component of pathname.
+
+  Args: filename     -- The pathname.
+ 
+ Result: Returned pointer points to last component in the input argument.
+  ----*/
+char *
+last_cmpnt(filename)
+    char *filename;
+{
+    register char *p = NULL, *q = filename;
+
+    if(!q)
+      return(q);
+
+    while(q = strchr(q, '\\'))
+      if(*++q)
+	p = q;
+
+    if(!p && isalpha((unsigned char)*filename)
+	&& *(filename+1) == ':' && *(filename+2))
+      p = filename + 2;
+       
+    return(p);
+}
+
+

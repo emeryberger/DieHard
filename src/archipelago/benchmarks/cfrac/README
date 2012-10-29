@@ -1,0 +1,8 @@
+cfrac
+
+the file "precision.h" contains the mods to allow the use of different
+allocators.
+
+See INPUT/README for benchmark inputs.
+
+e.g., 41757646344123832613190542166099121

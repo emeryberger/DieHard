@@ -1,0 +1,91 @@
+#!/bin/bash
+BASEDIR=`dirname $0`
+
+if [[ ${BASEDIR:0:1} != / ]]
+    then
+    BASEDIR=`pwd`/${BASEDIR}
+fi
+
+TIMECMD="/usr/bin/time -a -o"
+PTIMECMD="${BASEDIR}/../../tools/pmem.py"
+TIMEFORMAT="%U %S %e"
+timestamp=`date +%F_%T`
+LIBC=
+DIEHARD2="LD_PRELOAD=${BASEDIR}/../../../diehard/src/libdiehard-2.so"
+DIEHARD1024="LD_PRELOAD=${BASEDIR}/../../../diehard/src/libdiehard-1024.so"
+ARCH="LD_PRELOAD=${BASEDIR}/../../libsparseheaps.so"
+EFENCE="LD_PRELOAD=${BASEDIR}/../../../electric-fence-2.1.13/libefence.so"
+NUMRUNS=10
+RUNS=`seq 1 ${NUMRUNS}`
+ESPRESSO_CMD="${BASEDIR}/espresso -t ${BASEDIR}/Input/largest.espresso"
+ESPRESSO_SLOW="${BASEDIR}/espresso-slow -t ${BASEDIR}/Input/largest.espresso"
+
+#save value of time variable
+if [[ -n "${TIME}" ]]
+    then 
+    TIMESAVE=${TIME}
+fi
+
+#set new time format
+export TIME=${TIMEFORMAT}
+
+#libc experiments
+#echo Running experiments with libc...
+
+#for i in $RUNS 
+#    do
+#    ${TIMECMD} ./espresso_libc_${timestamp}.time ${ESPRESSO_CMD} >> /dev/null
+#done	
+
+#${PTIMECMD} -o ./espresso_libc_${timestamp}.mem ${ESPRESSO_SLOW} >> /dev/null
+
+#Arch experiments
+#echo Running experiments with Archipelago...
+
+#for i in $RUNS 
+#    do
+#    eval "${ARCH} ${TIMECMD} ./espresso_arch_${timestamp}.time ${ESPRESSO_CMD} >> /dev/null"
+#done	
+
+#${PTIMECMD} -e ${ARCH} -o ./espresso_arch_${timestamp}.mem ${ESPRESSO_SLOW} >> /dev/null
+
+#dh experiments
+#echo Running experiments with DieHard-1024...
+
+#for i in $RUNS 
+#    do
+#    eval "${DIEHARD1024} ${TIMECMD} ./espresso_dh_${timestamp}.time ${ESPRESSO_CMD} >> /dev/null"
+#done	
+
+#${PTIMECMD} -e ${DIEHARD1024} -o ./espresso_dh_${timestamp}.mem ${ESPRESSO_SLOW} >> /dev/null
+
+#dh experiments
+echo Running experiments with DieHard-2...
+
+for i in $RUNS 
+    do
+    eval "${DIEHARD2} ${TIMECMD} ./espresso_dh2_${timestamp}.time ${ESPRESSO_CMD} >> /dev/null"
+done	
+
+${PTIMECMD} -e ${DIEHARD2} -o ./espresso_dh2_${timestamp}.mem ${ESPRESSO_SLOW} >> /dev/null
+
+
+#efence experiments
+echo Running experiments with eFence...
+
+for i in $RUNS 
+    do
+    eval "${EFENCE} ${TIMECMD} ./espresso_ef_${timestamp}.time ${ESPRESSO_CMD} >> /dev/null"
+done	
+
+${PTIMECMD} -e ${EFENCE} -o ./espresso_ef_${timestamp}.mem ${ESPRESSO_SLOW} >> /dev/null
+
+
+#restore time variable
+if [[ -n "${TIMESAVE}" ]]
+    then 
+    export TIME=${TIMESAVE}
+else 
+    unset TIME
+fi
+

@@ -1,0 +1,336 @@
+<HTML><HEAD><TITLE>Pine Technical Notes: Notes for Porting and Modification</TITLE></HEAD><BODY>
+<H1>Notes for Porting and Modification</H1>
+
+<H2><A NAME="new-port">Porting Pine to Other Platforms</A></H2>
+
+Substantial effort has gone into making <EM>Pine</EM>/<EM>Pico</EM> portable.
+There are
+still, of course, a number of machine dependencies.  Some of the ports are
+well-tested and some are untested.  In particular, the most heavily used
+ports are the Ultrix, AIX, NeXT, Windows, and Dec Unix ports.  <P>
+
+Each platform is given a three letter name (see the file
+<CODE>doc/pine-ports</CODE>).  Make up a new one for your new port.  We've
+attempted to bring all potential platform dependencies into the files: 
+<CODE>{pico,pine}/osdep/os-xxx.h</CODE>,
+<CODE>{pico,pine}/osdep/os-xxx.ic</CODE>,
+and <CODE>{pico,pine}/makefile.xxx</CODE>, where <EM>xxx</EM>
+is the three letter name of the port.  Thus any new port will hopefully
+just result in new versions of these files and some notes for the
+<EM>pine-ports</EM> file.
+There are separate dependencies in the c-client source, but that
+is handled in separate documentation there.
+Regrettably, the source code is also full of instances of <EM>ifdef DOS</EM>.
+Most of these are due to memory limit problems on <EM>DOS</EM> as
+opposed to actual system dependencies.  <P>
+
+The makefiles are kept as simple and straight-forward as possible, because
+many previous attempts at automatically figuring out what to do seem to
+have become complex and ineffective in what they set out to do:  which is
+to make compiling and installing the program easy.  Each port is for a
+specific hardware/software platform, also because past attempts to
+generalize on versions of Unix or some CPU architecture don't seem to have
+gained much.  Thus, there is a separate makefile for each platform that
+calls the appropriate compiler and linker with the appropriate flags. 
+Most of these makefiles are pretty similar.  The makefile also specifies
+which of the <EM>os-xxx.c</EM> and <EM>os-xxx.h</EM> files to use.
+It is
+the root from which most platform dependencies are selected.  In most cases
+the makefile also defines a symbol named after the platform on which there
+can be dependencies in the source code, though we've tried to minimize
+relying on this where reasonable.
+When different "ports" are very similar, it is sometimes possible to use
+the same pine code (for example) with only a small change in the c-client
+or pico code. In those cases, that kind of dependency is reflected in
+the top-level <EM>build</EM> script.
+The <EM>build</EM> script can usually be
+used to invoke the various makes correctly.
+It may set some variables before running make so look to see what <EM>build</EM>
+does before trying a make in one of the subdirectories. This is especially true
+if LDAP is being included. <P>
+
+It is almost always easier to start with an existing port when trying to port
+to a new system. There is a port called <EM>gen</EM> (generic) which may be
+a good starting point. On the other hand, if another port is close to what
+you want, start with it instead.
+<P>
+
+The file <CODE>pico/osdep/os-xxx.h</CODE> contains most of the general
+platform dependent <EM>#include</EM>'s and <EM>#defines</EM>.
+There are a number
+of <EM>Pine</EM> configuration settings that are defined in
+<CODE>pine/osdep/os-xxx.h</CODE>, as well, such as the
+place it looks for certain files, defaults for the printer and folder
+names, the maximum screen size, and so on.
+Start by looking at the generic <CODE>pico/osdep/os-gen.h</CODE> file
+and comparing it to some of the specific <CODE>os-xxx.h</CODE> files there. <P>
+
+The <CODE>osdep/os-xxx.c</CODE> files contain functions that are potentially
+platform dependent.  Again, the idea is to gather all the dependencies in
+one place.  
+We use a complicated looking method to produce
+the <EM>os-xxx.c</EM> files from a set of included files.  Each included
+file usually contains a single implementation method and we've
+found that there are
+usually only two or three different methods in the
+ports we've done so far.  Hopefully, coming up with an <CODE>os-xxx.c</CODE>
+for a new port will usually be a matter of including the right set of
+these already written functions.  This is done by writing a new
+<CODE>os-xxx.ic</CODE> file in the <CODE>osdep</CODE> subdirectories.
+Starting with the generic <CODE>os-gen.ic</CODE>, as you did with
+the <CODE>os-gen.h</CODE> file above, may be a useful strategy.  <P>
+
+We strongly encourage that no changes be made to the general source when
+porting and that all changes be contained in the system
+dependent files if possible.  The object is to maintain source code
+integrity and assimilate ports to new platforms rapidly.  The more
+conventional way to do this is with a large collection of
+<EM>#ifdefs</EM>.  The problem with this is that adding a port for a new
+platform implies changing the source code for all the other platforms and
+thereby risks breaking them.  (We readily admit that there are still too
+many <EM>ifdefs</EM> in the code.) <P>
+
+If you do port <EM>Pine</EM> to a new platform we hope that you will send us the
+changes required so that we may attempt to include it in a later release. 
+Thanks!  <P>
+
+<HR>
+
+<H2><A NAME="checklist">Test Checklist</A></H2>
+
+The following is a checklist of some things to check when testing a new
+port:  <P>
+
+<DL COMPACT>
+<DT>
+ ___
+<DD>
+Sending mail, check that headers are correct 
+<DT>
+ ___
+<DD>
+Sending mail with attachments 
+<DT>
+ ___
+<DD>
+Sending mail with SMTP server 
+<DT>
+ ___
+<DD>
+Sending mail without SMTP server 
+<DT>
+ ___
+<DD>
+Sending mail with list of two SMTP servers, first one doesn't answer 
+<DT>
+ ___
+<DD>
+Replying to and forwarding a message 
+<DT>
+ ___
+<DD>
+Postponing messages under composition 
+<DT>
+ ___
+<DD>
+Composer operations 
+<DT>
+ ___
+<DD>
+Alternate editor, <EM>enable-alternate-editor-implicitly</EM>
+<DT>
+ ___ 
+<DD>
+Make sure local user names are expanded 
+<DT>
+ ___
+<DD>
+Test spelling checker 
+<DT>
+ ___
+<DD>
+Catching of SIGHUP while message is being composed 
+<DT>
+ ___
+<DD>
+Setting of variables in <CODE>.pinerc</CODE> 
+<DT>
+ ___
+<DD>
+New mail notification.  Should happen with <EM>Pine</EM> idle to check timeouts 
+<DT>
+ ___
+<DD>
+Reading mail (attachments, MIME, MIME with mailcap viewers) 
+<DT>
+ ___
+<DD>
+Deleting, undeleting, expunging, sorting 
+<DT>
+ ___
+<DD>
+Expunge to empty folder 
+<DT>
+ ___
+<DD>
+Make sure that <EM>~</EM> expansion works in config files 
+<DT>
+ ___
+<DD>
+Make sure that $VAR expansion works in config files 
+<DT>
+ ___
+<DD>
+Save message to folder, check error conditions such as permission denied 
+<DT>
+ ___
+<DD>
+Export message with FullHeaderMode on and off 
+<DT>
+ ___
+<DD>
+Checkpointing (see the section on checkpointing) 
+<DT>
+ ___  
+<DD>
+Open IMAP and RIMAP folders 
+<DT>
+ ___
+<DD>
+Default-fcc on remote IMAP server 
+<DT>
+ ___
+<DD>
+Fcc-name-rule, fcc in addrbook (while composing) 
+<DT>
+ ___
+<DD>
+Test opening bogus folders:  invalid format, no permission 
+<DT>
+ ___
+<DD>
+Open a USENET news group, list in folder-lister, read news, post news 
+<DT>
+ ___
+<DD>
+Command line arguments 
+<DT>
+ ___
+<DD>
+Change password 
+<DT>
+ ___
+<DD>
+Lock keyboard 
+<DT>
+ ___
+<DD>
+Address book operations (edit, delete, add, lists, whereis, composeto) 
+<DT>
+ ___
+<DD>
+ReadOnly address book 
+<DT>
+ ___
+<DD>
+Look at addrbook, change addrbook-sort-rule in Config, go back to 
+addrbook screen 
+<DT>
+ ___
+<DD>
+No permission to write in same directory as addrbook, should create 
+addrbook.lu in a temp directory 
+<DT>
+ ___
+<DD>
+Multiple address books 
+<DT>
+ ___
+<DD>
+Address book loops from one addrbook to another and back 
+<DT>
+ ___
+<DD>
+TakeAddr command with one address, with multiple addresses 
+<DT>
+ ___
+<DD>
+TakeAddr command with ReadOnly address books 
+<DT>
+ ___
+<DD>
+TakeAddr command with one of two address books ReadOnly 
+<DT>
+ ___
+<DD>
+Send mail with empty address book 
+<DT>
+ ___
+<DD>
+Config Screen operation, does pinerc get written? 
+<DT>
+ ___
+<DD>
+Make sure SIGTSTP, ^Z works 
+<DT>
+ ___ 
+<DD>
+Sent-mail pruning (set back <EM>last-time-prune-questioned</EM> variable) 
+<DT>
+ ___
+<DD>
+Printing using all three printer configurations, various screens 
+<DT>
+ ___
+<DD>
+View help text and news 
+<DT>
+ ___
+<DD>
+Folder list operations (rename, create, delete...) 
+<DT>
+ ___
+<DD>
+Saved-msg-name-rule 
+<DT>
+ ___
+<DD>
+Screen redrawing in various screens (^L) 
+<DT>
+ ___
+<DD>
+Window resizing in various screens 
+<DT>
+ ___
+<DD>
+Error messages for incorrect terminal types (try "foo" and "vt52") 
+<DT>
+ ___
+<DD>
+Reading of <CODE>/usr/local/lib/pine.conf</CODE> 
+<DT>
+ ___
+<DD>
+Fixing variables and features in <CODE>/usr/local/lib/pine.conf.fixed</CODE> 
+<DT>
+ ___
+<DD>
+Flag command (check message status changed in mail folder) 
+<DT>
+ ___
+<DD>
+Initial-keystroke-list 
+<DT>
+ ___
+<DD>
+Aggregate operations (save, delete, export, takeaddr, ...) 
+<DT>
+ ___
+<DD>
+Build xxx from scratch, build clean 
+</DL>
+
+<!-- pnuts -->
+
+</BODY>
+</HTML>

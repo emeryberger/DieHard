@@ -1,0 +1,91 @@
+!define BLANK ""
+bandmat.obj : newmat\bandmat.cpp .AUTODEPEND
+ *wpp386 newmat\bandmat.cpp $(CFLAGS)
+
+cholesky.obj : newmat\cholesky.cpp .AUTODEPEND
+ *wpp386 newmat\cholesky.cpp $(CFLAGS)
+
+evalue.obj : newmat\evalue.cpp .AUTODEPEND
+ *wpp386 newmat\evalue.cpp $(CFLAGS)
+
+fft.obj : newmat\fft.cpp .AUTODEPEND
+ *wpp386 newmat\fft.cpp $(CFLAGS)
+
+hholder.obj : newmat\hholder.cpp .AUTODEPEND
+ *wpp386 newmat\hholder.cpp $(CFLAGS)
+
+jacobi.obj : newmat\jacobi.cpp .AUTODEPEND
+ *wpp386 newmat\jacobi.cpp $(CFLAGS)
+
+myexcept.obj : newmat\myexcept.cpp .AUTODEPEND
+ *wpp386 newmat\myexcept.cpp $(CFLAGS)
+
+newmat1.obj : newmat\newmat1.cpp .AUTODEPEND
+ *wpp386 newmat\newmat1.cpp $(CFLAGS)
+
+newmat2.obj : newmat\newmat2.cpp .AUTODEPEND
+ *wpp386 newmat\newmat2.cpp $(CFLAGS)
+
+newmat3.obj : newmat\newmat3.cpp .AUTODEPEND
+ *wpp386 newmat\newmat3.cpp $(CFLAGS)
+
+newmat4.obj : newmat\newmat4.cpp .AUTODEPEND
+ *wpp386 newmat\newmat4.cpp $(CFLAGS)
+
+newmat5.obj : newmat\newmat5.cpp .AUTODEPEND
+ *wpp386 newmat\newmat5.cpp $(CFLAGS)
+
+newmat6.obj : newmat\newmat6.cpp .AUTODEPEND
+ *wpp386 newmat\newmat6.cpp $(CFLAGS)
+
+newmat7.obj : newmat\newmat7.cpp .AUTODEPEND
+ *wpp386 newmat\newmat7.cpp $(CFLAGS)
+
+newmat8.obj : newmat\newmat8.cpp .AUTODEPEND
+ *wpp386 newmat\newmat8.cpp $(CFLAGS)
+
+newmat9.obj : newmat\newmat9.cpp .AUTODEPEND
+ *wpp386 newmat\newmat9.cpp $(CFLAGS)
+
+newmatex.obj : newmat\newmatex.cpp .AUTODEPEND
+ *wpp386 newmat\newmatex.cpp $(CFLAGS)
+
+newmatnl.obj : newmat\newmatnl.cpp .AUTODEPEND
+ *wpp386 newmat\newmatnl.cpp $(CFLAGS)
+
+newmatrm.obj : newmat\newmatrm.cpp .AUTODEPEND
+ *wpp386 newmat\newmatrm.cpp $(CFLAGS)
+
+solution.obj : newmat\solution.cpp .AUTODEPEND
+ *wpp386 newmat\solution.cpp $(CFLAGS)
+
+sort.obj : newmat\sort.cpp .AUTODEPEND
+ *wpp386 newmat\sort.cpp $(CFLAGS)
+
+submat.obj : newmat\submat.cpp .AUTODEPEND
+ *wpp386 newmat\submat.cpp $(CFLAGS)
+
+svd.obj : newmat\svd.cpp .AUTODEPEND
+ *wpp386 newmat\svd.cpp $(CFLAGS)
+
+newmat.lib : bandmat.obj cholesky.obj evalue.obj fft.obj hholder.obj &
+jacobi.obj myexcept.obj newmat1.obj newmat2.obj newmat3.obj newmat4.obj &
+newmat5.obj newmat6.obj newmat7.obj newmat8.obj newmat9.obj newmatex.obj &
+newmatnl.obj newmatrm.obj solution.obj sort.obj submat.obj svd.obj &
+.AUTODEPEND
+ %create newmat.lb1
+!ifneq BLANK "bandmat.obj cholesky.obj evalue.obj fft.obj hholder.obj jacobi&
+.obj myexcept.obj newmat1.obj newmat2.obj newmat3.obj newmat4.obj newmat5.ob&
+j newmat6.obj newmat7.obj newmat8.obj newmat9.obj newmatex.obj newmatnl.obj &
+newmatrm.obj solution.obj sort.obj submat.obj svd.obj"
+ @for %i in (bandmat.obj cholesky.obj evalue.obj fft.obj hholder.obj jacobi.&
+obj myexcept.obj newmat1.obj newmat2.obj newmat3.obj newmat4.obj newmat5.obj&
+ newmat6.obj newmat7.obj newmat8.obj newmat9.obj newmatex.obj newmatnl.obj n&
+ewmatrm.obj solution.obj sort.obj submat.obj svd.obj) do @%append newmat.lb1&
+ +'%i'
+!endif
+!ifneq BLANK ""
+ @for %i in () do @%append newmat.lb1 +'%i'
+!endif
+ *wlib -b -c -n -q -p=512 newmat.lib @newmat.lb1
+

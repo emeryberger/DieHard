@@ -1,0 +1,347 @@
+#!/bin/sh
+#
+# $Id: ldap-setup 13828 2004-10-14 19:17:34Z hubert $
+#
+#            T H E    P I N E    M A I L   S Y S T E M
+#
+#   Laurence Lundblade and Mike Seibel
+#   Networks and Distributed Computing
+#   Computing and Communications
+#   University of Washington
+#   Administration Building, AG-44
+#   Seattle, Washington, 98195, USA
+#   Internet: lgl@CAC.Washington.EDU
+#             mikes@CAC.Washington.EDU
+#
+#   Please address all bugs and comments to "pine-bugs@cac.washington.edu"
+#
+#
+#   Pine and Pico are registered trademarks of the University of Washington.
+#   No commercial use of these trademarks may be made without prior written
+#   permission of the University of Washington.
+#
+#   Pine, Pico, and Pilot software and its included text are Copyright
+#   1989-2004 by the University of Washington.
+#
+#   The full text of our legal notices is contained in the file called
+#   CPYRIGHT, included with this distribution.
+#
+#
+#   Pine is in part based on The Elm Mail System:
+#    ***********************************************************************
+#    *  The Elm Mail System  -  Revision: 2.13                             *
+#    *                                                                     *
+#    * 			Copyright (c) 1986, 1987 Dave Taylor               *
+#    * 			Copyright (c) 1988, 1989 USENET Community Trust    *
+#    ***********************************************************************
+# 
+#
+
+
+#
+#  Helper script for setting up LDAP
+#
+# Pine has been successfully compiled with OpenLDAP 2.1.8, 2.0.27, and 1.2.13;
+# the University of Michigan LDAP source (ldap-3.3), and with the
+# Netscape Directory SDK 1.0.
+#
+# The setup for use with the Univ. of Michigan source is as follows.
+# Put a symlink called "ldap" to the University of Michigan LDAP source
+# (ldap-3.3) in the top-level pine directory, where the pine build script
+# is located. The script you are reading is called by the "build" script
+# in that same top-level directory. If you haven't previously compiled the
+# LDAP library this ldap-setup script may be able to give you a small amount
+# of help in the form of a hint. Try setting up the symlink to the source
+# and then type the "build <target>" command. The script will try to figure
+# out the command you need to use to compile the LDAP library.
+#
+# The setup for use with the Netscape SDK is as follows. Make a directory
+# called ldap in the same place where the "build" script is located.
+# That directory should have subdirs "libraries" and "include". "Include"
+# is where ldap.h and friends from the Netscape SDK should go, and "libraries"
+# should contain libldap.a.
+#
+# And there is also the SDK from mozilla.org. It is based on the Netscape
+# SDK but for some reason has reverted to the Michigan style of having
+# two separate libraries. The setup for mozilla is the same as for
+# the Netscape SDK with ldap/include and ldap/libraries. This script will
+# look for liblber.a and exit with return value 1 if it finds it.
+#
+# And there is also OpenLDAP. It looks just like the
+# Michigan setup so no changes here for it. Set it up just like you
+# would set up umich. Or, you can set the ldap symlink to point to the
+# installation directory where subdirectories include and lib are expected
+# to be located.
+#
+# And there is also the Solaris 8 setup.
+#
+# The build script is looking for an exit value of
+# 1, 2, 3, 4, 5 or 11 from this
+# script. 1 means this is a UMICH-style setup (with liblber.a) and 2 means
+# there is no liblber.a, just libldap.a. 3 means that the library is in a
+# standard location and so can be accessed with -lldap. 11 is like 1 with
+# two libraries but they are in ldap/libldap/.libs/libldap.a and
+# ldap/liblber/.libs/liblber.a instead. 4 means don't attempt
+# to include LDAP support. 5 is like 3 but also with -llber
+# Anything else is an error.
+
+exitval=0
+ptarget=xxx
+btarget=xxx
+if [ $# != "2" ]
+then
+    echo "Usage: contrib/ldap-setup pinetarget buildtarget"
+    exit 30
+fi
+
+ptarget=$1
+btarget=$2
+
+if [ ! -d ldap ]
+then
+    # User didn't configure LDAP but
+    # attempt automatic LDAP inclusion on some systems
+    set `uname -s -r`
+    exitval=6
+    if [ "$1" = "SunOS" ]; then
+      set `echo $2 | tr "." " "`
+      if [ "$1" = "5" -a "$2" -ge 8 ]; then
+        exitval=4
+        if [ -f /usr/lib/libldap.so ]; then
+	  if [ -f /usr/include/ldap.h ]; then
+	    exit 3				# EXIT successfull
+	  else
+	    echo "/usr/include/ldap.h not found"
+	  fi
+        else
+	  echo "/usr/lib/libldap.so not found"
+	fi
+      fi
+    elif [ "$1" = "Linux" -a "$btarget" = "lrh" ]; then
+      if [ -f /usr/lib/libldap.so ]; then
+	if [ -f /usr/include/ldap.h ]; then
+	  exit 3				# EXIT successfull
+	else
+	  echo "/usr/include/ldap.h not found"
+	fi
+      else
+	echo "/usr/lib/libldap.so not found"
+      fi
+    elif [ "$1" = "Linux" -a "$btarget" = "ldb" ]; then
+      if [ -f /usr/lib/libldap.so ]; then
+	if [ -f /usr/include/ldap.h ]; then
+	  if [ -f /usr/include/lber.h ]; then
+	    exit 5                             # EXIT successful
+	  else
+	    echo "/usr/include/lber.h not found"
+	  fi
+	else
+	  echo "/usr/include/ldap.h not found"
+	fi
+      else
+	echo "/usr/lib/libldap.so not found"
+      fi
+    elif [ "$1" = "Linux" -a "$btarget" = "lmd" ]; then
+      if [ -f /usr/lib/libldap.so ]; then
+	if [ -f /usr/include/ldap.h ]; then
+	  if [ -f /usr/include/lber.h ]; then
+	    exit 5                             # EXIT successful
+	  else
+	    echo "/usr/include/lber.h not found"
+	  fi
+	else
+	  echo "/usr/include/ldap.h not found"
+	fi
+      else
+	echo "/usr/lib/libldap.so not found"
+      fi
+    elif [ "$btarget" = "cyg" ]; then
+      if [ -f /usr/lib/libldap.a ]; then
+	if [ -f /usr/include/ldap.h ]; then
+	  exit 7				# EXIT successfull
+	else
+	  echo "/usr/include/ldap.h not found"
+	fi
+      else
+	echo "/usr/lib/libldap.a not found"
+      fi
+    elif [ "$1" = "Darwin" ]; then
+      set `echo $2 | tr "." " "`
+      if [ "$1" -ge "6" ]; then
+        exitval=4
+        if [ -f /usr/lib/libldap.dylib ]; then
+	  if [ -f /usr/include/ldap.h ]; then
+	    exit 3				# EXIT successfull
+	  else
+	    echo "/usr/include/ldap.h not found"
+	  fi
+        else
+	  echo "/usr/lib/libldap.dylib not found"
+	fi
+      fi
+    fi
+elif [ ! -d ldap/libraries -a ! -d ldap/lib ]
+then
+    echo "Ldap-setup: Expected directory \"ldap/libraries\" or \"ldap/lib\" is missing."
+    exitval=30
+elif [ ! -d ldap/include ]
+then
+    echo "Ldap-setup: Expected directory \"ldap/include\" is missing."
+    exitval=30
+elif [ ! -f ldap/include/ldap.h ]
+then
+    echo "Ldap-setup: Expected file \"ldap/include/ldap.h\" is missing."
+    exitval=30
+fi
+
+
+
+# Figure out if this is the Umich ldap-3.3 tree or something else, like
+# the Netscape SDK. Style 1 is umich, style 2 is Netscape SDK, style 3 is
+# mozilla.org.
+# Style 11 is similar to 1 but the libraries are in a subdir. This is
+# getting ridiculous.
+style=2
+if [ $exitval -eq 0 -a -d ldap/libraries/liblber ]
+then
+    style=1
+fi
+
+if [ $exitval -eq 0 -a \( $style -eq 2 -a -f ldap/libraries/liblber.a -a -f ldap/libraries/libldap.a \) ]
+then
+    style=3
+elif [ $exitval -eq 0 -a \( $style -eq 2 -a -f ldap/lib/liblber.a -a -f ldap/lib/libldap.a \) ]
+then
+    style=23
+elif [ $exitval -eq 0 -a \( $style -eq 1 -a -f ldap/libraries/liblber/.libs/liblber.a -a -f ldap/libraries/libldap/.libs/libldap.a \) ]
+then
+    style=11
+fi
+
+# This is a successful exit. The value of style tells build whether to include
+# the liblber.a library or not.
+if [ $exitval -eq 0 -a \( \( $style -eq 1 -a -f ldap/libraries/liblber.a -a -f ldap/libraries/libldap.a \) -o \( $style -eq 11 \) -o \( $style -eq 2 -a -f ldap/libraries/libldap.a \) -o \( $style -eq 3 \) -o \( $style -eq 23 \) \) ]
+then
+    if [ $style -eq 3 ]
+    then
+      exit 1
+    fi
+
+    exit $style
+fi
+
+# Exitval = 6 just means there is no LDAP. Exit with 4. The only difference
+# between 6 and 4 is the stuff that gets printed out.
+if [ $exitval -eq 6 ]
+then
+    exit 4
+fi
+
+if [ $exitval -eq 4 ]
+then
+    echo ""
+    echo "You may be able to install the SUNWlldap package to include"
+    echo "LDAP support, continuing without LDAP. Read the file"
+    echo "contrib/ldap-setup for some help in setting up LDAP."
+    echo ""
+    exit 4
+fi
+
+if [ $exitval -eq 30 ]
+then
+    echo ""
+    echo "Read the file contrib/ldap-setup for some help in setting"
+    echo "up LDAP."
+    echo ""
+    exit 30
+fi
+
+if [ $style -eq 1 ]
+then
+#
+# Not all of these have been tried.
+#
+ldaptarget=unknown
+case "$ptarget"
+in
+    a32) ldaptarget=aix-cc ;;
+    a41) ldaptarget=aix-cc ;;
+    bsf) ldaptarget=freebsd-gcc ;;
+    gh9) ldaptarget=hpux-gcc ;;
+    ghp) ldaptarget=hpux-gcc ;;
+    gs4) ldaptarget=sunos5-gcc ;;
+    gs5) ldaptarget=sunos5-gcc ;;
+    gsu) ldaptarget=sunos4-gcc ;;
+    gul) ldaptarget=ultrix-gcc ;;
+    hpp) ldaptarget=hpux-cc ;;
+    hpx) ldaptarget=hpux-cc ;;
+    hxd) ldaptarget=hpux-cc ;;
+    lnx) ldaptarget=linux-gcc ;;
+    neb) ldaptarget=netbsd-cc ;;
+    nxt) ldaptarget=nextstep-cc ;;
+    os4) ldaptarget=osf1-cc ;;
+    osf) ldaptarget=osf1-cc ;;
+    s40) ldaptarget=sunos4-cc ;;
+    sc5) ldaptarget=sco-cc ;;
+    sco) ldaptarget=sco-cc ;;
+    sgi) ldaptarget=irix-cc ;;
+    shp) ldaptarget=hpux-cc ;;
+    slx) ldaptarget=linux-gcc ;;
+    sl5) ldaptarget=linux-gcc ;;
+    so4) ldaptarget=sunos5-cc ;;
+    so5) ldaptarget=sunos5-cc ;;
+    sos) ldaptarget=osf1-cc ;;
+    ssn) ldaptarget=sunos4-cc ;;
+    sun) ldaptarget=sunos4-cc ;;
+    sv4) ldaptarget=ncr-mp-ras-2-cc ;;
+    ult) ldaptarget=ultrix-cc ;;
+esac
+
+if [ ! -f ldap/libraries/liblber.a -a ! -f ldap/libraries/libldap.a ]
+then
+    echo "The LDAP libraries \"ldap/libraries/liblber.a\" and"
+    echo "\"ldap/libraries/libldap.a\" don't appear to be built yet."
+elif [ ! -f ldap/libraries/liblber.a ]
+then
+    echo "The LDAP library \"ldap/libraries/liblber.a\""
+    echo "doesn't appear to be built yet."
+else
+    echo "The LDAP library \"ldap/libraries/libldap.a\""
+    echo "doesn't appear to be built yet."
+fi
+
+if [ "$ldaptarget" = unknown ]
+then
+    echo "Can't figure out which LDAP port to use for pine target \"$ptarget\"."
+    echo "If you are able to figure out the target the following cmds may work."
+    ldaptarget='<target_name>'
+else
+    echo "The following commands may work for you."
+fi
+
+echo "Be sure you are working on a copy of the LDAP source before trying this."
+echo ""
+echo "  cd ldap/build/platforms/$ldaptarget"
+echo "  make platform"
+echo "  make"
+echo ""
+echo "After you've successfully built the libraries \"liblber.a\" and"
+echo "\"libldap.a\" you may try the \"build $btarget\" command again."
+echo ""
+echo "Only those two libraries are used by pine. The rest of the ldap make"
+echo "doesn't have to succeed for pine to build successfully."
+echo "In order to build pine without LDAP functionality you may rename or"
+echo "remove the directory \"ldap\" and run the \"build $btarget\" command again."
+
+else
+
+# Come here if style is 2, which means we're trying to use the non-UMICH
+# setup which doesn't include a liblber.a.
+if [ ! -f ldap/libraries/libldap.a ]
+then
+    echo "The LDAP library \"ldap/libraries/libldap.a\""
+    echo "is missing."
+fi
+
+fi
+exit 30

@@ -1,0 +1,142 @@
+# $Id: makefile.msc 8320 1998-05-08 23:28:35Z mikes $
+#
+#            T H E    P I N E    M A I L   S Y S T E M
+#
+#   Laurence Lundblade and Mike Seibel
+#   Networks and Distributed Computing
+#   Computing and Communications
+#   University of Washington
+#   Administration Building, AG-44
+#   Seattle, Washington, 98195, USA
+#   Internet: lgl@CAC.Washington.EDU
+#             mikes@CAC.Washington.EDU
+#
+#   Please address all bugs and comments to "pine-bugs@cac.washington.edu"
+#
+#
+#   Pine and Pico are registered trademarks of the University of Washington.
+#   No commercial use of these trademarks may be made without prior written
+#   permission of the University of Washington.
+#
+#   Pine, Pico, and Pilot software and its included text are Copyright
+#   1989-1998 by the University of Washington.
+#
+#   The full text of our legal notices is contained in the file called
+#   CPYRIGHT, included with this distribution.
+#
+#
+#   Pine is in part based on The Elm Mail System:
+#    ***********************************************************************
+#    *  The Elm Mail System  -  Revision: 2.13                             *
+#    *                                                                     *
+#    * 			Copyright (c) 1986, 1987 Dave Taylor               *
+#    * 			Copyright (c) 1988, 1989 USENET Community Trust    *
+#    ***********************************************************************
+# 
+#
+
+
+#
+#     Make file for the Pine mail system for PC-DOS
+#
+#     NOTE: There are nmake preprocessing conditionals that control
+#           neccessary switches for the various IP stacks supported.
+#	    There's also a switch for producing executables for
+#	    symbol table include
+#
+#
+CC=cl
+CP=copy
+RM=del
+MAKE=nmake
+
+#   Most commonly fiddled flags for compiler.
+#   Uncomment the setttings desired here
+
+OPTIMIZE=    -Os
+#OPTIMIZE=    -Oq		# Oq is for pcode 
+PROFILE=     # -pg
+DEBUG=       # -Zi -Od
+CBASIC=      -WX -Gy -Gt2 -AL -DDOS -DMOUSE
+!IF	DEFINED(LWP)
+CFLAGS=	     $(OPTIMIZE) $(DEBUG) $(CBASIC) -DLWP -DSYSTYPE=\"PCN\"
+LINKSCRIPT=  pine-lwp.lnk
+!ELSEIF	DEFINED(PCTCP)
+INCLUDES=    -Ic:\pctcp\toolkit\include
+CFLAGS=	     $(OPTIMIZE) $(DEBUG) $(CBASIC) $(INCLUDES) -DPCTCP -DSYSTYPE=\"PCF\"
+LINKSCRIPT=  pine-pc.lnk
+!ELSEIF	DEFINED(PCNFS)
+INCLUDES=    -Ic:\nfs\ptk40\include
+CFLAGS=	     $(OPTIMIZE) $(DEBUG) $(CBASIC) $(INCLUDES) -DPCNFS -DSYSTYPE=\"PCS\"
+LINKSCRIPT=  pine-nfs.lnk
+!ELSE
+CFLAGS=	     $(OPTIMIZE) $(DEBUG) $(CBASIC) -DSYSTYPE=\"PCP\"
+LINKSCRIPT=  pine-wat.lnk
+!ENDIF
+
+LIBES =  # -ltermlib 
+
+HEADERS= headers.h os.h pine.h adrbklib.h context.h helptext.h \
+	  ..\pico\headers.h ..\pico\estruct.h \
+	  ..\pico\edef.h ..\pico\efunc.h \
+	  ..\pico\pico.h ..\pico\os.h \
+	  ..\c-client\mail.h ..\c-client\osdep.h
+
+OBJ=    addrbook.obj adrbklib.obj args.obj bldaddr.obj context.obj \
+	filter.obj folder.obj help.obj imap.obj init.obj mailcap.obj \
+	mailcmd.obj mailindx.obj mailpart.obj mailview.obj newmail.obj \
+	os.obj other.obj pine.obj reply.obj screen.obj send.obj \
+	signals.obj status.obj strings.obj takeaddr.obj adrbkcmd.obj
+	
+all:	pine.exe
+	
+.c.obj:
+	$(CC) -c $(CFLAGS) $*.c
+
+os.h:	osdep\os-dos.h
+	$(RM) os.h
+	$(CP) osdep\os-dos.h os.h
+
+os.c:	osdep\os-dos.c
+	$(RM) os.c
+	$(CP) osdep\os-dos.c os.c
+
+osdep\os-dos.c:	osdep\bld_path.dos osdep\canacces osdep\canonicl.dos \
+		osdep\chnge_pw.dos osdep\coredump osdep\creatdir.dos \
+		osdep\diskquot.non osdep\domnames.dos osdep\dosextra \
+		osdep\err_desc osdep\expnfldr.dos osdep\filesize \
+		osdep\fltrname.dos osdep\fnexpand.dos osdep\header \
+		osdep\hostname osdep\jobcntrl.dos osdep\lstcmpnt.dos \
+		osdep\mimedisp osdep\print.dos osdep\pw_stuff.dos \
+		osdep\debuging.dos osdep\readfile.dos osdep\rename.dos \
+		osdep\tempfile osdep\tempnam.dos osdep\fgetpos \
+		osdep\termin.dos osdep\termout.dos \
+		osdep\termin.gen osdep\termout.gen \
+		osdep\writ_dir osdep\sendmail.dos osdep\execview.dos \
+		osdep\os-dos.ic
+	cd osdep
+	$(MAKE) -f makefile.dos includer.exe os-dos.c
+	cd ..
+
+helpindx.exe:	helpindx.c
+		cl helpindx.c
+
+pine.ndx:	helpindx.exe pine.hlp
+		helpindx pine.hlp pine.ndx helptext.h
+
+helptext.h:	pine.ndx
+
+#helptext.c:	pine.hlp 
+#		./cmplhelp.sh  < pine.hlp > helptext.c
+
+$(OBJ):	$(HEADERS)
+
+pine.exe:  $(OBJ) pine.def ..\c-client\cclient.lib ..\pico\libpico.lib
+	..\pico\blddate > bdate.c
+	$(CC) /c $(CFLAGS) bdate.c
+# this is for pine 8086 instruction version without symbol table
+	link /F /NOI /NOE /DYNAMIC:2048 /MAP:FULL /st:44000 /se:512 @$(LINKSCRIPT)
+# for testing 
+#	link /CO /F /NOI /NOE /DYNAMIC:2048 /MAP:FULL /st:44000 /se:512 @$(LINKSCRIPT)
+# this is for generating pcode
+#	link /PCODE /PACKC:55000 /I /F /NOI /NOE /st:32000 /se:256 @pine.lnk

@@ -1,0 +1,15 @@
+/*----------------------------------------------------------------------
+       Call the system to change the passwd
+ 
+It would be nice to talk to the passwd program via a pipe or ptty so the
+user interface could be consistent, but we can't count on the the prompts
+and responses from the passwd program to be regular so we just let the user 
+type at the passwd program with some screen space, hope he doesn't scroll 
+off the top and repaint when he's done.
+ ----*/        
+void
+change_passwd()
+{
+}
+
+

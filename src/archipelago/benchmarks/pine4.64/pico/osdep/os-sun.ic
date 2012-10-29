@@ -1,0 +1,15 @@
+;
+; SunOS 4.1 os-sun.ic file for building os-sun.c.
+;
+; Boilerplate header.
+include(header)
+
+include(unix)
+
+include(spell.unx)
+
+include(read.sel)
+
+include(raw.brk)
+
+include(term.cap)

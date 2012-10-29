@@ -1,0 +1,30 @@
+/*----------------------------------------------------------------------
+     This routine returns 1 if job control is available.  Note, thiis
+     could be some type of fake job control.  It doesn't have to be
+     real BSD-style job control.
+  ----*/
+have_job_control()
+{
+    return 1;
+}
+
+
+/*----------------------------------------------------------------------
+    If we don't have job control, this routine is never called.
+  ----*/
+void
+stop_process()
+{
+    SigType (*save_usr2) SIG_PROTO((int));
+    
+    /*
+     * Since we can't respond to KOD while stopped, the process that sent 
+     * the KOD is going to go read-only.  Therefore, we can safely ignore
+     * any KODs that come in before we are ready to respond...
+     */
+    save_usr2 = signal(SIGUSR2, SIG_IGN);
+    kill(0, SIGSTOP); 
+    (void)signal(SIGUSR2, save_usr2);
+}
+
+

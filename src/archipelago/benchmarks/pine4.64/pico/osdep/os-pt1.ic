@@ -1,0 +1,15 @@
+;
+; Sequent Dynix/PTX 1.4 os-pt1.ic file for building os-pt1.c.
+;
+; Boilerplate header.
+include(header)
+
+include(unix)
+
+include(spell.unx)
+
+include(read.pol)
+
+include(raw.io)
+
+include(term.inf)

@@ -1,0 +1,560 @@
+<HTML><HEAD><TITLE>Pine Technical Notes: Command Line Arguments</TITLE></HEAD><BODY>
+<H1>Command Line Arguments</H1>
+
+<H2><A NAME="pine">Pine</A></H2>
+  
+<EM>Pine</EM> and <EM>PC-Pine</EM> can accept quite a few
+command-line arguments.
+Many of these arguments overlap with variables
+in the <EM>Pine</EM> configuration file.
+If there is a difference, then a flag set in the command line takes precedence.
+Both <EM>Pine</EM> and <EM>PC-Pine</EM> expect command line arguments (other
+than addresses) to be
+preceded by the "-" (dash) as normally used by UNIX programs.
+<P>
+
+<DL COMPACT>
+
+<DT> <EM>[addresses]</EM>
+
+<DD> Send-to:  If you give <EM>Pine</EM> an argument or arguments which
+do not begin with a dash, <EM>Pine</EM> treats them as email addresses.
+<EM>Pine</EM> will startup in
+the composer with a message started to the addresses specified.
+Once the message is sent, the <EM>Pine</EM> session closes.
+Standard input redirection is allowed.
+Separate multiple addresses with a space between them.
+Addresses are placed in the &quot;To&quot; field only.
+<P>
+
+<DT> &lt; <EM>file</EM>
+
+<DD> <EM>Pine</EM> will startup in the composer with <EM>file</EM> read
+into the body of the message.
+Once the message is sent, the <EM>Pine</EM> session closes. 
+<P>
+
+<DT> -attach <EM>file</EM>
+
+<DD> Go directly into composer with given file attached.
+<P>
+
+<DT> -attachlist <EM>file-list</EM>
+
+<DD> Go directly into composer with given files attached.
+This must be the last option on the command line.
+<P>
+
+<DT> -attach_and_delete <EM>file</EM>
+
+<DD> Go directly into composer with given file attached, delete when finished.
+<P>
+
+<DT> -aux <EM>local_directory</EM>
+
+<DD> <EM>PC-Pine</EM> only.
+This tells <EM>PC-Pine</EM> the local directory to use for storing auxiliary
+files, like debug files, address books, and signature files.  The pinerc may 
+be local or remote.
+<P>
+
+<DT> -nosplash
+
+<DD> <EM>PC-Pine</EM> only.
+This tells <EM>PC-Pine</EM> to not display the splash screen upon startup.
+This may be helpful for certain troubleshooting or terminal server scenarios.
+<P>
+
+<DT> -bail
+
+<DD> If the personal configuration file doesn't already exist, exit.
+This might be useful if the configuration file is accessed using some
+remote filesystem protocol. If the remote mount is missing this will cause
+<EM>Pine</EM> to quit instead of creating a new pinerc.
+<P>
+
+<DT> -c <EM>n</EM>
+
+<DD> When used with the <CODE>-f</CODE> option, apply the <EM>n</EM>th context.
+This is used when there are multiple folder collections (contexts) and you 
+want to open a folder not in the primary collection.
+<P>
+
+<DT> -conf
+
+<DD> Configuration: Prints a sample system configuration file to the
+screen or standard output. To generate an initial system configuration 
+file, execute
+
+<PRE><CODE>
+		pine -conf > /usr/local/lib/pine.conf
+</CODE></PRE>
+<P>
+
+To generate a system configuration file using settings from an old
+system configuration file, execute
+
+<PRE><CODE>
+		pine -P old-pine.conf -conf > /usr/local/lib/pine.conf
+</CODE></PRE>
+<P>
+A system configuration file is not required.
+<P>
+
+<DT> -convert_sigs <EM>-p pinerc</EM>
+
+<DD> Convert signatures contained in signature files into literal signatures.
+<P>
+
+<DT> <A NAME="copy_abook">-copy_abook <EM>&lt;local_abook_file&gt; &lt;remote_abook_folder&gt;</EM>
+
+<DD> Copy an address book file to a remote address book folder.
+If the remote folder doesn't exist, it will be created.
+If it exists but the first message in the folder isn't a remote address
+book header message, the copy will be aborted.
+This flag will not usually be used by a user.
+Instead, the user will create a remote address book from within <EM>Pine</EM>
+and copy entries from the local address book by using aggregate Save in
+the address book screen.
+<P>
+
+<DT>  <A NAME="copy_pinerc">-copy_pinerc <EM>&lt;local_pinerc_file&gt; &lt;remote_pinerc_folder&gt;</EM>
+
+<DD> Copy a pinerc configuration file to a remote pinerc folder.
+If the remote folder doesn't exist, it will be created.
+If it exists but the first message in the folder isn't a remote pinerc
+header message, the copy will be aborted.
+This flag may be useful to users who already have a local pinerc file and
+would like to convert it to a remote pinerc folder and use that instead.
+This gives a way to bootstrap that conversion without having to manually
+reset all of the variables in the remote pinerc folder.
+<P>
+
+<DT> -create_lu <EM>addrbook sort-order</EM>
+
+<DD> Create auxiliary LookUp (index) file for <EM>addrbook</EM> and sort
+<EM>addrbook</EM> in <EM>sort-order</EM>, which may be <EM>dont-sort</EM>,
+<EM>nickname</EM>, <EM>fullname</EM>, <EM>nickname-with-lists-last</EM>,
+or <EM>fullname-with-lists-last</EM>.
+Only useful when creating global or shared address books.
+The settings of the features
+disable-setlocale-collate and enable-setlocale-ctype have no
+effect when using the create_lu command.
+See <A HREF="low-level.html#addrbook-lu">Address Book Lookup File</A>
+for more information, especially the warning about copying the
+address book after creating the lookup file.
+<P>
+
+<DT> -d <EM>debug-level</EM>
+
+<DD> Debug Level:  Sets the level of debugging information written by
+<EM>Pine</EM>.
+<EM>Debug-level</EM> can be set to any integer 0-9.
+A debug level of 0 turns off debugging for the session.
+(Actually there are some levels higher than 9, but you probably don't
+want to see them. Sensitive authentication information is hidden at
+levels less than 10.)
+<P>
+
+<DT> -d <EM>keywords</EM>
+
+<DD> You may use a more detailed version of the debugging flag to set
+the debug level in separate parts of <EM>Pine</EM>.
+The possibilities are flush, timestamp, imap=0..4, tcp, numfiles=0..31, and
+verbose=0..9.
+<EM>Flush</EM> causes debugging information to be flushed immediately to
+the debug file as it is written.
+<EM>Verbose</EM> is the general debugging verbosity level.
+<EM>Timestamp</EM> causes timestamps to be added to the debug file, which
+is useful when you are trying to figure out what is responsible for delays.
+<EM>Numfiles</EM> sets the number of debug files saved.
+<EM>Imap</EM> sets the debug level for the debugging statements related
+to the conversation with the IMAP server, and more generally, for the
+debugging related to <EM>Pine</EM>'s interaction with the C-Client library.
+If <EM>imap</EM> is set higher than 4, sensitive authentication information
+will be included in the debug file.
+<EM>Tcp</EM> adds more TCP/IP debugging information.
+<P>
+
+<DT> -f <EM>folder</EM>
+
+<DD> Startup folder:  <EM>Pine</EM> will open this folder in place
+of the standard INBOX.
+<P>
+
+<DT> -F <EM>file</EM>
+
+<DD> Open named text file for viewing and forwarding.
+<P>
+
+<DT> -h
+
+<DD> Help:  Prints the list of available command-line arguments to the
+screen.
+<P>
+
+<DT> -i
+
+<DD> <EM>Pine</EM> will start up in the FOLDER INDEX
+screen instead of the MAIN MENU.
+<P>
+
+Configuration equivalent:  <EM>initial-keystroke-list=i</EM>.
+<P>
+
+<DT> -I <EM>a,b,c,...</EM>
+
+<DD> Initial Keystrokes:  <EM>Pine</EM> will execute this comma-separated
+sequence of commands upon startup.
+This allows users to get <EM>Pine</EM> to start in any
+of its menus/screens.
+You cannot include any input to the composer in the initial keystrokes.
+The key &lt;Return&gt; is represented by a ``CR'' in
+the keystroke list; the spacebar is designated by the letters ``SPACE''.
+Control keys are two character sequences beginning with ``^'', such as
+``^I''.
+A tab character is ``TAB''.
+Function keys are ``F1'' - ``F12'' and the arrow keys are ``UP'',
+``DOWN'', ``LEFT'', and ``RIGHT''.
+A restriction is that you can't mix function keys and character keys in this
+list even though you can, in some cases, mix them when running <EM>Pine</EM>.
+A user can always use only <EM>character</EM> keys in the startup list even
+if he or she is using <EM>function</EM> keys normally, or vice versa.
+If an element in this list is a string of characters surrounded by double
+quotes (&quot;) then it will be expanded into the individual characters in
+the string, excluding the double quotes.
+<P>
+
+Configuration equivalent:  <EM>initial-keystroke-list</EM>
+<P>
+
+<DT> -install
+
+<DD> For <EM>PC-Pine</EM> only, this option prompts for some basic
+setup information, then exits.
+<P>
+
+<DT> -k
+
+<DD> Function-Key Mode:  When invoked in this way, <EM>Pine</EM> expects
+the input of commands to be function-keys.
+Otherwise, commands are linked to the regular character keys.
+<P>
+
+Configuration equivalent:  <EM>use-function-keys</EM> included in
+<EM>feature-list</EM>.
+<P>
+
+<DT> -n <EM>n</EM>
+
+<DD> Message-Number:  When specified, <EM>Pine</EM> starts up in the
+FOLDER INDEX screen with the current message being the specified
+message number.
+<P>
+
+<DT> -nowrite_passfile
+
+<DD> This tells <EM>Pine</EM> to use the passfile if there is one, but to
+never offer writing new passwords to the passfile.
+<P>
+
+<DT> -o <EM>folder</EM>
+
+<DD> Opens the INBOX (or a folder specified via the -f argument) ReadOnly. 
+<P>
+
+<DT> -p <EM>pinerc</EM>
+
+<DD> Uses the named file as the personal configuration file instead of
+<EM>~/.pinerc</EM> or the default PINERC search sequence <EM>PC-Pine</EM> uses.
+Pinerc may be either a local file or a remote configuration folder.
+<P>
+
+<DT> -P <EM>pinerc</EM>
+
+<DD> Uses the named file as the system wide configuration file instead of
+<EM>/usr/local/lib/pine.conf</EM> on UNIX, or nothing on <EM>PC-Pine</EM>.
+Pinerc may be either a local file or a remote configuration folder.
+<P>
+
+<DT> -passfile <EM>passfile</EM>
+
+<DD> This tells <EM>Pine</EM> what file should be used as the password file.
+This should be a fully-qualified filename.
+<P>
+
+<DT> -pinerc <EM>file</EM>
+
+<DD> Output fresh pinerc configuration to <EM>file</EM>, preserving the
+settings of variables that the user has made.
+Use <EM>file</EM> set to ``-'' to make output go to standard out.
+<P>
+
+<DT> -r
+
+<DD> Restricted Mode:  For UNIX <EM>Pine</EM> only.
+<EM>Pine</EM> in restricted mode can only send email to itself.
+Save and export are limited.
+<P>
+
+<DT> -registry <EM>cmd</EM>
+
+<DD> For <EM>PC-Pine</EM> only, this option affects the values of 
+<EM>Pine</EM>'s registry entries.
+Possible values for <EM>cmd</EM> are set, noset, clear, clearsilent, and dump.
+<EM>Set</EM> will always reset <EM>Pine</EM>'s registry 
+entries according to its current settings.
+<EM>NoSet</EM> will never set any values in the registry, but it will
+still use the values already set in the registry.
+<EM>Clear</EM> will clear the registry values.
+<EM>Clearsilent</EM> will silently clear the registry values.
+<EM>Dump</EM> will display the values of current registry settings.
+Note that the dump command is currently disabled.
+Without the -registry option, <EM>PC-Pine</EM> will write values into
+the registry only if there currently aren't any values set.
+<P>
+
+<DT> -sort <EM>key</EM>
+
+<DD> Sort-Key:  Specifies the order messages will be displayed in for the
+FOLDER INDEX screen.
+<EM>Key</EM> can have the following values: 
+arrival, date, subject, orderedsubj, thread, from, size, score, to, cc,
+arrival/reverse, date/reverse, subject/reverse, orderedsubj/reverse, thread/reverse,
+from/reverse, size/reverse, score/reverse, to/reverse, and cc/reverse.
+The default value is &quot;arrival&quot;.
+The <EM>key</EM> value reverse is equivalent to arrival/reverse.
+<P>
+
+Configuration equivalent:  <EM>sort-key</EM>.
+<P>
+
+<DT> -supported
+
+<DD> Some options may or may not be supported depending on how <EM>Pine</EM>
+was compiled.
+This is a way to determine which options are supported in the particular
+copy of <EM>Pine</EM> you are using.
+<P>
+
+<DT> -url <EM>url</EM>
+
+<DD> Open the given URL.
+<P>
+
+<DT> -v
+
+<DD> Version:  Print version information to the screen.
+<P>
+
+<DT> -version
+
+<DD> Version:  Print version information to the screen.
+<P>
+
+<DT> -x <EM>exceptions_config</EM>
+
+<DD> Configuration settings in the exceptions config override your normal
+default settings.
+<EM>Exceptions_config</EM> may be either a local file or a remote pinerc folder.
+<P>
+
+<DT> -z
+
+<DD> Enable Suspend:  When run with this flag, the key sequence ctrl-z
+will suspend the <EM>Pine</EM> session.
+<P>
+
+Configuration equivalent:  <EM>enable-suspend</EM> included in
+<EM>feature-list</EM>.
+<P>
+
+<DT> -<EM>option</EM>=<EM>value</EM>
+
+<DD> Assign <EM>value</EM> to the config option <EM>option</EM>.
+For example, <EM>-signature-file=sig1</EM> or
+<EM>-feature-list=signature-at-bottom</EM>.
+(Note:  feature-list values are
+additive and features may be preceded with no- to turn them off).
+<P>
+
+</DL>
+<P>
+
+<H2><A NAME="pico">Pico</A></H2>
+
+The following command line options are supported in <EM>Pico</EM>:
+
+<DL>
+
+<DT> +<EM>n</EM>
+
+<DD> Causes <EM>Pico</EM> to be started with the cursor located <EM>n</EM>
+lines into the file. (Note: no space between "+" sign and number) <P>
+
+<DT> -a
+
+<DD> Display all files and directories, including those beginning
+with a period (.). <P>
+
+<DT> -b
+
+<DD> Enable the option to Replace text matches found using the
+"Where is" command. <P>
+
+<DT> -d
+
+<DD> Rebind the "delete" key so the character the cursor is on is rubbed
+out rather than the character to its left.  <P>
+
+<DT> -e
+
+<DD>Enable file name completion. <P>
+
+<DT> -f
+
+<DD> Use function keys for commands.  <I>This option supported only in
+conjunction with UW Enhanced NCSA telnet.</I> <P>
+
+<DT> -g
+
+<DD> Enable "Show Cursor" mode in file browser.  Cause cursor to be
+positioned before the current selection rather than placed at the lower
+left of the display. <P>
+
+<DT> -k
+
+<DD>Causes "Cut Text" command to remove characters from the cursor
+position to the end of the line rather than remove the entire line. <P>
+
+<DT> -m
+
+<DD> Enable mouse functionality.  This only works when <EM>Pico</EM> is
+run from within an X Window System "xterm" window. <P>
+
+<DT>-n<EM>n</EM>
+
+<DD> The -n<EM>n</EM> option enables new mail notification.  The
+<EM>n</EM> argument is optional, and specifies how often, in seconds, your
+mailbox is checked for new mail.  For example, -n60 causes <EM>Pico</EM>
+to check for new mail once every minute.  The default interval is 180
+seconds, while the minimum allowed is 30. (Note: no space between "n" and
+the number) <P>
+
+<DT> -o <EM>dir</EM>
+
+<DD> Sets operating directory.  Only files within this directory are
+accessible.  Likewise, the file browser is limited to the specified
+directory subtree. <P>
+
+<DT> -p
+
+<DD> Preserve the &quot;start&quot; and &quot;stop&quot; characters, typically Ctrl-Q
+ and Ctrl-S, which are sometimes used in communications paths to control data flow
+between devices that operate at different speeds.<P>
+
+<DT> -q
+
+<DD> TermdefWins. Termcap or terminfo escape sequences are used in preference
+to default escape sequences.<P>
+
+<DT> -Q <EM>quotestr</EM>
+
+<DD> Set the quote string.  Especially useful when composing email, setting this 
+allows the quote string to be checked for when Justifying paragraphs.
+A common quote string is "> ".<P>
+
+<DT> -r<EM>n</EM>
+
+<DD> Sets column used to limit the "Justify" command's right margin. <P>
+
+<DT> -t
+
+<DD> Enable "tool" mode.  Intended for when <EM>Pico</EM> is used as the
+editor within other tools (e.g., Elm, Pnews).  <EM>Pico</EM> will not
+prompt for save on exit, and will not rename the buffer during the "Write
+Out" command. <P>
+
+<DT> -v
+
+<DD> View the file only, disallowing any editing. <P>
+
+<DT> -version
+
+<DD> Print version information. <P>
+
+<DT> -w
+
+<DD> Disable word wrap (thus allow editing of long lines).  <P>
+
+<I>Note: <EM>Pico</EM> will break any lines over 255 characters when reading a
+file, regardless of word wrapping.</I> <P>
+
+<DT> -x
+
+<DD> Disable keymenu at the bottom of the screen. <P>
+
+<DT> -z
+
+<DD> Enable ^Z suspension of <EM>Pico</EM>. <P>
+
+</DL>
+
+<H2><A NAME="pilot">Pilot</A></H2>
+
+The following command line options are supported in <EM>Pilot</EM>:
+
+<DL>
+
+<DT> -a
+
+<DD> Display all files including those beginning with a period (.). <P>
+
+<DT> -f
+
+<DD> Use function keys for commands.  <I>This option supported only in
+conjunction with UW Enhanced NCSA telnet.</I> <P>
+
+<DT> -g
+
+<DD> Enable "Show Cursor" mode.  Cause cursor to be positioned before the
+current selection rather than placed at the lower left of the display. <P>
+
+<DT> -m
+
+<DD> Enable mouse functionality.  This only works when <EM>Pilot</EM> is
+run from within an X Window System "xterm" window. <P>
+
+<DT> -n<EM>n</EM>
+
+<DD> The -n<EM>n</EM> option enables new mail notification.  The
+<EM>n</EM> argument is optional, and specifies how often, in seconds, your
+mailbox is checked for new mail.  For example, -n60 causes <EM>Pilot</EM>
+to check for new mail once every minute.  The default interval is 180
+seconds, while the minimum allowed is 30. (Note: no space between "n" and
+the number) <P>
+
+<DT> -o <EM>dir</EM>
+
+<DD>Sets operating directory.  Only files within the specified directory
+are accessible and browsing is limited to the specified directory subtree.
+<P>
+
+<DT> -v
+
+<DD> Enable single vertical column display. <P>
+
+<DT> -x
+
+<DD> Disable keymenu at the bottom of the screen. <P>
+
+<DT> -z
+
+<DD> Enable ^Z suspension of <EM>Pilot</EM>.
+
+</DL>
+
+<!-- pnuts -->
+
+</BODY>
+</HTML>

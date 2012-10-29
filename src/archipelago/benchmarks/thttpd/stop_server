@@ -1,0 +1,23 @@
+#!/bin/bash
+
+PIDFILE=/tmp/mythttpd.pid
+CHECK_PID="ps hp"
+
+if [[ -e "${PIDFILE}" ]] 
+    then
+
+    PID=`cat ${PIDFILE}`
+
+    kill $PID
+
+    sleep 1
+
+    if [[ -z `${CHECK_PID} ${PID}` ]]
+	then
+	rm /tmp/mythttpd.pid
+    else
+	echo "Failed to stop tHTTPd"
+    fi
+else
+    echo "No pid file found"
+fi

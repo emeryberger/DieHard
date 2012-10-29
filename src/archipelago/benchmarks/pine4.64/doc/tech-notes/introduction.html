@@ -1,0 +1,121 @@
+<HTML><HEAD><TITLE>Pine Technical Notes: Introduction</TITLE></HEAD><BODY>
+<H1>Introduction</H1>
+
+<H2><A NAME="design">Design Goals</A></H2>
+
+Throughout <EM>Pine</EM> development, we have had to strike a balance
+between the
+need to include features which advanced users require and the need to keep
+things simple for beginning users.  To strike this balance, we have tried
+to adhere to these design principles:  <P>
+
+<DL COMPACT>
+
+<DT>
+
+<DD> - The model presented to the user has to be simple and
+clear.  Underlying system operation is hidden as much as possible. 
+
+<DT>
+
+<DD> - It's better to have a few easily understood commands that can be
+repeated than to have some more sophisticated command that will do the job
+all at once. 
+
+<DT>
+
+<DD> - Whenever the user has to select a command, file name, address,
+etc., the user should be given (or can get) a menu from which to make the
+selection. Menus need to be complete, small, organized and well thought
+out. 
+
+<DT>
+
+<DD> - <EM>Pine</EM> must provide immediate feedback for the user with each
+operation. 
+
+<DT>
+
+<DD> - <EM>Pine</EM> must be very tolerant of user errors.  Any time a user is
+about to perform an irreversible act (send a message, expunge messages
+from a folder), <EM>Pine</EM> should ask for confirmation. 
+
+<DT>
+
+<DD> - Users should be able to learn by exploration without fear of doing
+anything wrong. This is an important feature so the user can get started
+quickly without reading any manuals and so fewer manuals are required. 
+
+<DT>
+
+<DD> - The core set of <EM>Pine</EM> functions should be kept to a
+minimum so new
+users don't feel "lost" in seemingly extraneous commands and concepts. 
+<P>
+
+</DL> <P>
+
+Just as there were goals relating to the look and feel of <EM>Pine</EM>,
+there were
+equally important goals having to do with <EM>Pine</EM>'s structure-the
+things that
+users never see but still rely on every time they use <EM>Pine</EM>.
+While <EM>Pine</EM>
+can be used as a stand-alone mail user agent, one of its strongest assets
+is its use of the Internet Message Access Protocol (IMAP) for accessing
+remote email folders.  In addition, <EM>Pine</EM> was one of
+the first programs to
+support the Multipurpose Internet Mail Extensions (MIME) specification. 
+With MIME, <EM>Pine</EM> users can reliably send any binary file to any other
+person on the Internet who uses a MIME compliant email program.  <P>
+
+The decision to use IMAP and MIME reflects the importance of
+interoperability, standardization and robustness in <EM>Pine</EM>.  As you work
+with <EM>Pine</EM> more, you will see other features which reflect
+the same values. 
+For example, <EM>Pine</EM> enforces strict compliance with RFC 822, implements a
+strong mail folder locking mechanism and verifies a process before
+overwriting any files (e.g. addressbook, expunging messages).  <P>
+ 
+<H2><A NAME="components">Pine Components</A></H2>
+
+If you have picked up the <EM>Pine</EM> distribution, then you already know that
+<EM>Pine</EM> comes in a few different pieces.  They are:  <P>
+
+<DL COMPACT>
+
+<DT> <EM>Pine</EM>
+
+<DD> The main code from which the <EM>Pine</EM> program is compiled.  <P>
+
+<DT> <EM>Pico</EM>
+
+<DD> <EM>Pico</EM> is the name for the <EM>Pine</EM> composer.
+The <EM>Pico</EM> code is used in two
+ways:  (1) it is compiled on its own to be a stand-alone editor and, (2)
+it is compiled as a library for <EM>Pine</EM> to support composition
+of messages within <EM>Pine</EM>.
+<EM>Pico</EM> is <EM>Pine</EM>'s internal editor invoked when users
+need to fill in header lines or type the text of an email message.  <P>
+
+<DT> <EM>Imap</EM>
+
+<DD> An API for IMAP.  Includes the C-Client library, which is compiled
+into <EM>Pine</EM>, and the IMAP server <EM>IMAPd</EM>.
+C-Client implements the IMAP
+protocol and also negotiates all access between <EM>Pine</EM> and
+the mail folders
+it operates on, even if the folders are local.
+The C-Client routines are used for email folder parsing
+and interpreting MIME messages. <EM>IMAPd</EM> is a separate server that handles
+IMAP connections from any IMAP-compliant email program.  When <EM>Pine</EM>
+accesses a remote mailbox, the <EM>Pine</EM> program is the IMAP client and the
+<EM>IMAPd</EM> program is the IMAP server.  <P>
+
+</DL>
+
+<!-- pnuts -->
+
+</BODY>
+</HTML>
+

@@ -1,0 +1,42 @@
+# Program:	MAILUTIL Makefile for Windows 9x and Windows NT + Kerberos
+#
+# Author:	Mark Crispin
+#		Networks and Distributed Computing
+#		Computing & Communications
+#		University of Washington
+#		Administration Building, AG-44
+#		Seattle, WA  98195
+#		Internet: MRC@CAC.Washington.EDU
+#
+# Date:		25 February 1996
+# Last Edited:	21 August 2002
+#
+# The IMAP toolkit provided in this Distribution is
+# Copyright 2002 University of Washington.
+#
+# The full text of our legal notices is contained in the file called
+# CPYRIGHT, included with this Distribution.
+
+
+C = ..\c-client
+CCLIENTLIB = $C\cclient.lib
+K5 = \k5\lib
+K5LIB = $(K5)\comerr32.lib $(K5)\gssapi32.lib $(K5)\krb5_32.lib
+LIBS = $(CCLIENTLIB) $(K5LIB) wsock32.lib winmm.lib advapi32.lib
+CFLAGS= -I$C /MT /W3 /DWIN32 /D_WIN32_WINNT=0x0400 -nologo $(EXTRACFLAGS)
+
+mailutil: $(CCLIENTLIB) mailutil.obj
+	LINK /NOLOGO /DEF:mailutil.def mailutil.obj $(LIBS)
+
+mailutil.obj: $C\mail.h $C\smtp.h $C\misc.h $C\osdep.h mailutil.c
+
+$(CCLIENTLIB):
+	@echo Make c-client first
+	false
+
+clean:
+	del *.obj *.exe *.lib *.exp || rem
+
+# A monument to a hack of long ago and far away...
+love:
+	@echo not war?

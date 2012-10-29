@@ -1,0 +1,15 @@
+;
+; Linux 0.99.10 os-lnx.ic file for building os-lnx.c.
+;
+; Boilerplate header.
+include(header)
+
+include(unix)
+
+include(spell.unx)
+
+include(read.sel)
+
+include(raw.ios)
+
+include(term.inf)

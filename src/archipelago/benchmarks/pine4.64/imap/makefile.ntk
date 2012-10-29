@@ -1,0 +1,70 @@
+# Program:	IMAP Toolkit Makefile for Windows 9x and Windows NT + Kerberos
+#
+# Author:	Mark Crispin
+#		Networks and Distributed Computing
+#		Computing & Communications
+#		University of Washington
+#		Administration Building, AG-44
+#		Seattle, WA  98195
+#		Internet: MRC@CAC.Washington.EDU
+#
+# Date:		7 December 1989
+# Last Edited:	2 July 2002
+#
+# The IMAP toolkit provided in this Distribution is
+# Copyright 2002 University of Washington.
+#
+# The full text of our legal notices is contained in the file called
+# CPYRIGHT, included with this Distribution.
+
+
+COPY=copy
+CD=cd
+MAKE=nmake /nologo /f makefile.ntk
+MKDIR=mkdir
+RD=rmdir /s /q
+
+
+# Make the IMAP Toolkit
+
+build:	c-client mtest mailutil imapd ipopd
+	$(CD) c-client
+	$(MAKE)
+	$(CD) ..\mtest
+	$(MAKE)
+	$(CD) ..\mailutil
+	$(MAKE)
+	$(CD) ..\ipopd
+	$(MAKE)
+	$(CD) ..\imapd
+	$(MAKE)
+	$(CD) ..
+
+c-client:
+	$(MKDIR) c-client
+	$(COPY) src\c-client\*.* c-client
+	$(COPY) src\charset\*.* c-client
+	$(COPY) src\osdep\nt\*.* c-client
+
+mtest:
+	$(MKDIR) mtest
+	$(COPY) src\mtest\*.* mtest
+
+mailutil:
+	$(MKDIR) mailutil
+	$(COPY) src\mailutil\*.* mailutil
+
+ipopd:
+	$(MKDIR) ipopd
+	$(COPY) src\ipopd\*.* ipopd
+
+imapd:
+	$(MKDIR) imapd
+	$(COPY) src\imapd\*.* imapd
+
+clean:
+	$(RD) c-client mtest mailutil ipopd imapd
+
+# A monument to a hack of long ago and far away...
+love:
+	@echo 'not war?'

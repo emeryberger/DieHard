@@ -1,0 +1,76 @@
+/*----------------------------------------------------------------------
+      Expand a folder name, taking account of the folders_dir and `~'.
+
+  Args: filename -- The name of the file that is the folder
+ 
+ Result: The folder name is expanded in place.  
+         Returns 0 and queues status message if unsuccessful.
+         Input string is overwritten with expanded name.
+         Returns 1 if successful.
+
+BUG should limit length to MAXPATH
+  ----*/
+int
+expand_foldername(filename, len)
+    char  *filename;
+    size_t len;
+{
+    char         temp_filename[MAXPATH+1];
+
+    dprint(5, (debugfile, "=== expand_foldername called (%s) ===\n",
+	   filename ? filename : "?"));
+
+    /*
+     * We used to check for valid filename chars here if "filename"
+     * didn't refer to a remote mailbox.  This has been rethought
+     */
+
+    strncpy(temp_filename, filename, sizeof(temp_filename)-1);
+    temp_filename[sizeof(temp_filename)-1] = '\0';
+    if(strucmp(temp_filename, "inbox") == 0) {
+        strncpy(filename, ps_global->VAR_INBOX_PATH == NULL ? "inbox" :
+                ps_global->VAR_INBOX_PATH, len-1);
+	filename[len-1] = '\0';
+    } else if(temp_filename[0] == '{') {
+        strncpy(filename, temp_filename, len-1);
+	filename[len-1] = '\0';
+    } else if(ps_global->restricted
+	        && (strindex("./~", temp_filename[0]) != NULL
+		    || srchstr(temp_filename,"/../"))){
+	q_status_message(SM_ORDER, 0, 3, "Can only open local folders");
+	return(0);
+    } else if(temp_filename[0] == '*') {
+        strncpy(filename, temp_filename, len-1);
+	filename[len-1] = '\0';
+    } else if(ps_global->VAR_OPER_DIR && srchstr(temp_filename,"..")){
+	q_status_message(SM_ORDER, 0, 3,
+			 "\"..\" not allowed in folder name");
+	return(0);
+    } else if (temp_filename[0] == '~'){
+        if(fnexpand(temp_filename, sizeof(temp_filename)) == NULL) {
+            char *p = strindex(temp_filename, '/');
+    	    if(p != NULL)
+    	      *p = '\0';
+    	    q_status_message1(SM_ORDER, 3, 3,
+                    "Error expanding folder name: \"%s\" unknown user",
+    	       temp_filename);
+    	    return(0);
+        }
+        strncpy(filename, temp_filename, len-1);
+	filename[len-1] = '\0';
+    } else if(temp_filename[0] == '/') {
+        strncpy(filename, temp_filename, len-1);
+	filename[len-1] = '\0';
+    } else if(F_ON(F_USE_CURRENT_DIR, ps_global)){
+        strncpy(filename, temp_filename, len-1);
+	filename[len-1] = '\0';
+    } else if(ps_global->VAR_OPER_DIR){
+	build_path(filename, ps_global->VAR_OPER_DIR, temp_filename, len);
+    } else {
+	build_path(filename, ps_global->home_dir, temp_filename, len);
+    }
+    dprint(5, (debugfile, "returning \"%s\"\n", filename ? filename : "?"));    
+    return(1);
+}
+
+

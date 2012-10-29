@@ -1,0 +1,87 @@
+#!/bin/bash
+
+BASEDIR=`dirname ${0}`
+
+if [[ ${BASEDIR:0:1} != / ]]
+    then
+    BASEDIR=`pwd`/${BASEDIR}
+fi
+
+timestamp=`date +%F_%T`
+NUM_CLIENTS=50
+NUM_REQUESTS=100
+CLIENT="${BASEDIR}/ftp_client.py ${NUM_CLIENTS} ${NUM_REQUESTS} 0 2121 ftp he >>"
+START="${BASEDIR}/start_server -o"
+STOP="${BASEDIR}/stop_server"
+LIBC=
+DIEHARD2=-d2
+DIEHARD1024=-d1024
+ARCHIPELAGO=-a
+EFENCE=-e
+MTRACE=-m
+#libc
+#echo Running experiments with libc...
+
+#eval $START $BASEDIR/bftpd_libc_${timestamp}.mem $LIBC
+
+#sleep 1
+
+#eval $CLIENT $BASEDIR/ftp_libc_${timestamp}.time
+
+#eval $STOP
+
+#diehard2
+#echo Running experiments with DieHard-2...
+
+#eval $START $BASEDIR/bftpd_dh2_${timestamp}.mem $DIEHARD2
+
+#sleep 1
+
+#eval $CLIENT $BASEDIR/ftp_dh2_${timestamp}.time
+
+#eval $STOP
+
+#diehard1024
+#echo Running experiments with DieHard-1024...
+
+#eval $START $BASEDIR/bftpd_dh1024_${timestamp}.mem $DIEHARD1024
+
+#sleep 1
+
+#eval $CLIENT $BASEDIR/ftp_dh1024_${timestamp}.time
+
+#eval $STOP
+
+#archipelago
+#echo Running experiments with Archipelago...
+
+#eval $START $BASEDIR/bftpd_arch_${timestamp}.mem $ARCHIPELAGO
+
+#sleep 1
+
+#eval $CLIENT $BASEDIR/ftp_arch_${timestamp}.time
+
+#eval $STOP
+
+echo Running experiments with malloctrace...
+
+eval $START $BASEDIR/bftpd_mt_${timestamp}.mem $MTRACE
+
+sleep 1
+
+eval $CLIENT $BASEDIR/ftp_mt_${timestamp}.time
+
+eval $STOP
+
+#efence
+#echo Running experiments with Electric Fence...
+
+#eval $START $BASEDIR/bftpd_ef_${timestamp}.mem $EFENCE
+
+#sleep 1
+
+#eval $CLIENT $BASEDIR/ftp_ef_${timestamp}.time
+
+#eval $STOP
+
+

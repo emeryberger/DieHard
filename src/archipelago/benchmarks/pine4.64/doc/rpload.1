@@ -1,0 +1,50 @@
+.TH rpload 1
+.SH NAME
+rpload \- pine remote data utility
+.SH SYNTAX 
+
+.B rpload
+[ -f ] [ -s trimSize ] -t Type -l Local_file -r Remote_folder
+.SH DESCRIPTION
+
+Rpload may be used to convert local Pine configuration files or address
+books into remote configurations or address books.
+It is intended to be used by system administrators.
+Regular users should normally use the facilities provided within Pine.
+.LP
+Local_file will usually be a user's pine configuration file, and
+Remote_folder is the IMAP folder which will be used
+(with the help of Pine's \fB-p\fR, \fB-P\fR, and \fB-x\fR commands or
+PINECONF, PINERC, and PINERCEX environment variables)
+as the user's remote configuration folder.
+A copy of Local_file will be placed in the folder with the correct header
+lines to satisfy Pine.
+.IP \fB-f\fR 20
+Force the load even if the remote folder is in the wrong format.
+This will \fBdelete\fR the contents of the folder so use it carefully.
+.IP \fB-s\fR\ \fBtrimSize\fR 20
+If the number of messages in the remote folder is more than one plus
+trimsize (one is for the header message), then messages 2, 3, and so on
+will be deleted until there are only one plus trimsize messages left.
+If this option is not set no trimming will be done.
+.IP \fB-t\fR\ \fBType\fR 20
+The possible Types are \fBpinerc\fR, \fBabook\fR, and \fBsig\fR.
+(Sig is mostly obsolete. Literal signatures contained within the remote
+pinerc should be used instead.)
+.IP \fB-l\fR\ \fBLocal_file\fR 20
+The file on this system that is to be copied.
+.IP \fB-r\fR\ \fBRemote_folder\fR 20
+A remote folder name to be copied to.
+See the Pine documentation for the syntax of a remote folder name.
+One example is
+.br
+{my.imap.server}remote_pinerc.
+.SH DIAGNOSTICS
+Exit status is zero if all goes well, -1 otherwise.
+.SH "SEE ALSO"
+Rpdump(1).
+.LP
+Copyright 1989-2005 by the University of Washington.
+Pine and Pico are trademarks of the University of Washington.
+
+$Date: 2005-01-14 12:44:47 -0800 (Fri, 14 Jan 2005) $

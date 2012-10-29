@@ -1,0 +1,15 @@
+;
+; Generic os-gen.ic file for building os-gen.c.
+;
+; Boilerplate header.
+include(header)
+
+include(unix)
+
+include(spell.unx)
+
+include(read.sel)
+
+include(raw.ios)
+
+include(term.cap)

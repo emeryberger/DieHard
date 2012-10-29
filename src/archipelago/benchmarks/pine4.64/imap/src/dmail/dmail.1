@@ -1,0 +1,99 @@
+.TH DMAIL 1 "May 18, 2004"
+.SH NAME
+dmail \- procmail Mail Delivery Module
+.nh
+.SH SYNOPSIS
+.B dmail
+.I [\-D] [\-f from_name] [-s] [user][+folder]
+.SH DESCRIPTION
+.I dmail
+delivers mail to a user's INBOX or a designated folder.
+.I dmail
+may be configured as a drop-in replacement for
+.IR binmail (1),
+.IR mail.local (1)
+for use with a mail delivery filter such as
+.IR procmail (1) .
+.PP
+Because of security considerations (see below)
+.I dmail
+is not intended to be used for direct delivery by the mailer daemon;
+.IR tmail (1)
+is the preferred tool for this purpose.  If
+.I dmail
+is used for mailer daemon delivery, the mailer daemon must invoke
+.I dmail
+with the
+.I dmail
+process' user id set to the recipient's user id.
+.PP
+When
+.I dmail
+exits, it returns exit status values to enable
+.IR procmail (1)
+to determine whether a message was delivered successfully or had a
+temporary (requeue for later delivery) or permanent (return to sender)
+failure.
+.PP
+If the
+.I user
+name is present, it must be the same as the logged-in user name.
+.PP
+If the 
+.I +folder
+extension is included in the user argument (or appears by itself if there
+is no user argument), 
+.I dmail
+will attempt to deliver to the designated folder.  If the folder does not 
+exist or the extension is not included, the message is delivered to the 
+user's INBOX.
+If delivery is to INBOX and no INBOX currently exists,
+.I dmail
+will create a new INBOX.
+.I dmail
+recognizes the format of an existing INBOX or folder, and appends the new
+message in that format.
+.PP
+The \fB-D\fR flag specifies debugging; this enables additional message
+telemetry.
+.PP
+The \fB-f\fR or \fB-r\fR flag is used to specify a Return-Path.  The header
+.br
+   Return-Path: <\fIfrom_name\fR> 
+.br 
+is prepended to the message before delivery.
+.PP
+The
+.B -s
+flag specifies that the message will be flagged as being "seen".
+.SH RESTRICTIONS
+Absolute pathnames and 
+.I ~user
+specifications are not permitted in
+.I +folder
+extensions.
+.SH SECURITY CONSIDERATIONS
+Unlike
+.I tmail
+you can use
+.I dmail
+to deliver to IMAP4 namespace names via
+.I +folder
+extensions.  This means that it is possible to deliver to
+.IR mh (1)
+format mailboxes.
+.PP
+However, this can also include such namespaces as #shared, #public,
+and #ftp.  In most cases, it is undesirable to allow anybody sending
+mail to the user to deliver to these namespaces.  Consequently, there
+needs to be a rule in place in the configuration of either
+.IR sendmail (8)
+or
+.IR procmail (1)
+to prevent such abuse.
+.SH AUTHOR
+Mark Crispin, MRC@CAC.Washington.EDU
+.SH "SEE ALSO"
+binmail(1)
+.br
+procmail(1)

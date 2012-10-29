@@ -1,0 +1,12 @@
+;
+; MTEST.DEF - def file for c-client test application mtest
+;
+
+NAME         WINDOWSAPI
+DESCRIPTION  'C-Client Test Application'
+EXETYPE      WINDOWS
+PROTMODE
+CODE           PRELOAD MOVEABLE DISCARDABLE
+DATA           PRELOAD MOVEABLE
+HEAPSIZE       1024
+STACKSIZE      32767

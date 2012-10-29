@@ -1,0 +1,15 @@
+;
+; A/UX os-aux.ic file for building os-aux.c.
+;
+; Boilerplate header.
+include(header)
+
+include(unix)
+
+include(spell.unx)
+
+include(read.sel)
+
+include(raw.io)
+
+include(term.cap)

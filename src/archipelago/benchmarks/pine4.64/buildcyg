@@ -1,0 +1,515 @@
+#!/bin/sh
+#
+# $Id: buildcyg 13790 2004-09-15 22:44:42Z jpf $
+#
+#            T H E    P I N E    M A I L   S Y S T E M
+#
+#   Laurence Lundblade and Mike Seibel
+#   Networks and Distributed Computing
+#   Computing and Communications
+#   University of Washington
+#   Administration Building, AG-44
+#   Seattle, Washington, 98195, USA
+#   Internet: lgl@CAC.Washington.EDU
+#             mikes@CAC.Washington.EDU
+#
+#   Please address all bugs and comments to "pine-bugs@cac.washington.edu"
+#
+#
+#   Pine and Pico are registered trademarks of the University of Washington.
+#   No commercial use of these trademarks may be made without prior written
+#   permission of the University of Washington.
+#
+#   Pine, Pico, and Pilot software and its included text are Copyright
+#   1989-2004 by the University of Washington.
+#
+#   The full text of our legal notices is contained in the file called
+#   CPYRIGHT, included with this distribution.
+#
+#
+#   Pine is in part based on The Elm Mail System:
+#    ***********************************************************************
+#    *  The Elm Mail System  -  Revision: 2.13                             *
+#    *                                                                     *
+#    * 			Copyright (c) 1986, 1987 Dave Taylor               *
+#    * 			Copyright (c) 1988, 1989 USENET Community Trust    *
+#    ***********************************************************************
+# 
+#
+
+
+#
+# This is a modified build script which is for Cygwin. The reason it is
+# separate is because we do not want to deal with the .exe suffixes in
+# the regular build script.
+#
+
+cat > .bld.hlp <<EOF
+Usage: build <make-options> <target-platform>
+
+<target-platform> may be one of the ports listed in doc/pine-ports or
+  clean   Clean up object files and such.
+          Also, a good way to rebuild Pine/Pico from scratch.
+
+See the README file for more information.
+
+EOF
+                 
+
+# If no args, build what was built last time.
+if [ $# -eq 0 ]
+then
+    if [ -f .bld.args ]
+    then
+	set `cat .bld.args`
+    fi
+else
+    rm -f .bld.args
+fi
+
+L1=
+L2=
+K1=
+K2=
+S1=
+S2=
+S3=
+S4=
+CERTSD=
+NOSSL=
+# We will complain if we use "none",
+# but this gets overridden if we find the ssl dir
+SSL=none
+DEFSSLD=/usr/local/ssl
+SSLD=
+NOCC=
+LLIBS=
+LFLAGS=
+NOLDAP=
+GDIR=
+AAFLAGS=
+SAFLAGS=
+
+maketarg="no-target"
+PHOME=`pwd`
+
+for var in "$@"; do
+  case "$var" in
+ 
+    help) cat .bld.hlp
+          exit ;;
+
+    clean|???)
+         if [ $maketarg != no-target ]
+         then
+             echo "Can only make one target system at a time"
+             echo Both \""$maketarg"\" and \""$var"\" were given
+             exit
+         else
+             maketarg="$var"
+         fi
+       ;;
+
+    NOSSL) NOSSL=1
+	   NSSL=NOSSL
+	   SSL="none"
+       ;;
+
+    NOLDAP) NOLDAP=1
+	   NLDAP=NOLDAP
+       ;;
+
+    SSLTYPE=*) SAFLAGS=1
+	       SSL=`echo "$var" | cut -c9-`
+	       if [ "$SSL" = "none" ]
+	       then
+		   NOSSL=1
+		   NSSL=NOSSL
+	       fi
+	   ;;
+
+    *) makeargs="$makeargs '$var'"
+       case "$var" in
+	 CC=*)                   NOCC=1    ;;
+	 LDAPLIBS=*)             LLIBS=1   ;;
+	 LDAPCFLAGS=*)           LFLAGS=1  ;;
+	 GSSDIR=*)               GDIR=1
+				 K1="$var" ;;
+	 EXTRAAUTHENTICATORS=*)  AAFLAGS=1 ;;
+	 SSLDIR=*)               SSLD=`echo "$var" | cut -c8-`  ;;
+	 SSLCERTS=*)             CERTSD=`echo "$var" | cut -c10-`
+				 S2="$var" ;;
+	 SSLINCLUDE=*)           S3="$var" ;;
+	 SSLLIB=*)               S4="$var" ;;
+       esac
+       ;;
+
+  esac
+done
+
+
+if [ $# -ne 0 ]
+then
+    case $maketarg in
+
+       ???) 
+	    echo "$makeargs" "$NSSL" "$NLDAP" $maketarg > .bld.args ;;
+    esac
+fi
+
+# Set up correct compiler
+if [ "$NOCC" != "1" ]
+then
+  case $maketarg in
+     sol)
+ echo "\"Sol\" port no longer exists. Use \"so4\" for Solaris version 2.4 or"
+ echo "lower (SunOS 5.4 or lower) and \"so5\" for Solaris version 2.5 or"
+ echo "higher (SunOS 5.5 or higher)."
+	  exit;;
+     gso)
+ echo "\"Gso\" port no longer exists. Use \"gs4\" for Solaris version 2.4 or"
+ echo "lower (SunOS 5.4 or lower) and \"gs5\" for Solaris version 2.5 or"
+ echo "higher (SunOS 5.5 or higher)."
+	  exit;;
+     cyg) makeargs="CC=gcc $makeargs" ;;
+     gh9) makeargs="CC=gcc $makeargs" ;;
+     ghp) makeargs="CC=gcc $makeargs" ;;
+     go5) makeargs="CC=gcc $makeargs" ;;
+     gs4) makeargs="CC=gcc $makeargs" ;;
+     gs5) makeargs="CC=gcc $makeargs" ;;
+     gsc) makeargs="CC=gcc $makeargs" ;;
+     gsu) makeargs="CC=gcc $makeargs" ;;
+     gul) makeargs="CC=gcc $makeargs" ;;
+     mnt) makeargs="CC=gcc $makeargs" ;;
+     bs3) makeargs="CC=shlicc $makeargs" ;;
+     nto) makeargs="CC=qcc $makeargs" ;;
+     lyn) [ -f /CYGNUS.bash ] && . /CYGNUS.bash; makeargs="CC=gcc $makeargs" ;;
+       *) makeargs="CC=cc $makeargs" ;;
+  esac
+fi
+
+# Some ports are common for pico (for example) but different for pine.
+# For example, port hxd uses hpp port for pico, hpx port for pine, and a
+# separate hxd port for c-client. Not all of these have been verified to work.
+case $maketarg in
+   aos) ccltarg=$maketarg; picotarg=bsd;       pinetarg=$picotarg ;;
+   bs2) ccltarg=bsi;       picotarg=$maketarg; pinetarg=$maketarg ;;
+   bs3) ccltarg=$maketarg; picotarg=bs2;       pinetarg=bs2 ;;
+   cyg) ccltarg=$maketarg; picotarg=$maketarg; pinetarg=$maketarg ; DEFSSLD=/usr/ssl ;;
+   d41) ccltarg=$maketarg; picotarg=d-g;       pinetarg=$picotarg ;;
+   d54) ccltarg=$maketarg; picotarg=d-g;       pinetarg=$picotarg ;;
+   ghp) ccltarg=$maketarg; picotarg=gh9;       pinetarg=$maketarg ;;
+   go5) ccltarg=$maketarg; picotarg=$maketarg; pinetarg=sc5 ;;
+   gs4) ccltarg=gso;       picotarg=gso;       pinetarg=$maketarg ;;
+   gs5) ccltarg=gso;       picotarg=gso;       pinetarg=$maketarg ;;
+   gsc) ccltarg=$maketarg; picotarg=sco;       pinetarg=sco ;;
+   hpx) ccltarg=$maketarg; picotarg=hpp;       pinetarg=$maketarg ;;
+   hxd) ccltarg=$maketarg; picotarg=hpp;       pinetarg=hpx ;;
+   lnp) ccltarg=$maketarg; picotarg=lnx;       pinetarg=$picotarg ;;
+   lrh) ccltarg=$maketarg; picotarg=lnx;       pinetarg=$picotarg ; DEFSSLD=/usr/share/ssl ;;
+   lmd) ccltarg=$maketarg; picotarg=lnx;       pinetarg=$picotarg ; DEFSSLD=/usr/lib/ssl ;;
+   lsu) ccltarg=$maketarg; picotarg=lnx;       pinetarg=$picotarg ; DEFSSLD=/usr/ssl ;;
+   nx3) ccltarg=$maketarg; picotarg=nxt;       pinetarg=$picotarg ;;
+   osx) ccltarg=$maketarg; picotarg=$maketarg; pinetarg=$picotarg ; DEFSSLD=/System/Library/OpenSSL ;;
+   os4) ccltarg=$maketarg; picotarg=osf;       pinetarg=$picotarg ;;
+   pt1) ccltarg=psx;       picotarg=$maketarg; pinetarg=$maketarg ;;
+   shp) ccltarg=$maketarg; picotarg=hpp;       pinetarg=$picotarg ;;
+   sg6) ccltarg=$maketarg; picotarg=sgi;       pinetarg=$picotarg ;;
+   slx) ccltarg=$maketarg; picotarg=lnx;       pinetarg=$picotarg ;;
+   sl4) ccltarg=$maketarg; picotarg=lnx;       pinetarg=$picotarg ;;
+   sl5) ccltarg=$maketarg; picotarg=lnx;       pinetarg=$picotarg ;;
+   snx) ccltarg=$maketarg; picotarg=sv4;       pinetarg=sv4 ;;
+   so4) ccltarg=sol;       picotarg=sol;       pinetarg=$maketarg ;;
+   so5) ccltarg=sol;       picotarg=sol;       pinetarg=$maketarg ;;
+   sos) ccltarg=$maketarg; picotarg=osf;       pinetarg=$picotarg ;;
+   ssn) ccltarg=$maketarg; picotarg=sun;       pinetarg=$picotarg ;;
+     *) ccltarg=$maketarg; picotarg=$maketarg; pinetarg=$maketarg ;;
+esac
+
+echo "make args are $makeargs" "$maketarg"
+
+case $maketarg in
+
+   ???) 
+        echo ''
+        cd "$PHOME"
+
+# Try to automatically include LDAP definitions.
+        if [ "$NOLDAP" != "1" -a -f contrib/ldap-setup -a \
+	     \( "$LLIBS" != "1" -o "$LFLAGS" != "1" \) ]
+	then
+	  contrib/ldap-setup $pinetarg $maketarg
+# Allow for override of either of these separately.
+	  case "$?" in
+	    1) if [ "$LLIBS" != "1" ]
+	       then
+		 L1="'LDAPLIBS=../ldap/libraries/libldap.a ../ldap/libraries/liblber.a'"
+	       fi
+	       if [ "$LFLAGS" != "1" ]
+	       then
+		 L2="'LDAPCFLAGS=-DENABLE_LDAP -I../ldap/include'"
+	       fi
+	       echo "Including LDAP functionality"
+	       ;;
+
+	    11) if [ "$LLIBS" != "1" ]
+	       then
+		 L1="'LDAPLIBS=../ldap/libraries/libldap/.libs/libldap.a ../ldap/libraries/liblber/.libs/liblber.a'"
+	       fi
+	       if [ "$LFLAGS" != "1" ]
+	       then
+		 L2="'LDAPCFLAGS=-DENABLE_LDAP -I../ldap/include'"
+	       fi
+	       echo "Including LDAP functionality"
+	       ;;
+
+	    2) if [ "$LLIBS" != "1" ]
+	       then
+		 L1="'LDAPLIBS=../ldap/libraries/libldap.a'"
+	       fi
+	       if [ "$LFLAGS" != "1" ]
+	       then
+		 L2="'LDAPCFLAGS=-DENABLE_LDAP -I../ldap/include'"
+	       fi
+	       echo "Including LDAP functionality"
+	       ;;
+
+	    3) if [ "$LLIBS" != "1" ]
+	       then
+		 L1="'LDAPLIBS=-lldap'"
+	       fi
+	       if [ "$LFLAGS" != "1" ]
+	       then
+		 L2="'LDAPCFLAGS=-DENABLE_LDAP'"
+	       fi
+	       echo "Including LDAP functionality"
+	       ;;
+
+	    7) if [ "$LLIBS" != "1" ]
+	       then
+		 L1="'LDAPLIBS=-lldap -llber'"
+	       fi
+	       if [ "$LFLAGS" != "1" ]
+	       then
+		 L2="'LDAPCFLAGS=-DENABLE_LDAP -I/usr/include'"
+	       fi
+	       echo "Including LDAP functionality"
+	       ;;
+
+	    4) ;;
+
+	    *) exit 30 ;;
+	  esac
+	fi
+
+# Try to automatically include Kerberos5 definitions.
+        if [ -d krb5 -a -f contrib/krb5-setup -a \
+             \( "$GDIR" != "1" -o "$AAFLAGS" != "1" \) ]
+	then
+	  contrib/krb5-setup $pinetarg $maketarg
+# Allow for override of either of these separately.
+	  case "$?" in
+	    0) if [ "$GDIR" != "1" ]
+	       then
+	         K1="GSSDIR=\"$PHOME/krb5\""
+	       fi
+	       if [ "$AAFLAGS" != "1" ]
+	       then
+	         K2="'EXTRAAUTHENTICATORS=gss'"
+	       fi
+	       echo "Including Kerberos5 functionality"
+	       ;;
+
+	    *) exit 30 ;;
+	  esac
+	fi
+
+# Try to automatically include SSL. To prevent SSL from being automatically
+# included use "build NOSSL target".
+# Check for nonempty certs directory from OpenSSL. Also check for 8-hexdigit
+# symlinks.
+	if [ x"$SSLD" = "x" ]
+	then
+	  SSLD="$DEFSSLD"
+	fi
+
+	if [ x"$CERTSD" = "x" ]
+	then
+	  CERTSD="$SSLD/certs"
+	fi
+
+        if [ \( -d "$SSLD" -o -d "$CERTSD" \) -a "$SAFLAGS" != "1" -a "$NOSSL" != "1" ]
+	then
+	  if [ ! -d "$CERTSD" -o ! -f "$CERTSD"/factory.pem ]
+	  then
+	    if [ ! -d "$CERTSD" ]
+	    then
+	      echo ""
+	      echo "  Directory "$CERTSD" is missing"
+	      echo ""
+	      SSLWARN=1
+	    else
+	      echo "  File "$CERTSD"/factory.pem is missing"
+	      echo "  This might indicate that CA certs did not get properly"
+	      echo "  installed.  If you get certificate validation failures"
+	      echo "  in Pine, this might be the reason for them."
+	      echo ""
+	    fi
+	  else
+	    /bin/ls "$CERTSD" | grep '[0-9A-Za-z][0-9A-Za-z][0-9A-Za-z][0-9A-Za-z][0-9A-Za-z][0-9A-Za-z][0-9A-Za-z][0-9A-Za-z][0-9A-Za-z]*\.0' > /dev/null 2>&1
+	    if [ $? != "0" ]
+	    then
+		echo "  No 8-hexdigit symlinks in "$CERTSD""
+		echo "  This might indicate that CA certs did not get properly"
+		echo "  installed.  If you get certificate validation failures"
+		echo "  in Pine, this might be the reason for them."
+		echo ""
+	    fi
+	  fi
+	  case $maketarg in
+	    sco|gsc|sc5|go5)   SSL="sco.nopwd"  ;;
+	    *)                 SSL="nopwd" ;;
+	  esac
+
+	  S1="SSLDIR=$SSLD"
+	  echo "Including SSL functionality"
+	fi
+
+        if [ -s c-client ] ; then rm -f c-client ; fi
+        ln -s imap/c-client c-client
+        if [ -s mtest    ] ; then rm -f mtest    ; fi
+        ln -s imap/mtest mtest
+        if [ -s mailutil ] ; then rm -f mailutil ; fi
+        ln -s imap/mailutil mailutil
+        if [ -s imapd    ] ; then rm -f imapd    ; fi
+        ln -s imap/imapd imapd
+        if [ -s ipopd    ] ; then rm -f ipopd    ; fi
+        ln -s imap/ipopd ipopd
+        echo "Making c-client library, imapd, and ipopd"
+	echo $S1 $S2 $S3 $S4 $K1 > imap/SPECIALS
+        cd "$PHOME/imap"
+# This "touch" tells the IMAP make not to give any warnings about IESG compliance.
+	if [ "$NOSSL" = "1" -o "$SSL" != "none" ] ; then touch ssl$SSL ; fi
+	if [ "$NOSSL" != "1" -a "$SSL" = "none" -a ! -f sslnone ]
+	then
+	   echo "+-----------------------------------------------------------+"
+	   echo "| It appears that you do not have OpenSSL or equivalent     |"
+	   echo "| installed on this system.                                 |"
+	   echo "|                                                           |"
+	   echo "| Building PINE without SSL support will possibly introduce |"
+	   echo "| problems when communicating with IMAP, POP3, or SMTP      |"
+	   echo "| servers that require TLS or SSL authentication.           |"
+	   echo "| In addition, your password may be vulnerable to a         |"
+	   echo "| snooping attack since it may be sent over the network     |"
+	   echo "| unencrypted.                                              |"
+	   echo "+-----------------------------------------------------------+"
+	   echo ""
+	   echo "Do you want to continue this build anyway? Type y or n please:"
+	   read ans
+	   case "$ans" in
+	       y)   echo "Building without SSL ..."
+		    touch sslnone
+		    ;;
+
+	       *)   echo "Terminating build"
+		    exit 1
+		    ;;
+	   esac
+	fi
+        eval echo eval make "$makeargs" "SSLTYPE=$SSL" "SPECIALS=`cat SPECIALS`" "$K2" $ccltarg
+        eval make "$makeargs" "SSLTYPE=$SSL" "SPECIALS=`cat SPECIALS`" "$K2" $ccltarg
+	rc=$?
+	if [ $rc != "0" ]
+	then
+	    echo "+---------------------------------------------+"
+	    echo "| Problems building c-client                  |"
+	    echo "|                                             |"
+	    echo "| Please check the output above for a         |"
+	    echo "| possible explanation for this failure       |"
+	    echo "+---------------------------------------------+"
+	    echo ""
+	    exit $rc
+	fi
+        echo ''
+
+        echo "Making Pico and Pilot"
+        cd "$PHOME/pico"
+        eval echo make "$makeargs" -f makefile.$picotarg
+        eval make "$makeargs" -f makefile.$picotarg
+	rc=$?
+	if [ $rc != "0" ] ; then exit $rc ; fi
+        echo ''
+
+        echo "Making Pine and rpload/rpdump".
+        cd "$PHOME/pine"
+        eval echo make "$makeargs" "$L1" "$L2" -f makefile.$pinetarg
+        eval make "$makeargs" "$L1" "$L2" -f makefile.$pinetarg
+	rc=$?
+	if [ $rc != "0" ] ; then exit $rc ; fi
+        cd "$PHOME"
+        if [ ! -d bin ] ;  then    mkdir bin;        fi
+        cd "$PHOME/bin"
+        rm -f pine.exe mtest.exe imapd.exe mailutil.exe pico.exe pilot.exe rpload.exe rpdump.exe ipop2d.exe ipop3d.exe
+        if [ -s ../pine/pine.exe ] ;      then ln ../pine/pine.exe  pine.exe      ; fi
+        if [ -s ../mtest/mtest.exe ] ;    then ln ../mtest/mtest.exe mtest.exe    ; fi
+        if [ -s ../mailutil/mailutil.exe ] ; then ln ../mailutil/mailutil.exe mailutil.exe ; fi
+        if [ -s ../imapd/imapd.exe ] ;    then ln ../imapd/imapd.exe imapd.exe    ; fi
+        if [ -s ../ipopd/ipop2d.exe ] ;   then ln ../ipopd/ipop2d.exe ipop2d.exe  ; fi
+        if [ -s ../ipopd/ipop3d.exe ] ;   then ln ../ipopd/ipop3d.exe ipop3d.exe  ; fi
+        if [ -s ../pico/pico.exe ] ;      then ln ../pico/pico.exe pico.exe       ; fi
+        if [ -s ../pico/pilot.exe ] ;     then ln ../pico/pilot.exe pilot.exe     ; fi
+        if [ -s ../pine/rpload.exe ] ;    then ln ../pine/rpload.exe rpload.exe   ; fi
+        if [ -s ../pine/rpdump.exe ] ;    then ln ../pine/rpdump.exe rpdump.exe   ; fi
+        cd "$PHOME"
+        echo ''
+        echo "Links to executables are in bin directory:"
+        size bin/pine.exe bin/mtest.exe bin/imapd.exe bin/pico.exe bin/pilot.exe bin/rpdump.exe bin/rpload.exe bin/mailutil.exe bin/ipop2d.exe bin/ipop3d.exe
+	case $maketarg in
+	    mnt)    echo "Fixing stacksizes ..."
+		    fixstk 64K bin/pine bin/pico bin/imapd bin/mtest bin/pilot
+	esac
+	if [ "$SSLWARN" = "1" ]
+	then
+	    echo ""
+	    echo " +---------------------------------------------------------+"
+	    echo " |                                                         |"
+	    echo " |   WARNING. Certificates may not be installed correctly  |"
+	    echo " |   in $CERTSD. This may cause Pine SSL/TLS  |"
+	    echo " |   connections to fail because Pine may not be able to   |"
+	    echo " |   verify the authenticity of the certificates on the    |"
+	    echo " |   server. To compile Pine without SSL support use       |"
+	    echo " |                                                         |"
+	    echo " |             build NOSSL target                          |"
+	    echo " |                                                         |"
+	    echo " +---------------------------------------------------------+"
+	    echo ""
+	fi
+        echo "Done"
+        ;;
+
+
+    clean) # This only sort of works 
+        rm -f c-client mtest  mailutil imapd ipopd
+        echo "Cleaning c-client and imapd"
+	cd "$PHOME/imap"
+	make clean
+# this list of ssl* files matches with imap/Makefile
+	rm -f sslnopwd sslunix.nopwd sslsco.nopwd sslunix sslsco sslnone
+        echo "Cleaning Pine"
+        cd "$PHOME/pine"
+        make -f makefile.cyg clean
+        echo "Cleaning pico"
+        cd "$PHOME/pico"
+        make $makeargs -f makefile.cyg clean
+        echo "Done"
+        cd "$PHOME"
+        ;;
+
+    no-target)
+        echo "No target plaform for which to build Pine given."
+        echo 'Give command "build help" for help.'
+        ;;
+
+    *)  echo 'Do not know how to make Pine for target "'$maketarg'".'
+        ;;
+esac

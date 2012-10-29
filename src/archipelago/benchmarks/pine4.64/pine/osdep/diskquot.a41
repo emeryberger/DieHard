@@ -1,0 +1,6 @@
+#if defined(USE_QUOTAS)
+#include <jfs/quota.h>
+
+include(sunquota)
+#endif /* USE_QUOTAS */
+

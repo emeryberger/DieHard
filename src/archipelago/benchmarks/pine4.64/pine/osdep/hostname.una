@@ -1,0 +1,29 @@
+#include <sys/utsname.h>
+
+/*----------------------------------------------------------------------
+       Call system gethostname
+
+  Args: hostname -- buffer to return host name in 
+        size     -- Size of buffer hostname is to be returned in
+
+ Result: returns 0 if the hostname is correctly set,
+         -1 if not (and errno is set).
+ ----*/
+hostname(hostname,size) 
+    char *hostname;
+    int size;
+{
+    /** This routine compliments of Scott McGregor at the HP
+	    Corporate Computing Center **/
+     
+    int uname();
+    struct utsname name;
+
+    (void)uname(&name);
+    (void)strncpy(hostname,name.nodename,size-1);
+
+    hostname[size - 1] = '\0';
+    return 0;
+}
+
+

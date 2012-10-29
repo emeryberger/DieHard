@@ -1,0 +1,107 @@
+# Program:	Portable C client makefile -- old NT version
+#
+# Author:	Mark Crispin
+#		Networks and Distributed Computing
+#		Computing & Communications
+#		University of Washington
+#		Administration Building, AG-44
+#		Seattle, WA  98195
+#		Internet: MRC@CAC.Washington.EDU
+#
+# Date:		11 May 1989
+# Last Edited:	6 July 2004
+#
+# The IMAP toolkit provided in this Distribution is
+# Copyright 1988-2004 University of Washington.
+#
+# The full text of our legal notices is contained in the file called
+# CPYRIGHT, included with this Distribution.
+
+
+EXTRAAUTHENTICATORS =
+EXTRADRIVERS = 
+EXTRACFLAGS =
+AUTHENTICATORS = md5 pla log
+DRIVERS = imap nntp pop3 mbx mtx tenex unix
+CREATEDRIVER = mbx
+APPENDDRIVER = unix
+CFLAGS = /MT /W3 /Ox /DWIN32 /D_WIN32_WINNT=0x0400 -nologo /I.. $(EXTRACFLAGS)
+CC = cl
+CCLIENTLIB = cclient.lib
+
+all:	$(CCLIENTLIB)
+
+.c.obj:
+	$(CC) -c $(CFLAGS) $*.c
+
+osdep.h: os_nt.h
+	copy os_nt.h osdep.h
+	drivers $(EXTRADRIVERS) $(DRIVERS) dummy
+	setproto $(CREATEDRIVER) $(APPENDDRIVER)
+	echo ssl_onceonlyinit (); >> linkage.c
+	mkauths $(EXTRAAUTHENTICATORS) $(AUTHENTICATORS)
+
+ip_nt.c: ip4_nt.c
+	copy ip4_nt.c ip_nt.c
+
+mail.obj: mail.h misc.h osdep.h mail.c
+
+misc.obj: mail.h misc.h misc.c
+
+fdstring.obj: mail.h misc.h osdep.h fdstring.h fdstring.c
+
+flstring.obj: mail.h misc.h osdep.h flstring.h flstring.c
+
+netmsg.obj: mail.h misc.h netmsg.h osdep.h netmsg.c
+
+newsrc.obj: mail.h misc.h newsrc.h osdep.h newsrc.c
+
+rfc822.obj: mail.h rfc822.h misc.h rfc822.c
+
+smanager.obj: mail.h misc.h smanager.c
+
+utf8.obj: mail.h misc.h osdep.h utf8.h
+
+imap4r1.obj: mail.h imap4r1.h misc.h osdep.h imap4r1.c
+
+nntp.obj: mail.h nntp.h smtp.h rfc822.h misc.h osdep.h nntp.c
+
+pop3.obj: mail.h rfc822.h misc.h osdep.h pop3.c
+
+smtp.obj: mail.h smtp.h rfc822.h misc.h osdep.h smtp.c
+
+os_old.obj: mail.h osdep.h env_nt.h fs.h ftl.h nl.h tcp.h tcp_nt.h yunchan.h \
+	os_old.c fs_nt.c ftl_nt.c nl_nt.c env_nt.c ssl_nt.c ssl_none.c \
+	ip_nt.c tcp_nt.c yunchan.c pmatch.c write.c \
+	mailfile.h auth_md5.c auth_pla.c auth_log.c
+
+mbxnt.obj: mail.h mbxnt.h misc.h osdep.h mbxnt.c
+
+mtxnt.obj: mail.h misc.h osdep.h mtxnt.c
+
+tenexnt.obj: mail.h misc.h osdep.h tenexnt.c
+
+unixnt.obj: mail.h unixnt.h pseudo.h misc.h osdep.h unixnt.c
+
+dummynt.obj: mail.h dummy.h misc.h osdep.h dummynt.c
+
+pseudo.obj: pseudo.h
+
+$(CCLIENTLIB): mail.obj misc.obj fdstring.obj flstring.obj netmsg.obj \
+	newsrc.obj rfc822.obj smanager.obj utf8.obj \
+	imap4r1.obj nntp.obj pop3.obj smtp.obj os_old.obj \
+	mbxnt.obj mtxnt.obj tenexnt.obj unixnt.obj dummynt.obj pseudo.obj
+	if exist $(CCLIENTLIB) del $(CCLIENTLIB)
+	LIB /NOLOGO /OUT:cclient.lib \
+	mail.obj misc.obj fdstring.obj flstring.obj netmsg.obj \
+	newsrc.obj rfc822.obj smanager.obj utf8.obj \
+	imap4r1.obj nntp.obj pop3.obj smtp.obj os_old.obj \
+	mbxnt.obj mtxnt.obj tenexnt.obj unixnt.obj dummynt.obj pseudo.obj
+
+clean:
+	del *.lib *.obj linkage.* osdep.* ip_nt.c auths.c *.exe *.exp || rem
+
+# A monument to a hack of long ago and far away...
+
+love:
+	@echo not war?

@@ -1,0 +1,172 @@
+#line 2 "osdep/execview.dos"
+/*----------------------------------------------------------------------
+    Routine to execute command mailcap says is used to display MIME segment
+    under MS-DOS
+
+ The exported routine is:
+
+    exec_viewer -- 
+
+ ----*/
+
+#include	<process.h>
+
+
+/* ----------------------------------------------------------------------
+   Execute the given 
+
+  Args: cmd -- 
+	image_file --
+  
+     
+  ----*/
+void
+exec_mailcap_cmd(cmd, image_file, needsterminal)
+    char *cmd;
+    char *image_file;
+    int   needsterminal;  /* not used in DOS */
+{
+#ifdef	OLDWAY
+#define	MAXARGS	10
+    char     *args[MAXARGS], command[MAXPATH], *cp = command;
+    int       i;
+
+    /* build args */
+/* MAJOR HACK JUST FOR NOW */
+    if(struncmp(type_desc(body->type, body->subtype, body->parameter, 1),
+		"audio", 5) == 0){
+	if(getenv("PINEHOME"))
+	  sprintf(command,"%s\\sound", getenv("PINEHOME"));
+	else
+	  strcpy(command, "c:\\pine\\sound");
+	args[0] = command;
+	args[1] = image_file;
+	args[2] = "27";
+	args[3] = NULL;
+    }
+    else {
+	strncpy(command, ps_global->VAR_IMAGE_VIEWER, MAXPATH);
+	for(i=0; *cp != '\0';i++){			/* build args array */
+	    if(i < MAXARGS+2){
+		args[i] = NULL;			/* in case we break out */
+	    }
+	    else{
+		q_status_message1(SM_ORDER | SM_DING, 3, 5,
+				  "Too many args : %s",
+				  ps_global->VAR_IMAGE_VIEWER);
+		return;
+	    }
+
+	    while(isspace((unsigned char)(*cp)))
+	      if(*cp != '\0')
+		cp++;
+	      else
+		break;
+
+	    args[i] = cp;
+
+	    while(!isspace((unsigned char)(*cp)))
+	      if(*cp != '\0')
+		cp++;
+	      else
+		break;
+
+	    if(*cp != '\0')
+	      *cp++ = '\0';
+	}
+	args[i++] = image_file;
+	args[i] = NULL;
+    }
+
+    /* actually display the sucker */
+    if(spawnv(_P_WAIT, args[0], args) == -1){
+	/* error spawning image viewer */
+        q_status_message2(SM_ORDER | SM_DING, 4, 5,
+                          "Error \"%s\" spawning %s",
+                          error_description(errno),
+			  ps_global->VAR_IMAGE_VIEWER); 
+	return;
+    }
+
+    /* let main loop know we messed with the display */
+    ps_global->mangled_screen = 1;
+    q_status_message1(SM_ORDER, 0, 4, "Display of %s complete",
+		      type_desc(body->type, body->subtype, 
+				body->parameter, 1));
+#endif	/* OLDWAY */
+    int   rc;
+
+    cancel_busy_alarm(1);
+
+    if(system(cmd) < 0)
+      q_status_message1(SM_ORDER, 3, 4, "Failed to exec viewer: %s",
+			(errno == E2BIG) ? "Argument list too big" :
+			  (errno == ENOENT) ? "No command interpreter" :
+			    (errno == ENOMEM) ? "Not enough memory"
+				: "Unknown Error");
+
+    unlink(image_file);
+}
+
+
+/* ----------------------------------------------------------------------
+   Execute the given test= cmd
+
+  Args: cmd -- command to execute
+  Returns exit status
+     
+  ----*/
+int
+exec_mailcap_test_cmd(cmd)
+    char *cmd;
+{
+#define	MAXARGS	10
+    char *args[MAXARGS], *cp;
+    int   i, rv;
+
+    cp = cmd;
+
+    /* build args */
+    for(i=0; *cp != '\0'; i++){			/* build args array */
+	if(i < MAXARGS+2){
+	    args[i] = NULL;			/* in case we break out */
+	}
+	else{
+	    q_status_message1(SM_ORDER | SM_DING, 3, 5,
+			      "Too many args : %s",
+			      ps_global->VAR_IMAGE_VIEWER);
+	    return -1;
+	}
+
+	while(isspace((unsigned char)(*cp)))
+	  if(*cp != '\0')
+	    cp++;
+	  else
+	    break;
+
+	args[i] = cp;
+
+	while(!isspace((unsigned char)(*cp)))
+	  if(*cp != '\0')
+	    cp++;
+	  else
+	    break;
+
+	if(*cp != '\0')
+	  *cp++ = '\0';
+    }
+    args[i] = NULL;
+
+    /* actually display the sucker */
+    if((rv = spawnvp(_P_WAIT, args[0], args)) == -1){
+	/* error spawning image viewer */
+        q_status_message2(SM_ORDER | SM_DING, 4, 5, "Error \"%s\" spawning %s",
+                          error_description(errno),
+			  ps_global->VAR_IMAGE_VIEWER); 
+	return -1;
+    }
+
+    return(rv);
+}
+
+

@@ -1,0 +1,936 @@
+<HTML><HEAD><TITLE>Pine Technical Notes: Building and Installation</TITLE></HEAD><BODY>
+<H1>Building and Installation</H1>
+
+<H2><A NAME="compile">Compile-time Options</A></H2>
+
+The files you may need to modify are <CODE>./{pico,pine}/makefile.xxx</CODE>,
+<CODE>./{pico,pine}/osdep/os-xxx.h</CODE>, and possibly
+<CODE>./{pico,pine}/osdep/os-xxx.ic</CODE>,
+where <EM>xxx</EM> is the 3-letter code for your platform.
+You can give the command <CODE>build help</CODE> to see
+the list of ports incorporated into <EM>Pine</EM> and their
+associated 3-letter codes.
+The files <CODE>./{pico,pine}/makefile.xxx</CODE> are where you would
+set compiler options.
+By default, <EM>Pine</EM> will be compiled with debugging
+on, optimization and profiling off.
+Note that if you compile with DEBUG off,
+then <EM>Pine</EM> will not create its normal debug files, no matter how the
+debug-level and debug command line flag are set.  <P>
+
+Some of these can only be set when you compile.  Others,
+however, can be overridden by command-line flags to <EM>Pine</EM> or settings in
+<EM>Pine</EM>'s user or system configuration files.
+Some of the options which can be set when compiling: 
+
+<H3><A NAME="ldap-compile">Including LDAP Functionality</A></H3>
+
+In order to build <EM>Pine</EM> with LDAP functionality included you
+need to supply the LDAP library and include files.
+<EM>Pine</EM> has been successfully built with OpenLDAP 2.0.x, OpenLDAP 1.x,
+the University of Michigan LDAP library (ldap-3.3),
+and with the Netscape Directory SDK 1.0 LDAP library.
+<P>
+
+Set up a symlink called <CODE>ldap</CODE> in the top-level
+<CODE>pine</CODE> directory (the directory where the <EM>Pine</EM>
+<CODE>build</CODE> script is located).
+The <CODE>build</CODE> script will call <CODE>contrib/ldap-setup</CODE> to
+help figure out how to use the LDAP libraries.
+It expects to find directories
+<CODE>ldap</CODE>, <CODE>ldap/include</CODE>, <CODE>ldap/libraries</CODE>,
+and file <CODE>ldap/include/ldap.h</CODE>.
+<P>
+
+There are at least two slightly different styles of LDAP libraries.
+One style uses two libraries, libldap and liblber, the other uses just
+libldap.
+The script is not very smart, but it attempts to figure out which of
+these two cases is being used.
+Modify the script to fit your situation if you need to.
+<P>
+
+When using OpenLDAP as the library (or the older University of
+Michigan libary), set up the symlink so that it points to the base of
+the ldap source tree.
+The ldap-setup script looks for the directory
+<CODE>ldap/libraries/liblber</CODE> and the libraries
+<CODE>ldap/libraries/libldap.a</CODE> and <CODE>ldap/libraries/liblber.a</CODE>.
+<P>
+
+To use the Netscape Directory SDK library, make a directory called
+<CODE>ldap</CODE> in the top-level <CODE>pine</CODE> directory (where the
+<EM>Pine</EM> <CODE>build</CODE> script is located). That directory should
+contain two subdirectories, <CODE>include</CODE> and <CODE>libraries</CODE>.
+The <CODE>include</CODE> directory is where you should put the include
+files from the Netscape SDK. The <CODE>libraries</CODE> directory is
+where you should put the library, <CODE>libldap.a</CODE>.
+<P>
+
+The <CODE>build</CODE> script will run the script
+<CODE>contrib/ldap-setup</CODE> if you have created an <CODE>ldap</CODE>
+symlink or directory. It tries to figure out if the setup is the Univ. of
+Michigan code or not. If it is Univ. of Michigan ldap-3.3 or the library
+from <CODE>mozilla.org</CODE>, then it
+will link against both <CODE>libldap.a</CODE>
+and <CODE>liblber.a</CODE>. If it isn't, it will link
+against only <CODE>libldap.a</CODE>.
+You may find you have to do some tweaking to get this to work with the
+libraries you are using.
+If you find that a change to <CODE>contrib/ldap-setup</CODE> works for you,
+you might think about sending that to us for inclusion in the next
+<EM>Pine</EM> release.
+<P>
+
+If there is no <CODE>ldap</CODE> symlink, there is still an attempt to
+automatically include LDAP support if certain conditions exist.
+At this point, the check includes a check for Solaris 8, otherwise the
+automatic inclusion is not done.
+You may override the automatic inclusion of LDAP with the <CODE>build</CODE>
+argument <CODE>NOLDAP</CODE>.
+<P>
+
+<EM>Pine</EM> uses LDAPv2 protocol.
+When using LDAPv3 protocol, the results are returned in the utf8 character
+set.
+<EM>Pine</EM> is not yet ready to deal with that, so it tells the server to
+use the LDAPv2 protocol.
+<P>
+
+<H3><A NAME="krb5-compile">Including Kerberos 5 Functionality</A></H3>
+
+In order to build <EM>Pine</EM> with Kerberos functionality included
+you should place
+a symlink called <CODE>krb5</CODE> to the directory where your Kerberos5
+include files and libraries are located. That is, <CODE>krb5/include</CODE> and
+<CODE>krb5/lib</CODE> should exist. Place the symlink 
+in the top-level <CODE>pine</CODE> directory (where the
+<EM>Pine</EM> <CODE>build</CODE> script is located). See the comments in the
+script <CODE>contrib/krb5-setup</CODE> if you have trouble.
+<P>
+
+<H3><A NAME="pine-compile">Pine Compile-time Options</A></H3>
+
+<DL COMPACT>
+
+<DT> USE_QUOTAS
+
+<DD> Determines whether quotas are checked on startup.  Default is to not
+check the quota. 
+
+<DT> ALLOW_CHANGING_FROM
+
+<DD> This is now a hidden runtime feature called
+<A HREF="config.html#allow-from"<EM>allow-changing-from</EM></A>.
+Even with this feature turned on, users still have to include <EM>From</EM>
+in their <A HREF="config.html#def-comp"><EM>default-composer-hdrs</EM></A>
+or <A HREF="config.html#cust-hdr"><EM>customized-hdrs</EM></A>
+in order to be able to edit the From line.
+<P>
+
+Beginning with version 4.10, a user may also change their From address
+by using Roles.
+<P>
+
+A system administrator may disallow editing of the From line by putting
+the feature <EM>no-allow-changing-from</EM> in the system-wide <EM>fixed</EM>
+configuration file. The paranoid system administrator can compile in this
+behavior by defining <EM>NEVER_ALLOW_CHANGING_FROM</EM> in
+<CODE>./pine/osdep/os-xxx.h</CODE>.
+
+<DT> DEFAULT_DEBUG
+
+<DD> Sets the level of debugging output created in <EM>Pine</EM>'s debug files. 
+Default is level 2. The command-line flag -d may also be used to change the
+debug level. For example, <CODE>-dverbose=7</CODE>.
+
+<DT> NUMDEBUGFILES
+
+<DD> Sets the number of debug files kept per user.
+Default is 4. The command-line flag -d may also be used to change
+this. For example, <CODE>-dverbose=3,numfiles=2</CODE>.
+
+<DT> BACKGROUND_POST
+
+<DD> Define this if you want to allow users to turn on the feature that
+enables sending to take place in a fork()'d child. This may reduce
+the time on the user's wall clock it takes to post mail.
+NOTE: You'll also have to make sure the
+appropriate <CODE>./pine/osdep/postreap.*</CODE>
+file is included in the <CODE>./pine/osdep/os-xxx.ic</CODE> file for
+your system.
+
+<DT> NEW_MAIL_TIME
+
+<DD> Interval between new-mail checks.  Default is 150 seconds. 
+This is obsolete. This should be set in a
+configuration file by setting the variable
+<A HREF="config.html#mail-check"><EM>mail-check-interval</EM></A>.
+
+<DT> OVERLAP
+
+<DD> Number of lines overlap when user views the next page of a message. 
+Default is 2 lines. 
+This is obsolete. This should be set in a
+configuration file by setting the variable
+<A HREF="config.html#overlap"><EM>viewer-overlap</EM></A>.
+
+<DT> PASSFILE
+
+<DD> <EM>WARNING!</EM> Turning this on is very dangerous and should probably not
+be done, except on single user systems!
+For <EM>PC-Pine</EM>, this is turned on by default and set to the
+filename <CODE>PINE.PWD</CODE>.  It may be overridden by the
+-passfile command-line argument.
+You may enable it for Unix systems by defining PASSFILE to be a filename
+which will be located in the same directory as the pinerc file, usually the
+home directory.
+<P>
+The file is used to save passwords from one session to the next.
+Even if you define PASSFILE when you compile <EM>Pine</EM>, 
+password saving will not be enabled by default, but requires the
+existence of the file (the name of which is the value of PASSFILE).
+Even with the existence of this file, the user must still acknowledge a
+prompt before the password is saved to the file.
+If <EM>Pine</EM> is configured
+to access several different IMAP servers, each password entered will be
+kept (associated with the corresponding host name) in memory during the
+current session, and optionally, in the PASSFILE file for use in
+subsequent sessions.  <P>
+
+<EM>WARNING</EM>!  Use this feature with caution!  It effectively makes
+the user's mail no more secure than the physical security of the machine
+running <EM>Pine</EM>.  What's more, while the password is cloaked by a mild
+(some might say, feeble) encryption scheme, it is nonetheless sitting in a
+file on the disk and subject to cracking by anyone with access to it. 
+<EM>BEWARE</EM>!  <P>
+
+<DT> SENDMAIL
+<DT> SENDMAILFLAGS
+
+<DD> Sets the name and flags for the local program that will be called to
+handle outgoing email.  Default is <CODE>/usr/lib/sendmail -oi -oem -t</CODE>.
+See the <A HREF="background.html#SMTP"><EM>SMTP and Sendmail</EM></A>
+section for more details.
+
+<DT> SYSTEM_PINERC
+
+<DD> The name of the file which holds <EM>Pine</EM>
+configuration information for
+all users on the system.  Default on UNIX systems is
+<CODE>/usr/local/lib/pine.conf</CODE>.
+
+<DT> SYSTEM_PINERC_FIXED
+
+<DD> The name of the file which holds the same type of information as for
+SYSTEM_PINERC, but only for variables that the administrator wants to keep
+fixed.  That is, users are not allowed to change variables that are
+specified in the FIXED file.  Default on UNIX systems is
+<CODE>/usr/local/lib/pine.conf.fixed</CODE>.
+
+</DL> <P>
+
+There are a couple of more obscure options which are in the source code 
+because a few people have asked for them or because we changed our 
+minds about them being a good idea in general. 
+
+<DL COMPACT>
+
+<DT> ENCODE_FROMS
+
+<DD> Use Quoted-printable encoding so that <CODE>From</CODE>'s at the
+beginning of lines don't end up being escaped by &gt;'s.  Most people seem
+to dislike the Q-P encoding more than the &gt; escapes so this is off by
+default.  Once everyone has MIME mail readers, we'll turn this on by
+default. 
+
+<DT> NO_KEYBOARD_LOCK
+
+<DD> Disable the keyboard locking function in the main menu.  Keyboard
+locking is enabled by default.  An easier way to turn off Keyboard locking
+is to add the feature
+<A HREF="config.html#disable-kblock"><EM>disable-keyboard-lock-cmd</EM></A> to
+the feature list variable in the global <CODE>pine.conf</CODE> or
+<CODE>pine.conf.fixed</CODE> file. <P>
+
+</DL>
+
+<H3><A NAME="pico-compile">Pico Compile-time Options</A></H3>
+
+There is really only one option settable specifically for <EM>Pico</EM>.
+It is for the UNIX <EM>Pico</EM> versions only.
+The file that may need some changing is <CODE>./pico/osdep/os_xxx.h.</CODE>.
+Whatever is set will
+effect the behavior of the <EM>Pico</EM> stand-alone program as well as the
+composer within <EM>Pine</EM>. 
+
+<DL COMPACT>
+
+<DT> SPELLER
+
+<DD> Names the program called to do "normal" spell-checking. This can be set
+in a configuration file instead by setting the
+<A HREF="config.html#speller"><EM>speller</EM></A>
+configuration variable.
+
+</DL>
+
+<H3><A NAME="osdep-compile">OS Dependent Compile-time Settings</A></H3>
+
+Most of <EM>Pine</EM>'s (and <EM>Pico</EM>'s) operating system dependent
+behaviors are set in the files
+<CODE>./pico/osdep/os-xxx.h</CODE> and <CODE>./pico/osdep/os-xxx.ic</CODE>.
+The flags in the makefiles are also system dependent. See the comments in
+<CODE>./pico/osdep/os-xxx.h</CODE> for more details. One that may come up is:
+
+<DL COMPACT>
+<DT> USE_TERMINFO
+<DT> USE_TERMCAP
+
+<DD> Instructs <EM>Pine</EM> to use the terminfo (or termcap) database. 
+Default varies by system. This has been moved from
+<CODE>./pine/osdep/os-xxx.h</CODE> to <CODE>./pico/osdep/os-xxx.h</CODE>.
+If you change this you will also have to change the file
+<CODE>./pico/osdep/os-xxx.ic</CODE> so that it includes the file
+<CODE>term.inf</CODE> instead of <CODE>term.cap</CODE> (or vice versa) and
+you will probably have to change the libraries included by the makefiles
+<CODE>./{pico,pine}/makefile-xxx</CODE>. Hopefully, it is already set
+correctly for each system.
+
+</DL>
+
+<H3><A NAME="imapd-compile">IMAPd Compile-time Options</A></H3>
+
+There are no options or settings required for the version of IMAPd
+distributed with <EM>Pine</EM>.  If you need to be doing more complex modifications
+to IMAP, then you should pick up the IMAP development package and work
+with that code.  The developer's version of IMAP is available for
+anonymous ftp from <A
+HREF="ftp://ftp.cac.washington.edu"><CODE>ftp.cac.washington.edu</CODE></A>
+in the directory <CODE>mail</CODE>.  The file is called <A
+HREF="ftp://ftp.cac.washington.edu/mail/imap.tar.Z"><CODE>imap.tar.Z</CODE></A>. 
+<P>
+
+<HR>
+
+<H2><A NAME="build">Building the Pine Programs</A></H2>
+
+You may have already compiled <EM>Pine</EM> and tried it out.  If so, great!  If
+not, you should be able to do it without too much trouble by following
+these step-by-step instructions: <P>
+
+<OL>
+
+<LI> Figure out what platform you're building for.  You can give the
+command <CODE>build help</CODE> or look at the list
+in <CODE>./doc/pine-ports</CODE> to see the list of ports incorporated into
+<EM>Pine</EM>.  What you need is the three letter code for the platform.  Some
+examples are <CODE>a41</CODE> for the AIX 4.1 operating system,
+<CODE>os4</CODE> for Digital Unix 4.0, and <CODE>lnx</CODE> for Linux.
+There are sometimes several variants for a single operating system
+(different compilers, shadow passwords or not, etc.) so look through the
+whole list in <CODE>./doc/pine-ports</CODE> for the one you want.
+If your platform is not in the list of ports, then you might
+have some work ahead of you.  First, check the file
+<CODE>doc/pine-ports</CODE> to see if there are others working on a port for
+your platform or to see if the port is included in the <CODE>contrib</CODE> section
+of the source code.  Ports in the <CODE>contrib</CODE> directory were
+contributed by <EM>Pine</EM> administrators from around the world, but the <EM>Pine</EM>
+development team has not been able to test the code. Some of these ports are
+very old and are based on old versions of <EM>Pine</EM>.
+If <EM>Pine</EM> has not yet
+been ported to your platform at all, read the section on
+<A HREF="porting.html">Porting <EM>Pine</EM></A> in this document.  <P>
+
+<LI> Make sure you're in the root of the <EM>Pine</EM> source.  When you type
+<CODE>ls</CODE> you should see the following files and directories (or
+something close to it): 
+
+<PRE>
+	README	build	doc 	makefile	pine
+	bin	contrib	imap	pico
+</PRE>
+<P>
+
+<LI> Make sure you're getting a clean start by giving the command
+<CODE>./build clean</CODE>. This should take only a few seconds to run.  <P>
+
+<LI> Give the command <CODE>./build </CODE><EM>xxx</EM> where <EM>xxx</EM>
+is the three letter code you picked in step 1.  The compiler should grind
+away for a few minutes.  <P>
+
+<LI> When the compilation is complete the sizes of the binaries built
+will be displayed.  The actual binaries are in
+the various source directories.  In addition, the <CODE>bin</CODE>
+directory contains a link to each program compiled.  You can just copy
+them out of <CODE>bin</CODE> or try them from there.  <P>
+
+</OL>
+
+<P>
+The <CODE>build</CODE> command can be given some options which it passes
+on to the subordinate makes.
+Some that may be useful are <CODE>EXTRACFLAGS</CODE>,
+<CODE>DEBUG</CODE>, and
+<CODE>EXTRALDFLAGS</CODE>.
+There are also some SSL-related arguments: <CODE>SSLDIR</CODE>,
+<CODE>SSLCERTS</CODE>, <CODE>SSLINCLUDE</CODE>, and <CODE>SSLLIB</CODE>.
+You should also read the comments in the <CODE>build</CODE> script itself,
+which are possibly more up-to-date than this text.
+
+<P>
+Here are some examples of options you may want to pass to <CODE>build</CODE>.
+This will turn off the debugging files that <EM>Pine</EM> produces,
+while leaving
+the symbol table information. We believe a better way to do this is to
+have an alias for <CODE>pine</CODE> which
+executes <CODE>pine -d0</CODE> instead.
+This turns off debugging at runtime while preserving the possibility of using
+the debugging if a problem turns up.
+But if you wanted to turn it off unconditionally you could use the
+build argument
+
+<P>
+<CENTER><SAMP>
+                 DEBUG=-g
+</SAMP></CENTER>
+
+<P>
+In other words, the command to build a <EM>Pine</EM> with no debugging
+would be
+
+<P>
+<CENTER><SAMP>
+                ./build DEBUG=-g target
+</SAMP></CENTER>
+
+<P>
+where target is one of the 3-letter port names found in doc/pine-ports.
+To also leave out the symbol table information you could pass:
+
+<P>
+<CENTER><SAMP>
+                DEBUG=
+</SAMP></CENTER>
+
+<P>
+To turn on the optimizer
+
+<P>
+<CENTER><SAMP>
+                DEBUG=-O
+</SAMP></CENTER>
+
+<P>
+It should be ok to move string constants into a read-only area.
+We don't think there are any instances where <EM>Pine</EM> modifies a string
+constant. So you could pass a flag to your compiler that tells it to do
+this. This could cause several hundred K of strings to be moved from
+the data area of the program into the text area of the program, and that
+should allow that text to be shared among all instances of <EM>Pine</EM>.
+To do this, for example, with the AIX <EM>a41</EM> port, you could
+pass this to <CODE>build</CODE>:
+
+<P>
+<CENTER><SAMP>
+                EXTRACFLAGS=-qro
+</SAMP></CENTER>
+
+<P>
+If you are using OpenSSL but have decided to use a non-standard directory
+(standard one is <CODE>/usr/local/ssl</CODE>) for the location
+then you can cause <EM>Pine</EM>
+to use that directory with
+
+<P>
+<CENTER><SAMP>
+                SSLDIR=/some/other/dir
+</SAMP></CENTER>
+
+<P>
+The assumption is that the certs directory is in SSLDIR/certs, the include
+directory is SSLDIR/include, and the library directory is SSLDIR/lib.
+You can change those assumptions with
+
+<P>
+<CENTER><SAMP>
+                SSLCERTS=certs_directory
+</SAMP></CENTER>
+<CENTER><SAMP>
+                SSLINCLUDE=include_directory and
+</SAMP></CENTER>
+<CENTER><SAMP>
+                SSLLIB=ssl_library_directory
+</SAMP></CENTER>
+
+<P>
+If you are having trouble with the SSL compilation you may explicitly exclude
+SSL code with <CODE>NOSSL</CODE>.
+
+<P>
+<CENTER><SAMP>
+                NOSSL
+</SAMP></CENTER>
+
+<P>
+Similarly,
+
+<P>
+<CENTER><SAMP>
+                NOLDAP
+</SAMP></CENTER>
+
+<P>
+The argument
+
+<P>
+<CENTER><SAMP>
+                EXTRASPECIALS
+</SAMP></CENTER>
+
+<P>
+can be used to pass arguments to the c-client make which aren't provided
+for in the <EM>Pine</EM> build script.
+For example, if you want to change the <CODE>FRIZZLE</CODE>
+parameter (a made up argument which the c-client make uses) you might be
+tempted to type something like
+
+<P>
+<CENTER><SAMP>
+                ./build FRIZZLE=cruft target
+</SAMP></CENTER>
+
+<P>
+This does work with make on some platforms, but not on others.
+Some makes seem to pass the arguments on to sub-makes, others don't.
+If that doesn't work, then EXTRASPECIALS is for you.
+
+<P>
+<CENTER><SAMP>
+                ./build EXTRASPECIALS="FRIZZLE=cruft" target
+</SAMP></CENTER>
+
+<P>
+An additional warning. There are some arguments which are overridden
+unconditionally in the sub-makes. Hopefully none of the arguments mentioned
+above falls in this category, but it is something to look out for if you
+are having trouble.
+<P>
+
+<HR>
+
+<H2><A NAME="install-unix">Installing Pine and Pico on UNIX Platforms</A></H2>
+
+Installing <EM>Pine</EM> and <EM>Pico</EM> is remarkably simple.  You take the program files
+which you have just transferred or built and you move them to the correct
+directory on your system.  Most often the binaries go in
+<CODE>/usr/local/bin</CODE> though sometimes they are placed in
+<CODE>/usr/bin</CODE>.  All the help text is compiled into <EM>Pine</EM> so there
+are no <STRONG>required</STRONG> auxiliary files.  <P>
+
+There are, however, three optional auxiliary files: 
+<CODE>/usr/local/lib/pine.info</CODE>,
+<CODE>/usr/local/lib/pine.conf</CODE>, and
+<CODE>/usr/local/lib/pine.conf.fixed</CODE>.  The file
+<CODE>pine.info</CODE> contains text on how to get further help on the
+local system.  It is part of the help text for the
+main menu and should probably refer to the local help desk or the system
+administrator.  If this file doesn't exist a generic version which
+suggests ``talking to the computer support staff at your site'' is shown. 
+The file <CODE>pine.conf</CODE> is used to set system-wide default
+configurations for <EM>Pine</EM>.  The file <CODE>pine.conf.fixed</CODE> is also
+used to set system-wide default configurations for <EM>Pine</EM>.
+The difference
+between these two files is that configuration variables set in the
+<CODE>pine.conf.fixed</CODE> file may not normally be over-ridden by a
+user.  See the section on <A HREF="config.html"><EM>Pine</EM> Configuration</A>
+later in this document for details about
+the <CODE>pine.conf</CODE> and <CODE>pine.conf.fixed</CODE> files.  <P>
+
+<HR>
+
+<H2><A NAME="install-pc">Installing PC-Pine</A></H2>
+
+<P>
+The PC-Pine distribution comes as a .zip file.  To install, unzip the
+files to a directory where you would like the program to reside.  Modern
+Windows versions come with the capability of unzipping .zip files.  Failing
+that, you can use one of the many .zip file extractors out there, or the
+pkunzip.exe program that resides on our FTP server.
+Following current Windows conventions, a common directory into which the files
+could be extracted would be <CODE>C:\Program Files\PC-Pine\</CODE>.
+
+<P>
+Having extracted PC-Pine's .zip file to the directory of choice, you can
+now run that directory's pine.exe, which is the actual PC-Pine program.
+For convenience, you could place shortcuts to it on the task bar, start
+menu, etc.
+
+<P>
+Upon first running PC-Pine, you may be asked where you would like to
+access your Configuration file (called the <I>pinerc</I>).  This
+is useful in accessing already existing configuration files, and it
+does not matter where this file gets created.  If you are connecting 
+to an IMAP server to access your email, it is also possible to store
+this Configuration data on that server, which facilitates accessing
+the same configuration from multiple machines (in fact, your configuration
+may have already been set up this way for use with other pine programs).
+
+<P>
+After having established the location of the configuration file, it may be
+necessary to specify a few configuration settings before reading or sending
+mail.  You may be prompted for the following (which may also be edited from
+the (S)etup (C)onfig screen from the Main Menu):
+
+<LI><CODE>Folder to open as inbox</CODE> (or <I>inbox-path</I>) - This can 
+be an inbox residing on an IMAP or POP3 server, or one residing locally. 
+An example of an INBOX for an IMAP server is: 
+<CODE>{server.example.com}INBOX</CODE>.
+
+<LI><CODE>User-id</CODE>, <CODE>Personal name</CODE>, and 
+<CODE>host/domain</CODE>, which are to be used as your email address.
+
+<LI><CODE>SMTP server to forward message</CODE> - You must enter your SMTP
+server before you can send any messages.
+
+<P>
+At this point, you will be able to read and send email messages.  There are,
+however, many more preferences that you can set in the Configuration
+screen.
+<HR>
+
+<H2><A NAME="install-imapd">Installing IMAPd</A></H2>
+
+When the <EM>Pine</EM> distribution is built on a UNIX system, the IMAP server
+binary, <CODE>imapd</CODE>, is compiled.  Installing <CODE>imapd</CODE>
+requires placing the binary in the appropriate directory, usually
+<CODE>/usr/etc</CODE>, and adding entries to <CODE>/etc/services</CODE>
+and <CODE>/etc/inetd.conf</CODE> or their counterparts.  The following
+line is appropriate for <CODE>/etc/services</CODE>: 
+
+<PRE>
+  imap         143/tcp         # Mail transfer 
+</PRE>
+
+and the next line is appropriate for <CODE>/etc/inetd.conf</CODE>: 
+
+<PRE>
+  imap  stream  tcp     nowait  root    /usr/etc/imapd imapd 
+</PRE>
+
+The <CODE>/etc/inetd.conf</CODE> file entry may vary on different versions
+of UNIX.  Some have a slightly different set of fields.  Also the pathname
+in <CODE>/etc/inetd.conf</CODE> must match the path where
+<CODE>imapd</CODE> is installed.  <P>
+
+With this configuration, the IMAP server runs without pre-authentication. 
+Each new IMAP connection requires a correct username and password.  IMAP
+can also be run with pre-authentication based on the standard <EM>rsh</EM>
+mechanism.  To enable this, the user account on the IMAP server must
+contain a valid file which grants access to the client machine.  Enabling
+<EM>rimap</EM> authentication is done by creating a link called
+<CODE>/etc/rimapd</CODE> to <CODE>imapd</CODE>.  Basically, what is
+happening is that <EM>Pine</EM> is taking advantage of the ability that
+<CODE>rsh</CODE> has to use privileged TCP ports so it doesn't have to run
+in privileged mode.  If the <CODE>rimap</CODE> authentication fails it
+will drop back to plain password authentication.  <P>
+
+<EM>PC-Pine</EM> cannot take advantage of <EM>rimap</EM> authentication.  Also, if
+your system uses a distributed configuration database, like NIS, Yellow
+Pages or Netinfo, be sure that appropriate steps are taken to ensure the
+above mentioned information is updated.  <P>
+
+<HR>
+
+<H2><A NAME="files-unix">Support Files and Environment Variables:  UNIX Pine</A></H2>
+
+This section lists the various files which <EM>Pine</EM> uses which are not email
+folders.  All of these are the default names of files, they may vary based
+on <EM>Pine</EM>'s configuration. 
+
+<DL COMPACT>
+
+<DT> /usr/local/lib/pine.conf
+
+<DD> Pine's global configuration file. 
+
+<DT> /usr/local/lib/pine.conf.fixed
+
+<DD> Non-overridable global configuration file. 
+
+<DT> /usr/local/lib/pine.info
+
+<DD> Local pointer to system administrator. 
+
+<DT> ~/.pinerc
+
+<DD> Personal configuration file for each user. 
+
+<DT> ~/.pinercex
+
+<DD> Personal exceptions configuration file for each user. 
+
+<DT> ~/.addressbook
+
+<DD> Personal addressbook
+
+<DT> ~/.addressbook.lu
+
+<DD> Personal address book lookup file (index file to speed up lookups). 
+
+<DT> ~/.newsrc
+
+<DD> Personal USENET subscription list.  This is shared with other
+newsreading programs. 
+
+<DT> ~/.pine-debugX
+
+<DD> The files created for debugging <EM>Pine</EM> problems.  By default, there are
+4 .pine-debug files kept at any time. 
+
+<DT> ~/.signature
+
+<DD> A signature file which will be included in all outgoing email
+messages. 
+
+<DT> ~/.pine-interrupted-mail
+
+<DD> The text of a message which was interrupted by some unexpected error
+which <EM>Pine</EM> detected. 
+
+<DT> ~/mail/postponed-msgs
+
+<DD> A folder of messages which the user chose to postpone. 
+
+<DT> /etc/mailcap
+
+<DD> System-wide mail capabilities file.  Only used if
+<CODE>$MAILCAPS</CODE> not set. 
+
+<DT> ~/.mailcap
+
+<DD> Personal mail capabilities file.  Combines with system-wide mailcap. 
+Only used if <CODE>$MAILCAPS</CODE> not set. 
+
+</DL> <P>
+
+The location of the following support files may be controlled by variables
+in the personal or global <EM>Pine</EM> configuration file: signature, addressbook
+and its index file, postponed messages, and newsrc.  <P>
+
+Unix <EM>Pine</EM> uses the following environment variables: 
+
+<DL COMPACT>
+
+<DT> TERM
+
+<DD> Tells <EM>Pine</EM> what kind of terminal is being used. 
+
+<DT> DISPLAY
+
+<DD> Determines if <EM>Pine</EM> will try to display IMAGE attachments. 
+
+<DT> TMPDIR, TMP, or TEMP
+
+<DD> Specifies location of temporary storage area, first one set wins
+
+<DT> SHELL
+
+<DD> If not set, default is /bin/sh
+
+<DT> MAILCAPS
+
+<DD> A semicolon delimited list of path names to mailcap files.  <P>
+
+</DL>
+
+<HR>
+
+<H2><A NAME="files-pc">Support Files, Environment Variables, and Registry Settings:  PC-Pine</A></H2>
+
+This section lists the various files which <EM>PC-Pine</EM> uses which are not
+normal mail folders.  All of these are the default names of files, they
+may vary based on <EM>Pine</EM>'s configuration.  <P>
+
+<DL COMPACT>
+
+<DT> &lt;PINE.EXE directory&gt;\PINE.HLP
+
+<DD> File containing <EM>Pine</EM>'s internal help text. 
+
+<DT> &lt;PINE.EXE directory&gt;\PINE.NDX
+
+<DD> Index of <EM>Pine</EM>'s help text used by <EM>PC-Pine</EM> to locate entries. 
+
+<DT> $PINERC or &lt;PineRC registry value&gt; or $HOME\PINE\PINERC or 
+&lt;PINE.EXE dir&gt;\PINERC
+
+<DD> Path to (required) personal configuration file. 
+
+<DT> $PINERCEX or $HOME\PINE\PINERCEX or &lt;PINE.EXE dir&gt;\PINERCEX
+
+<DD> Path to personal exceptions configuration file. 
+
+<DT> $PINECONF
+
+<DD> Path of optional global configuration file. 
+
+<DT> &lt;PINERC directory&gt;\ADDRBOOK
+
+<DD> Personal addressbook
+
+<DT> &lt;PINERC directory&gt;\ADDRBOOK.LU
+
+<DD> Personal address book lookup file (index file to speed up lookups). 
+
+<DT> &lt;PINERC directory&gt;\PINE.SIG
+
+<DD> A signature file which will be included in all outgoing email
+messages. 
+
+<DT> &lt;PINERC directory&gt;\PINE.PWD
+
+<DD> A file containing encrypted password for remote mail server. 
+
+<DT> &lt;PINERC directory&gt;\PINEDEBG.TXT
+
+<DD> Location of <EM>Pine</EM> debug file. 
+
+<DT> &lt;PINERC directory&gt;\MAILCAP and/or &lt;PINE.EXE dir&gt;\MAILCAP
+
+<DD> These paths are only used if $MAILCAPS not set. 
+
+<DT> $HOME\NEWSRC or &lt;PINERC directory&gt;\NEWSRC
+
+<DD> Personal USENET subscription list.  This may be shared with other
+newsreading programs. 
+
+<DT> $HOME\MAIL\INTRUPTD
+
+<DD> The text of a message which was interrupted by some unexpected error
+which <EM>Pine</EM> detected. 
+
+<DT> $HOME\MAIL\POSTPOND
+
+<DD> A folder of messages which the user chose to postpone. 
+
+</DL> <P>
+Registry Values:
+<DL COMPACT>
+
+<DT> HKEY_LOCAL_MACHINE\Software\University of Washington\PC-Pine\4.0
+
+<DD> <EM>Pinedir</EM>: The directory that contains the <EM>Pine</EM> executable.
+
+<DD> <EM>PineEXE</EM>: The name of the <EM>Pine</EM> executable (most commonly 
+"pine.exe").
+
+<DT> HKEY_CURRENT_USER\Software\University of Washington\PC-Pine\4.0
+
+<DD> <EM>PineRC</EM>: The path that points to the default pinerc to use.
+
+<DT> HKEY_LOCAL_MACHINE\Software\Clients\Mail\PC-Pine
+
+<DD> <EM>DLLPath</EM>: The path that points to <EM>Pine</EM>'s pmapi32.dll.
+
+<DT> HKLM\Software\Clients\Mail\PC-Pine\shell\open\command
+
+<DD> <EM>(Default)</EM>: When set as the default mailer, this is the 
+command that is run by external programs.
+
+<DT> HKLM\Software\Clients\Mail\PC-Pine\Protocols\Mailto\DefaultIcon
+
+<DD> <EM>(Default)</EM>: This points to the icon to display in relation to
+<EM>Pine</EM>'s mailto URL rendering.
+
+<DT> HKLM\Software\Clients\Mail\PC-Pine\Protocols\Mailto\shell\open\command
+
+<DD> <EM>(Default)</EM>: This value is the command that gets run by external
+programs when a mailto URL is run with <EM>PC-Pine</EM> set as the
+default mailer.
+
+<DT> HKLM\Software\Clients\News\PC-Pine\shell\open\command
+
+<DD> <EM>(Default)</EM>: When set as the default newsreader, this is the 
+          command that is run by external programs.
+
+<DT> HKLM\Software\Clients\News\PC-Pine\Protocols\news\DefaultIcon
+
+<DD> <EM>(Default)</EM>: This points to the icon to display in relation to
+          _Pine_'s news URL rendering.
+
+<DT> HKLM\Software\Clients\News\PC-Pine\Protocols\news\shell\open\command
+
+<DD> <EM>(Default)</EM>: This value is the command that gets run by external
+programs when a news URL is run with <EM>PC-Pine</EM> set as the
+default newsreader.
+
+<DT> HKLM\Software\Clients\News\PC-Pine\Protocols\nntp\DefaultIcon
+
+<DD> <EM>(Default)</EM>: This points to the icon to display in relation to
+<EM>Pine</EM>'s nntp URL rendering.
+
+<DT> HKLM\Software\Clients\News\PC-Pine\Protocols\nntp\shell\open\command
+
+<DD> <EM>(Default)</EM>: This value is the command that gets run by external
+programs when a nntp URL is run with <EM>PC-Pine</EM> set as the
+default newsreader.
+
+</DL> <P>
+<EM>PC-Pine</EM>'s help text and help text index file are expected to reside in the
+same directory as the <CODE>PINE.EXE</CODE> executable, as they are
+essentially extensions of the executable.  The personal configuration file
+may be in the same directory as the executable, or if that is inconvenient
+because the executable is on a shared or read-only drive, then it can be
+in a file named by the <CODE>$PINERC</CODE> environment variable, or in
+<CODE>$HOME\PINE\PINERC</CODE>, where if not set, <CODE>$HOME</CODE>
+defaults to the root of the current working drive.  <P>
+
+Most of the other support files key off of the location of the
+<CODE>PINERC</CODE> file.  However, in the case of the NEWSRC file, the
+path <CODE>$HOME\NEWSRC</CODE> is checked first.  Also, the postponed
+messages and interrupted message folders are placed in the default folder
+collection, normally in the directory <CODE>$HOME\MAIL</CODE>.  <P>
+
+The location of the following support files may be controlled by variables
+in the personal or global <EM>Pine</EM> configuration file: signature, addressbook
+(and its index file), postponed messages, and newsrc.  <P>
+
+<EM>PC-Pine</EM> uses the following environment variables: 
+
+<DL COMPACT>
+
+<DT> PINERC
+
+<DD> Overrides default path to pinerc file. 
+
+<DT> PINERCEX
+
+<DD> Overrides default path to personal exceptions configuration file. 
+
+<DT> PINECONF
+
+<DD> Optional path to global <EM>Pine</EM> config file. 
+
+<DT> HOME
+
+<DD> If not set, <EM>Pine</EM> uses the root of the current drive, e.g. C: 
+
+<DT> TMPDIR, TMP, or TEMP
+
+<DD> Specifies location of temporary storage area, first one set wins
+
+<DT> COMSPEC
+
+<DD> Specifies shell for external commands. 
+
+<DT> MAILCAPS
+
+<DD> A semicolon delimited list of path names to mailcap files. 
+
+</DL> <P>
+
+<!-- pnuts -->
+
+</BODY>
+</HTML>

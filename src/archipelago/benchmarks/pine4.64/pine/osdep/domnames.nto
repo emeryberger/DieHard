@@ -1,0 +1,95 @@
+/*----------------------------------------------------------------------
+       Get the current host and domain names
+
+    Args: hostname   -- buffer to return the hostname in
+          hsize      -- size of buffer above
+          domainname -- buffer to return domain name in
+          dsize      -- size of buffer above
+
+  Result: The system host and domain names are returned. If the full host
+          name is akbar.cac.washington.edu then the domainname is
+          cac.washington.edu.
+
+On Internet connected hosts this look up uses /etc/hosts and DNS to
+figure all this out. On other less well connected machines some other
+file may be read. If there is no notion of a domain name the domain
+name may be left blank. On a PC where there really isn't a host name
+this should return blank strings. The .pinerc will take care of
+configuring the domain names. That is, this should only return the
+native system's idea of what the names are if the system has such
+a concept.
+ ----*/
+void
+getdomainnames(hostname, hsize, domainname, dsize)
+    char *hostname, *domainname;
+    int   hsize, dsize;
+{
+    char           *dn, hname[MAX_ADDRESS+1];
+    struct hostent *he;
+    char          **alias;
+    char           *maybe = NULL;
+
+    gethostname(hname, MAX_ADDRESS);
+    he = gethostbyname(hname);
+    hostname[0] = '\0';
+
+    if(he == NULL)
+      strncpy(hostname, hname, hsize-1);
+    else{
+	/*
+	 * If no dot in hostname it may be the case that there
+	 * is an alias which is really the fully-qualified
+	 * hostname. This could happen if the administrator has
+	 * (incorrectly) put the unqualified name first in the
+	 * hosts file, for example. The problem with looking for
+	 * an alias with a dot is that now we're guessing, since
+	 * the aliases aren't supposed to be the official hostname.
+	 * We'll compromise and only use an alias if the primary
+	 * name has no dot and exactly one of the aliases has a
+	 * dot.
+	 */
+	strncpy(hostname, he->h_name, hsize-1);
+	if(strindex(hostname, '.') == NULL){		/* no dot in hostname */
+	    for(alias = he->h_aliases; *alias; alias++){
+		if(strindex(*alias, '.') != NULL){	/* found one */
+		    if(maybe){		/* oops, this is the second one */
+			maybe = NULL;
+			break;
+		    }
+		    else
+		      maybe = *alias;
+		}
+	    }
+
+	    if(maybe)
+	      strncpy(hostname, maybe, hsize-1);
+	}
+    }
+    /*
+    ** Last ditch attempt to see if domain is set
+    */
+    if (strchr(hostname, '.') == NULL) {
+    int n;
+    char *p;
+
+	    n = strlen( hostname );
+	    if ( confstr( _CS_DOMAIN, NULL, (size_t)0 ) > 0 ) {
+		    confstr( _CS_DOMAIN, &hostname[n+1], hsize - (n+1) );
+		    if ( hostname[n+1] ) {
+			    hostname[n] = '.';
+		    }
+	    }
+    }
+
+    hostname[hsize-1] = '\0';
+
+
+    if((dn = strindex(hostname, '.')) != NULL)
+      strncpy(domainname, dn+1, dsize-1);
+    else
+      strncpy(domainname, hostname, dsize-1);
+
+    domainname[dsize-1] = '\0';
+}
+
+

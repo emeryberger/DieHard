@@ -1,0 +1,21 @@
+/*----------------------------------------------------------------------
+      Create the mail subdirectory.
+
+  Args: dir -- Name of the directory to create
+ 
+ Result: Directory is created.  Returns 0 on success, else -1 on error
+	 and errno is valid.
+  ----*/
+create_mail_dir(dir)
+    char *dir;
+{
+    if(mkdir(dir, 0700) < 0)
+      return(-1);
+
+    (void)chmod(dir, 0700);
+    /* Some systems need this, on others we don't care if it fails */
+    (void)chown(dir, getuid(), getgid());
+    return(0);
+}
+
+

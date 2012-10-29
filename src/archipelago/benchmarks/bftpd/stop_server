@@ -1,0 +1,25 @@
+#!/bin/bash
+
+PIDFILE=/tmp/mybftpd.pid
+CHECK_PID="ps hp"
+WS_LINK=/tmp/ftp
+PASSWD_LINK=/tmp/ftpdpassword
+
+if [[ -e "${PIDFILE}" ]] 
+    then
+
+    PID=`cat ${PIDFILE}`
+
+    kill $PID
+
+    sleep 1
+
+    if [[ -z `${CHECK_PID} ${PID}` ]]
+	then
+	rm -f ${WS_LINK} ${PASSWD_LINK} ${PIDFILE}
+    else
+	echo "Failed to stop bFTPd"
+    fi
+else
+    echo "No pid file found"
+fi

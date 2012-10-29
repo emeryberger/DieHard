@@ -1,0 +1,258 @@
+#line 2 "osdep/pipe.os2"
+/*======================================================================
+    pipe
+    
+    Initiate I/O to and from a process.  These functions are similar to 
+    popen and pclose, but both an incoming stream and an output file are 
+    provided.
+   
+ ====*/
+
+#include <process.h>
+#ifndef	STDIN_FILENO
+#define	STDIN_FILENO	0
+#endif
+#ifndef	STDOUT_FILENO
+#define	STDOUT_FILENO	1
+#endif
+#ifndef	STDERR_FILENO
+#define	STDERR_FILENO	2
+#endif
+
+int     child_status;
+
+void pipe_error_cleanup(PIPE_S **syspipe, char*cmd, char *op, char *res);
+
+
+/*----------------------------------------------------------------------
+     Spawn a child process and optionally connect read/write pipes to it
+
+  Args: command -- string to hand the shell
+	outfile -- address of pointer containing file to receive output
+	errfile -- address of pointer containing file to receive error output
+	mode -- mode for type of shell, signal protection etc...
+  Returns: pointer to alloc'd PIPE_S on success, NULL otherwise
+
+  This is a much simpler version than the UNIX pipe since it utilises
+  the EMX popen()/pclose() functions for OS/2 (and thereby avoides
+  fork() and its restrictions under OS/2). It is therefore not as
+  functional as the UNIX equivalents, and only understands a subset
+  of modes. All commands also invoke the system shell, but this is
+  of little consequence as there are no security problems and so forth
+  in the OS/2 environment.
+    PIPE_WRITE tells us we need to open a pipe to write the child's
+	stdin.
+    PIPE_READ tells us we need to open a pipe to read from the child's
+	stdout/stderr.  *NOTE*  Having neither of the above set means 
+	we're not setting up any pipes, just forking the child and exec'ing
+	the command.  Also, this takes precedence over any named outfile.
+    PIPE_STDERR means we're to tie the childs stderr to the same place
+	stdout is going.  *NOTE* This only makes sense then if PIPE_READ
+	or an outfile is provided.  Also, this takes precedence over any
+	named errfile.
+    PIPE_PROT means to protect the child from the usual nasty signals
+	that might cause premature death.  Otherwise, the default signals are
+	set so the child can deal with the nasty signals in its own way.     
+    PIPE_NOSHELL means we're to exec the command without the aid of
+	a system shell.  *NOTE* This negates the affect of PIPE_USER.
+    PIPE_USER means we're to try executing the command in the user's
+	shell.  Right now we only look in the environment, but that may get
+	more sophisticated later.
+    PIPE_RESET means we reset the terminal mode to what it was before
+	we started pine and then exec the command.
+ ----*/
+PIPE_S *
+open_system_pipe(command, outfile, errfile, mode)
+  char  *command;
+  char **outfile, **errfile;
+  int    mode;
+{
+    PIPE_S *syspipe = NULL;
+    FILE   *pipefp  = NULL;
+
+    dprint(5, (debugfile, "Opening pipe: \"%s\" (%s%s%s%s%s%s)\n",command,
+	       (mode & PIPE_WRITE)   ? "W":"", (mode & PIPE_READ)  ? "R":"",
+	       (mode & PIPE_NOSHELL) ? "N":"", (mode & PIPE_PROT)  ? "P":"",
+	       (mode & PIPE_USER)    ? "U":"", (mode & PIPE_RESET) ? "T":""));
+
+    syspipe = (PIPE_S *)fs_get(sizeof(PIPE_S));
+    memset(syspipe, 0, sizeof(PIPE_S));
+
+    /* fill in any output filenames */
+    if(!(mode & PIPE_READ)){
+	if(outfile && !*outfile)
+	  *outfile = temp_nam(NULL, "pp");	/* asked for, but not named? */
+
+	if(errfile && !*errfile)
+	  *errfile = temp_nam(NULL, "pp");	/* ditto */
+    }
+
+    interrupt_ok();
+    if((syspipe->mode = mode) & PIPE_RESET)
+        PineRaw(0);
+
+    if(mode & PIPE_READ){
+        /* now, start the pipe */
+        pipefp = syspipe->in.f = popen(command, "r");
+        if (pipefp &&(mode & PIPE_DESC))
+            syspipe->in.d = fileno(pipefp);
+    }
+    else{
+        int wasstdout = -1;
+        int wasstderr = -1;
+        int output = -1;
+        /* if parent isn't reading, and we have a filename to write */
+        if(outfile){                    /* connect output to file */
+            output = creat(*outfile, S_IREAD|S_IWRITE);
+            if (output != -1)
+            {
+                wasstdout = dup(STDOUT_FILENO);
+                wasstderr = dup(STDERR_FILENO);
+                dup2(output, STDOUT_FILENO);
+	        if (mode & PIPE_STDERR)
+                    dup2(output, STDERR_FILENO);
+	        else if(errfile)
+                    dup2(creat(*errfile, 0600), STDERR_FILENO);
+            }
+	}
+        if(mode & PIPE_WRITE){
+            /* Now, open the pipe */
+            pipefp = syspipe->out.f = popen(command, "w");
+            if (pipefp &&(mode & PIPE_DESC))
+                syspipe->out.d = fileno(pipefp);
+        }else{
+            char   **ap, *p;
+            size_t   n;
+
+            /* parse the arguments into argv */
+            for(p = command; *p && isspace((unsigned char)(*p)); p++)
+                ;		/* swallow leading ws */
+            if(*p)
+                syspipe->args = cpystr(p);
+            else{
+                pipe_error_cleanup(&syspipe, "<null>", "execute",
+    			                     "No command name found");
+                return(NULL);
+            }
+    
+            for(p = syspipe->args, n = 2; *p; p++)	/* count the args */
+                if(isspace((unsigned char)(*p))
+                   && *(p+1) && !isspace((unsigned char)(*(p+1))))
+                n++;
+    
+            syspipe->argv = ap = (char **)fs_get((n+2) * sizeof(char *));
+            memset(syspipe->argv, 0, n * sizeof(char *));
+
+            /*if (!(mode & PIPE_NOSHELL)){*/
+                *ap++ = getenv("COMSPEC");
+                *ap++ = "/C";
+            /*}*/
+
+            for(p = syspipe->args; *p; ){		/* collect args */
+                while(*p && isspace((unsigned char)(*p)))
+                    *p++ = '\0';
+
+                *ap++ = (*p) ? p : NULL;
+                while(*p && !isspace((unsigned char)(*p)))
+                    p++;
+            }
+            *ap = NULL;
+
+            /* make sure argv[0] exists in $PATH */
+            if(can_access_in_path(getenv("PATH"), syspipe->argv[0], EXECUTE_ACCESS) < 0){
+                pipe_error_cleanup(&syspipe, syspipe->argv[0], "access",
+                    error_description(errno));
+                return(NULL);
+            }
+            flush_status_messages(0);		/* just clean up display */
+            ClearScreen();
+            fflush(stdout);
+            /* And spawn the command */;
+            child_status = spawnvp(P_WAIT, syspipe->argv[0], syspipe->argv);
+            PineRaw(1);
+            dont_interrupt();
+            return(syspipe);
+        }
+        if (wasstdout!=-1){
+            dup2(STDOUT_FILENO, wasstdout);
+            close(wasstdout);
+        }
+        if (wasstderr!=-1){
+            dup2(STDERR_FILENO, wasstderr);
+            close(wasstderr);
+        }
+        if (output!=-1)
+            close(output);
+    }
+
+/*  if(mode & PIPE_RESET) */
+        PineRaw(1);
+    dont_interrupt();
+
+    if (pipefp == NULL) {
+        q_status_message1(SM_ORDER,3,3, "Error executing external command: %s",
+                                        error_description(errno));
+        fs_give((void **)&syspipe);
+        if(outfile)
+            fs_give((void **)outfile);
+        dprint(1, (debugfile, "CAN'T OPEN PIPE TO COMMAND: %s\n",
+	       command ? command : "?"));
+    }
+
+    return(syspipe);
+}
+
+
+
+void
+pipe_error_cleanup(syspipe, cmd, op, res)
+    PIPE_S **syspipe;
+    char    *cmd, *op, *res;
+{
+    q_status_message3(SM_ORDER, 3, 3, "Pipe can't %s \"%.20s\": %s",
+		      op, cmd, res);
+    dprint(1, (debugfile, "* * PIPE CAN'T %s(%s): %s\n",
+	   op ? op : "?",
+	   cmd ? cmd : "?",
+	   res ? res : "?"));
+    fs_give((void **)syspipe);
+}
+
+
+
+/*----------------------------------------------------------------------
+    Close pipe previously allocated and wait for child's death
+
+  Args: syspipe -- address of pointer to struct returned by open_system_pipe
+  Returns: returns exit status of child or -1 if invalid syspipe
+ ----*/
+int
+close_system_pipe(syspipe, exitval, dontnewmail)
+    PIPE_S **syspipe;
+    int     *exitval;			/* not implemented yet */
+    int      dontnewmail;		/* not implemented yet */
+{
+    int	     status = child_status;
+
+    if(!syspipe || !*syspipe)
+      return(-1);
+
+    child_status = 0;
+
+    if((*syspipe)->out.f)
+      status = pclose((*syspipe)->out.f);
+
+    if((*syspipe)->in.f)
+      status = pclose((*syspipe)->in.f);
+
+    ClearScreen();				/* No I/O to forked child */
+    ps_global->mangled_screen = 1;
+
+    fs_give((void **)syspipe);
+    if(exitval){
+	*exitval = status;
+	return 0;
+    }
+    else
+      return(status);
+}

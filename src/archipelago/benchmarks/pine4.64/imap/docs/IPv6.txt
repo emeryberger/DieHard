@@ -1,0 +1,118 @@
+The following information about configuring inetd and xinetd for IPv6 was
+contributed by a user.  I have not checked it for accuracy or completeness,
+but have included it as-is in the hope that it may be useful:
+
+---------------------------------------------------------------------------
+One thing you might consider adding to the docs are hints for setting up
+inetd or xinetd to simultaneously listen on BOTH IPv4 and IPv6 for
+different OS.
+
+Some OS want to see separate IPv4-only and IPv6-only listening sockets
+configured in inetd.conf or xinetd.conf.  Others will accept IPv4
+connections on lines configured for IPv6 and actually generate errors if
+you have both configured when inetd or xinetd start up.  It's not clear to
+me whether this difference is due to how inetd or xinetd are built or
+whether it's due to the kernel's IP stack implementation.  I suspect it's
+really the latter.  Below are some examples:
+
+Here's a fragment of /usr/local/etc/xinetd.conf for a FreeBSD 4.9 server:
+
+service imap
+{
+        socket_type     = stream
+        protocol        = tcp
+        wait            = no
+        user            = root
+        server          = /usr/local/libexec/imapd
+}
+service imap
+{
+        flags           = IPv6
+        socket_type     = stream
+        protocol        = tcp
+        wait            = no
+        user            = root
+        server          = /usr/local/libexec/imapd
+}
+service imaps
+{
+        socket_type     = stream
+        protocol        = tcp
+        wait            = no
+        user            = root
+        server          = /usr/local/libexec/imapd
+}
+service imaps
+{
+        flags           = IPv6
+        socket_type     = stream
+        protocol        = tcp
+        wait            = no
+        user            = root
+        server          = /usr/local/libexec/imapd
+}
+
+Note that you have to specify a nearly identical paragraph for each
+service which differs only by the 'flags = IPv6'.  An equivalent
+inetd.conf would look something like:
+
+imap  stream  tcp     nowait  root    /usr/local/libexec/imapd        imapd
+imap  stream  tcp6    nowait  root    /usr/local/libexec/imapd        imapd
+imaps stream  tcp     nowait  root    /usr/local/libexec/imapd        imapd
+imaps stream  tcp6    nowait  root    /usr/local/libexec/imapd        imapd
+
+The man pages for inetd suggest that if you use a single entry with
+'tcp46' replacing either 'tcp' or 'tcp6' the system will listen on both
+types of addresses.  At least for the case of FreeBSD this is actually
+incorrect.
+
+Now if you were to use the above xinetd.conf on Fedora Linux, it would
+complain.  What does work under Linux is to create a single service
+paragraph for each service which will accept connections on both IPv4 and
+IPv6:
+
+In /etc/xinetd.d/imap:
+
+service imap
+{
+        flags       = IPv6
+        disable     = no
+        socket_type = stream
+        wait        = no
+        user        = root
+        server      = /usr/local/sbin/imapd
+}
+
+In /etc/xinetd.d/imaps:
+
+service imaps
+{
+        flags       = IPv6
+        disable     = no
+        socket_type = stream
+        wait        = no
+        user        = root
+        server      = /usr/local/sbin/imapd
+}
+
+The man page for xinetd says the IPv6 flag means xinetd will listen ONLY
+on IPv6.  However the actual behaviour (for Fedora Linux) is to listen on
+both IPv4 and IPv6.
+
+All of the above also applies to ipop3d.  Anyway, this might save some
+folks a little bit of head scratching time.
+---------------------------------------------------------------------------
+Addendum from the original submitter:
+---------------------------------------------------------------------------
+I've since learned that the discrepancy really is a function of the OS.
+It seems those systems that force you to create separate IPv4 and IPv6
+listeners in inetd (or xinetd) are the same systems that also disable
+IPv4-mapped IPv6 addresses by default.  This is a boot-time configuration
+option.  If you enable IPv4-mapped IPv6 addresses, then the 'tcp46' option
+in inetd works and the simplified config would look like:
+
+imap4   stream  tcp46   nowait  root    /usr/local/libexec/imapd        imapd
+imaps   stream  tcp46   nowait  root    /usr/local/libexec/imapd        imapd
+
+In FreeBSD, enabling IPv4-mapped addresses is done by adding
+ipv6_ipv4mapping="YES" to /etc/rc.conf (in addition to ipv6_enable="YES").

@@ -1,0 +1,213 @@
+.TH mailutil 1 "May 18, 2004" 
+.SH NAME
+mailutil - mail utility program
+.nh
+.SH SYNTAX
+.B mailutil check [-debug] [-verbose]
+.B [mailbox]
+.PP
+.B mailutil create [-debug] [-verbose]
+.B new_mailbox
+.PP
+.B mailutil delete [-debug] [-verbose]
+.B mailbox
+.PP
+.B mailutil rename [-debug] [-verbose]
+.B [-rwcopy] old new
+.PP
+.B mailutil copy [-debug] [-verbose]
+.B [-rwcopy] old new
+.PP
+.B mailutil move [-debug] [-verbose]
+.B [-rwcopy] old new
+.PP
+.B mailutil append [-debug] [-verbose]
+.B [-rwcopy] src dst
+.PP
+.B mailutil appenddelete [-debug] [-verbose]
+.B [-rwcopy] src dst
+.PP
+.B mailutil prune [-debug] [-verbose]
+.B mailbox criteria
+.PP
+.B mailutil transfer [-debug] [-verbose]
+.B [-merge m] [-rwcopy] src dst
+.SH DESCRIPTION
+.B mailutil
+replaces the old chkmail, imapcopy, imapmove, imapxfer, mbxcopy,
+mbxcreat, and mbxcvt programs.
+.PP
+.B mailutil check
+determines whether new mail exists in the given mailbox (the default
+is INBOX).  The number of new messages is defined as the number of
+messages that have "Recent" status set.  If the mailbox contains no
+new messages, 
+.B mailutil check
+will indicate that no new mail is present;
+otherwise, it will report the number of new messages.  In either case,
+it will also indicate the canonical form of the name of the mailbox.
+.PP
+.B mailutil create
+creates a new
+.I mailbox
+with the given name.  The mailbox name must not already exist.  A mailbox
+can be created in a particular format by prefixing the name with 
+.I #driver.
+followed by the format name and a
+.I /
+character.  For example, the command
+.br
+   mailutil create #driver.mbx/junkmail
+.br
+will create a new mailbox named "junkmail" in mbx format.
+.PP
+.B mailutil delete
+deletes an existing
+.I mailbox
+with the given name.
+.PP
+.B mailutil rename
+renames an existing mailbox to a new name (which must not already exist).
+This only works if the old and new names are in the same mail store.  A
+more general means to rename a mailbox is to do a
+.B mailutil copy
+of the old name to the new name, followed by a
+.B mailutil delete
+of the old name.
+.PP
+.B mailutil copy
+creates a new mailbox and copies messages from the old mailbox to the
+new mailbox.  As in
+.B mailutil create
+a mailbox format can be specified with the new mailbox.  For example, the
+command
+.br
+   mailutil copy INBOX #driver.mbx/INBOX
+.br
+will copy messages from your existing INBOX to an mbx-format INBOX.
+.PP
+.B mailutil move
+is similar to
+.B mailutil copy
+but in addition will also remove (delete and expunge) the messages from the
+old mailbox after copying them to the new mailbox.
+.PP
+.B mailutil append
+and
+.B mailutil appenddelete
+are similar to
+.B mailutil copy
+and
+.B mailutil move
+respecitively except that they do not create the destination mailbox.
+.PP
+.B mailutil prune
+prunes the mailbox of messages which match certain criteria, which are
+in the form of IMAP2 (RFC 1176) SEARCH arguments.  For example, the
+command.
+.br
+  mailutil prune INBOX "before 1-jan-2004"
+.br
+will delete and expunge all messages written before January 1, 2004.
+.PP
+.B mailutil transfer
+copies an entire hierarchy of mailboxes from the named source to the
+named destination.  Mailboxes are created on the destination as
+needed.  Any error in copying messages will cause the transfer to stop.
+.PP
+Normally, any error in creation will cause the transfer to stop.
+However, if
+.B -merge mode 
+is specified, a merging transfer is performed.  The
+.B mode
+argument the type of merge.
+.PP
+.B -merge prompt
+indicates that the user should be asked for an alternative name to create.
+If creating the new name fails, the user will be asked again.
+.PP
+.B -merge append
+indicates that it's alright to copy the messages into an existing mailbox
+with that name.  If the mailbox does not exist, the user will be prompted
+for an alternative name.
+.PP
+.B -merge suffix=XXXX
+where XXXX is any string, indicates that an alternative name should be
+built by appending the given suffix to the name.  It that alternative name
+can't be created, then the user will be prompted for an alternative name.
+.PP
+The source hierarchy consists of all mailboxes which start
+with the given source name.  With the exception of a remote system
+specification (within "{}" braces), the source name is used as the
+name of the destination.  The destination hierarchy is a prefix
+applied to any new names being created.  For example,
+.br
+   mailutil transfer foo bar
+.br
+will copy all mailboxes with names beginning with "foo" to names
+beginning with "bar" (hence "foobar" will be copied to "barfoobar").
+Similarly,
+.br
+   mailutil transfer "{imap.foo.com}" "{imap.bar.com}old/"
+.br
+will copy all mailboxes from the imap.foo.com IMAP server to
+equivalent names starting with "old/" on the imap.bar.com IMAP server.
+.SH FLAGS
+The
+.B -debug
+flag prints full debugging telemetry including protocol operations.
+.PP
+The
+.B -verbose
+flag prints verbose (non-error) telemetry.
+.PP
+The
+.B -rwcopy
+flag causes the source mailbox to be open in readwrite mode rather than
+readonly mode.  Normally, mailutil tries to use readonly mode to avoid
+altering any flags in the source mailbox, but some mailbox types, e.g.
+POP3, can't be open in readonly mode.
+.SH ARGUMENTS
+The arguments are standard c-client mailbox names.  A
+variety of mailbox name formats and types of mailboxes are supported
+by c-client; examples of the most common forms of names are:
+.PP
+.I
+.IP Name 15
+.I Meaning
+.IP INBOX
+primary incoming mail folder on the local system
+.IP archive/tx-project
+mail folder named "tx-project" in "archive" subdirectory of local
+filesystem home directory
+.IP {imapserver.foo.com}INBOX
+primary incoming mail folder on IMAP server system
+"imapserver.foo.com"
+.IP {imapserver.foo.com}archive/tx-project
+mail folder named "tx-project" in "archive" subdirectory on IMAP
+server system "imapserver.foo.com"
+.IP #news.comp.mail.misc
+newsgroup "comp.mail.misc" on local filesystem
+.IP {newserver.foo.com/nntp}comp.mail.misc
+newsgroup "comp.mail.misc" on NNTP server system "newserver.foo.com"
+.IP {popserver.foo.com/pop3}
+mail folder on POP3 server system "popserver.foo.com"
+.LP
+See your system manager for more information about the types of
+mailboxes which are available on your system.
+.SH RESTRICTIONS
+You must surround a
+.I {host}mailbox
+argument with quotation marks if you run
+.B mailutil
+from
+.IR csh (1)
+or another shell for which braces have special meaning.
+.PP
+You must surround a
+.I #driver.format/mailbox
+argument with quotation marks if you run
+.B mailutil
+from a shell in which "#" is the comment character.
+.SH AUTHOR
+Mark Crispin, MRC@CAC.Washington.EDU

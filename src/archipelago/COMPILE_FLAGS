@@ -1,0 +1,18 @@
+MADVISE             : madvise page on free
+MADVISE_ASYNC       : madvise page on free asynchronously (in a separate thread). 
+		        currently somewhat useless due to single lock in the kernel
+OPP_ONLY_HEAP       : do not perform page tracking
+MMAP_POOL_HEAP      : manage pool of pages using free list (don't use)
+PROTECTION_ENABLED  : mprotect all unused but mapped pages in the system. WARNING: very expensive
+MEMSET0_ENABLED     : memset pages to 0 on allocation. WARNING: very expensive 
+NO_ASSERTS          : remove all asserts
+NO_LOGGING          : remove all log statements. 
+INITIAL_DEBUG_LEVEL : level of log output. 
+                      valid values are FATAL = 0, ERROR = 1, WARNING = 2, DEBUG = 3, INFO = 4, ALL = 5
+HOT_SPACE_SIZE      : default hot space size to use if none is specified through an environment variable
+PAGE_POOL_SIZE      : number of pages to reserve at startup
+VMCOMM              : make use of Eric's vmcomm patch for the 2.4 kernel. You also have to define VMSIG
+VMSIG               : make use of Eric's vmsig  patch for the 2.6 kernel
+IV                  : make use of Isla Vista page allocation stalls feedback module 
+		      for rate-limiting madvise calls.
+MADV_FREE_PRESENT   : kernel supports MADV_FREE(5) madvise calls, even if headers in /usr/include don't have it

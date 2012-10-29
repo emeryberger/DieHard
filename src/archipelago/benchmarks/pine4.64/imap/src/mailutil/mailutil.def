@@ -1,0 +1,9 @@
+;
+; MAILUTIL.DEF - def file for mailbox utilities
+;
+
+NAME         mailutil
+DESCRIPTION  'Mailbox Utilities'
+;PROTMODE
+;CODE           PRELOAD MOVEABLE DISCARDABLE
+;DATA           PRELOAD MOVEABLE

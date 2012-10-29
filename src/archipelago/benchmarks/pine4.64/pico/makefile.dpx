@@ -1,0 +1,95 @@
+# $Id: makefile.dpx 11894 2001-10-23 22:18:36Z hubert $
+#
+#   Michael Seibel
+#   Networks and Distributed Computing
+#   Computing and Communications
+#   University of Washington
+#   Administration Builiding, AG-44
+#   Seattle, Washington, 98195, USA
+#   Internet: mikes@cac.washington.edu
+#
+#   Please address all bugs and comments to "pine-bugs@cac.washington.edu"
+#
+#
+#   Pine and Pico are registered trademarks of the University of Washington.
+#   No commercial use of these trademarks may be made without prior written
+#   permission of the University of Washington.
+#
+#   Pine, Pico, and Pilot software and its included text are Copyright
+#   1989-1998 by the University of Washington.
+#
+#   The full text of our legal notices is contained in the file called
+#   CPYRIGHT, included with this distribution.
+#
+
+#
+# Makefile for Bull DPX/2 B.O.S version of the PINE composer library and 
+# stand-alone editor pico.
+#
+# [Port courtesy of David Brownlee <david@mono.org> ]
+#
+
+RM=          rm -f
+LN=          ln -s
+MAKE=        make
+OPTIMIZE=    # -O
+PROFILE=     # -pg
+DEBUG=       -g -DDEBUG
+
+#for GNU C
+#CC=		gcc
+#STDCFLAGS=	-Ddpx -DJOB_CONTROL -DPOSIX -ansi -DMOUSE
+
+#otherwise
+STDCFLAGS=	-Dconst= -Ddpx -DJOB_CONTROL -DPOSIX -DMOUSE
+CFLAGS=         $(OPTIMIZE) $(PROFILE) $(DEBUG) $(EXTRACFLAGS) $(STDCFLAGS)
+
+# switches for library building
+LIBCMD=		ar
+LIBARGS=	ru
+RANLIB=		true
+
+LIBS=		$(EXTRALDFLAGS) -lcurses
+
+OFILES=		attach.o basic.o bind.o browse.o buffer.o \
+		composer.o display.o file.o fileio.o line.o pico_os.o \
+		pico.o random.o region.o search.o \
+		window.o word.o
+
+HFILES=		headers.h estruct.h edef.h efunc.h pico.h os.h
+
+#
+# dependencies for the Unix versions of pico and libpico.a
+#
+all:		pico pilot
+pico pilot:	libpico.a
+
+pico:		main.o
+		$(CC) $(CFLAGS) main.o libpico.a $(LIBS) -o pico
+
+pilot:		pilot.o
+		$(CC) $(CFLAGS) pilot.o libpico.a $(LIBS) -o pilot
+
+libpico.a:	$(OFILES)
+		$(LIBCMD) $(LIBARGS) libpico.a $(OFILES)
+		$(RANLIB) libpico.a
+
+clean:
+		rm -f *.a *.o *~ pico_os.c os.h pico pilot
+		cd osdep; $(MAKE) clean; cd ..
+
+os.h:		osdep/os-dpx.h
+		$(RM) os.h
+		$(LN) osdep/os-dpx.h os.h
+
+pico_os.c:	osdep/os-dpx.c
+		$(RM) pico_os.c
+		$(LN) osdep/os-dpx.c pico_os.c
+
+$(OFILES) main.o pilot.o:	$(HFILES)
+pico.o:				ebind.h
+
+osdep/os-dpx.c:	osdep/header osdep/unix osdep/read.sel osdep/raw.ios \
+		osdep/spell.unx osdep/term.cap \
+		osdep/os-dpx.ic
+		cd osdep; $(MAKE) includer os-dpx.c; cd ..

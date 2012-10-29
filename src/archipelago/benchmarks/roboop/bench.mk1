@@ -1,0 +1,17 @@
+!define BLANK ""
+bench.obj : source\bench.cpp .AUTODEPEND
+ *wpp386 source\bench.cpp $(CFLAGS)
+
+bench.exe : bench.obj newmat.lib roboop.lib .AUTODEPEND
+ @%write bench.lk1 NAME bench
+ @%append bench.lk1 FIL bench.obj
+ @%append bench.lk1 LIBR newmat.lib,roboop.lib
+!ifneq BLANK ""
+ *wlib -q -n -b bench.imp 
+ @%append bench.lk1 LIBR bench.imp
+!endif
+ *wlink SYS nt op m d all op st=8192 op maxe=25 op q op symf @bench.lk1
+!ifneq BLANK ""
+ wrc -q -ad -s0  bench.exe
+!endif
+

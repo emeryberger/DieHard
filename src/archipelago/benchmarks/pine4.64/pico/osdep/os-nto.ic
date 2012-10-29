@@ -1,0 +1,15 @@
+;
+; QNX Neutrino os-nto.ic file for building os-nto.c.
+;
+; Boilerplate header.
+include(header)
+
+include(unix)
+
+include(spell.unx)
+
+include(read.sel)
+
+include(raw.ios)
+
+include(term.cap)

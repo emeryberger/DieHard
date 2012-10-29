@@ -1,0 +1,17 @@
+/*
+ * getcwd
+ */
+char *
+getcwd(pth, len)
+    char  *pth;
+    size_t len;
+{
+    extern char *getwd();
+
+    if(!pth)
+      pth = (char *)malloc(len+1);
+
+    return(getwd(pth));
+}
+
+

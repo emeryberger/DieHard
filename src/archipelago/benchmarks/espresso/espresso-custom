@@ -1,0 +1,21 @@
+#!/bin/bash
+BIN=~/work/plasma/sparseheaps/benchmarks/espresso
+
+if [[ $1 == -q ]] ; then
+    shift
+    if [[ $1 == -l ]] ;	then
+	LIB=$2
+	shift; shift
+	LD_PRELOAD=${LIB} ${BIN}/espresso $@ > /dev/null
+    else
+	${BIN}/espresso $@ > /dev/null
+    fi
+else
+    if [[ $1 == -l ]] ;	then
+	LIB=$2
+	shift; shift
+	LD_PRELOAD=${LIB} ${BIN}/espresso $@
+    else
+	${BIN}/espresso $@
+    fi
+fi

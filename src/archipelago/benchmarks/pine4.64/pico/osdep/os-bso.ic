@@ -1,0 +1,15 @@
+;
+; OpenBSD os-bso.ic file for building os-bso.c.
+;
+; Boilerplate header.
+include(header)
+
+include(unix)
+
+include(spell.unx)
+
+include(read.sel)
+
+include(raw.ios)
+
+include(term.cap)

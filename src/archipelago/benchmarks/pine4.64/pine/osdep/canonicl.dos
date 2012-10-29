@@ -1,0 +1,31 @@
+/*----------------------------------------------------------------------
+       Return canonical form of host name ala c-client (UNIX version).
+
+   Args: host      -- The host name
+
+ Result: Canonical form, or input argument (worst case)
+ ----*/
+char *
+canonical_name(host)
+    char *host;
+{
+#if	defined(LWP) || defined(PCNFS) || defined(PCTCP)
+    struct hostent *hent;
+    char tmp[MAILTMPLEN];
+
+                                /* domain literal is easy */
+    if (host[0] == '[' && host[(strlen (host))-1] == ']')
+      return host;
+
+                                /* lookup name, return canonical form */
+    return (hent = gethostbyname (lcase (strcpy (tmp,host)))) ?
+      hent->h_name : host;
+#else
+    /* just return host, as gethostbyname equivalent isn't available
+     * under wattcp
+     */
+    return host;
+#endif
+}
+
+

@@ -1,0 +1,11 @@
+;
+; OS/2 os-os2.ic file for building os-os2.c.
+;
+; Boilerplate header.
+include(header)
+
+include(os2)
+
+include(term.dos)
+
+include(spell.os2)

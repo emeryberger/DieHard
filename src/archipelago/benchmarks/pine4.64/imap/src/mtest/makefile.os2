@@ -1,0 +1,46 @@
+# Program:	MTEST Makefile
+#
+# Author:	Mark Crispin
+#		Networks and Distributed Computing
+#		Computing & Communications
+#		University of Washington
+#		Administration Building, AG-44
+#		Seattle, WA  98195
+#		Internet: MRC@CAC.Washington.EDU
+#
+# Date:		25 February 1996
+# Last Edited:	24 October 2000
+#
+# The IMAP toolkit provided in this Distribution is
+# Copyright 2000 University of Washington.
+#
+# The full text of our legal notices is contained in the file called
+# CPYRIGHT, included with this Distribution.
+
+# Thanks to Nicholas Paul Sheppard who contributed the original version
+
+CC = gcc
+CFLAGS = -O2 -Zomf
+LD = gcc
+LDFLAGS = -s -Zomf -Zcrtdll
+
+C = ..\c-client
+CCLIENTLIB = $C\\c-client.lib
+LIBS = $(CCLIENTLIB) -l socket
+
+mtest.exe: $(CCLIENTLIB) mtest.obj
+	$(LD) $(LDFLAGS) -o $@ $^ $(LIBS)
+
+$(CCLIENTLIB):
+	@echo Make c-client first
+	false
+
+mtest.obj: mtest.c $C\mail.h $C\smtp.h $C\misc.h $C\osdep.h
+	$(CC) $(CFLAGS) -I$C -o $@ -c $<
+
+clean:
+	if exist *.obj del *.obj
+
+# A monument to a hack of long ago and far away...
+love:
+	@echo not war?

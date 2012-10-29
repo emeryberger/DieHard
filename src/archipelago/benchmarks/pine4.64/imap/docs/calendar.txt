@@ -1,0 +1,314 @@
+			 ALL ABOUT CALENDARS
+
+     Although one can never be sure of what will happen at some future
+time, there is strong historical precedent for presuming that the
+present Gregorian calendar will still be in effect within the useful
+lifetime of the IMAP toolkit.  We have therefore chosen to adhere to
+these precedents.
+ 
+     The purpose of a calendar is to reckon time in advance, to show
+how many days have to elapse until a certain event takes place in the
+future, such as the harvest or the release of a new version of Pine.
+The earliest calendars, naturally, were crude and tended to be based
+upon the seasons or the lunar cycle.
+ 
+
+ANCIENT CALENDARS
+
+     The calendar of the Assyrians, for example, was based upon the
+phases of the moon.  They knew that a lunation (the time from one full
+moon to the next) was 29 1/2 days long, so their lunar year had a
+duration of 354 days.  This fell short of the solar year by about 11
+days.  (The exact time for the solar year is approximately 365 days, 5
+hours, 48 minutes, and 46 seconds.)  After 3 years, such a lunar
+calendar would be off by a whole month, so the Assyrians added an extra
+month from time to time to keep their calendar in synchronization with
+the seasons.
+ 
+     The best approximation that was possible in antiquity was a 19-year
+period, with 7 of these 19 years having 13 months (leap months).  This
+scheme was adopted as the basis for the lunar calendar used by the
+Hebrews.  The Arabs also used this calendar until Mohammed forbade
+shifting from 12 months to 13 months; this causes the Muslim holy month
+of Ramadan to move backwards through the seasons, completing a cycle
+every 32 1/2 years.
+ 
+     When Rome emerged as a world power, the difficulties of making a
+calendar were well known, but the Romans complicated their lives because
+of their superstition that even numbers were unlucky.  Hence their
+months were 29 or 31 days long, with the exception of February, which
+had 28 days.  Every second year, the Roman calendar included an extra
+month called Mercedonius of 22 or 23 days to keep up with the solar
+year.
+
+
+JULIAN CALENDAR
+
+     Even this algorithm was very poor, so that in 45 BCE, Caesar,
+advised by the astronomer Sosigenes, ordered a sweeping reform.  By
+imperial decree, the year 46 BCE was made 445 days long to bring the
+calendar back in step with the seasons.  The new calendar, similar to
+the one we now use was called the Julian calendar (named after Julius
+Caesar).
+
+     Months in the Julian calendar were 30 or 31 days in length and
+every fourth year was made a leap year (having 366 days) by adding a day
+to the end of the year.  This leap year rule was not consistantly
+applied until 8 CE.  The year-ending month of February, never a popular
+month, was presently shortened so that Julius Caesar and Emperor
+Augustus could each have long months named after them.
+
+     Caesar also decreed that the year would start with the first of
+January, which since 153 BCE was the day that Roman consuls took office,
+and not the vernal equinox in late March.  Not everyone accepted that
+part of his reform, as we shall see.
+
+ 
+GREGORIAN CALENDAR
+
+     Caesar's year was 11 1/2 minutes short of the calculations
+recommended by Sosigenes and eventually the date of the vernal equinox
+began to drift.  Roger Bacon became alarmed and sent a note to Pope
+Clement IV, who apparently was not impressed.  Pope Sixtus IV later
+became convinced that another reform was needed and called the German
+astronomer, Regiomontanus, to Rome to advise him.  Unfortunately,
+Regiomontanus died of the plague shortly thereafter and the plans died
+as well.
+ 
+     In 1545, the Council of Trent authorized Pope Gregory XIII to
+reform the calendar once more.  Most of the mathematical work was done
+by Father Christopher Clavius, S.J.  The immediate correction that was
+adopted was that Thursday, October 4, 1582 was to be the last day of the
+Julian calendar.  The next day was Friday, with the date of October 15.
+For long range accuracy, a formula suggested by the Vatican librarian
+Aloysius Giglio was adopted.  It said that every fourth year is a leap
+year except for century years that are not divisible by 400.  Thus 1700,
+1800 and 1900 would not be leap years, but 2000 would be a leap year
+since 2000 is divisible by 400.  This rule eliminates 3 leap years every
+4 centuries, making the calendar sufficiently correct for most ordinary
+purposes.  This calendar is known as the Gregorian calendar and is the
+one that we now use today.
+
+     It is interesting to note that in 1582, all the Protestant princes
+ignored the papal decree and so many countries continued to use the
+Julian calendar until either 1698 or 1752.  Britain and its American
+colonies went from Wednesday, September 2, 1752 to Thursday, September
+14.  Prior to the changeover, the British used March 25 as the start of
+the new year.
+
+     In Russia, it needed the revolution to introduce the Gregorian
+calendar in 1918.  Turkey didn't adopt it until 1927.
+
+
+NUMBERING OF YEARS
+
+     The numbering of the year is generally done according to an "era",
+such as the year of a ruler's reign.
+
+     In about 525, a monk named Dionysius Exiguus suggested that the
+calculated year of Jesus' birth be designated as year 1 in the Julian
+calendar.  This suggestion was adopted over the next 500 years and
+subsequently followed in the Gregorian calendar.
+
+     For the benefit of those who seek religious significance to the
+calendar millenium, note that year 1 is too late by at least 4 years.
+Herod the Great, named in the Christian Bible as having all children in
+Bethlehem put to death in an attempt to kill the infant Jesus, died in 4
+BCE.
+
+     Nothing particularly significant of an historic or religious nature
+happened in Gregorian year 1; however it has become a worldwide standard
+as the "common era."  In modern times, the terms "CE" (common era) and
+"BCE" (before common era) are preferred over the earlier (and, as we
+have seen, less accurate) "AD" (anno Domini, "the year of the Lord") and
+"BC" (before Christ).
+
+     The Hebrew lunar calendar begins at 3760 BCE, the year of creation
+in Jewish tradition.  The Muslim lunar calendar begins on July 16, 622,
+when Mohammed fled from Mecca to Medina.
+
+     The Japanese, Taiwanese, and North Koreans use the Gregorian
+calendar, but number the year by political era.  In Japan, an era
+begins when an emperor succeeds to the throne; year 1 of the Heisei
+era was 1989 when Emperor Akihito ascended to the throne (the first
+few days of 1989 was year 64 of the Shouwa era).  In Taiwan, year 1 is
+the first full year after the founding of the Republic of China in 1911.
+In North Korea, year 1 is the year of the Juche (self-reliance) ideal,
+corresponding to the birth year of founder Kim Il-Sung (1912).  Thus,
+year 2000 is Heisei 12 (Japan), 89th year of the Republic (Taiwan),
+and Juche 89 (North Korea).
+
+
+FURTHER MODIFICATIONS TO THE GREGORIAN CALENDAR
+
+     Despite the great accuracy of the Gregorian calendar, it still
+falls behind very slightly every few years.  The most serious problem
+is that the earth's rotation is slowing gradually.  If you are very
+concerned about this problem, we suggest that you tune in short wave
+radio station WWV or the Global Positioning System, which broadcasts
+official time signals for use in the United States.  About once every
+3 years, they declare a leap second at which time you should be
+careful to adjust your system clock.  If you have trouble picking up
+their signals, we suggest you purchase an atomic clock (not part of
+the IMAP toolkit).
+
+     Another problem is that the Gregorian calendar represents a year
+of 365.2425 days, whereas the actual time taken for the earth to
+rotate around the Sun is 365.2422 days.  Thus, the Gregorian calendar
+is actually 25.92 seconds slow each year, resulting in the calendar
+being one day behind every 3,333 1/3 years.
+
+     Consequently, the Gregorian calendar has been modified with a
+further rule, which is that years evenly divisible by 4000 are not
+leap years.  Thus, the year 4000 will not be a leap year.  Or, at
+least we assume that's what will happen assuming that the calendar
+remains unchanged for the next 2000 years.
+
+     The modified Gregorian calendar represents a year of 365.24225
+days.  Thus, the modified Gregorian calendar is actually 4.32 seconds
+slow each year, resulting in the calendar being one day slow every
+20,000 years.
+
+     There is some dispute whether the modified Gregorian calendar was
+officially adopted, or if it's just a proposal.  Other options (see
+below) exist; fortunately no decision needs to be made for several
+centuries yet.
+
+     There is code in c-client to support the modified Gregorian
+calendar, although it is currently disabled.  Sometime in the next
+2000 years, someone will need to enable this code so that c-client is
+Y4K compiliant.  Then, 18,000 years from now, someone will have to
+tear into c-client's code to fix the Y20K bug.
+
+
+EASTERN ORTHODOX MODIFICATION OF THE GREGORIAN CALENDAR
+
+     The Eastern Orthodox church in 1923 established its own rules to
+correct the Julian calendar.  In their calendar, century years modulo
+900 must result in value of 200 or 600 to be considered a leap year.
+Both the Orthodox and Gregorian calendar agree that the years 2000 and
+2400 will be leap years, and the years 1900, 2100, 2200, 2300, 2500,
+2600, 2700 are not.  However, the year 2800 will be a leap year in the
+Gregorian calendar but not in the Orthodox calendar; similarly, the
+year 2900 will be a leap year in the Orthodox calendar but not in the
+Gregorian calendar.  Both calendars will agree that 3000 and
+3100 are leap years, but will disagree again in 3200 and 3300.
+
+     There is code in c-client to support the Orthodox calendar.  It
+can be enabled by adding -DUSEORTHODOXCALENDAR=1 to the c-client
+CFLAGS, e.g.
+	make xxx EXTRACFLAGS="-DUSEORTHODOXCALENDAR=1"
+
+     The Orthodox calendar represents a year of 365.24222222... days.
+Thus, the Orthodox calendar is actually 1.91 seconds slow each year,
+resulting in the calendar being one day slow every 45,000 years.  The
+Eastern Orthodox church has not yet made any statements on how the
+Y45K bug will be fixed.
+
+
+OTHER ISSUES AFFECTING THE CALENDAR IN THE FUTURE
+
+     The effect of leap seconds also needs to be considered when
+looking at the Y20K and Y45K problems.  Leap seconds put the clock
+back in line with the Earth's rotation, whereas leap years put the
+calendar back in line with the Earth's revolution.  Since leap seconds
+slow down the clock (and hence the calendar), they actually bring the
+day of reckoning for the Gregorian and Orthodox calendars sooner.
+
+     Another factor is that the next ice age (technically, the end of
+the current interglacial period; we are in the middle of an ice age
+now!) is due around Y25K.  It is not known what perturbations this will
+cause on the Earth's rotation and revolution, nor what calendar
+adjustments will be necessary at that time.
+
+
+MEANINGS OF DAY NAMES
+
+     The names of days of the week from a combination of Roman and
+Germanic names for celestial bodies:
+. Sunday	Latin "dies solis" => "Sun's day"
+. Monday	Latin "dies lunae" => "Moon's day"
+. Tuesday	Germanic "Tiw's day" => "Mars' day"
+. Wednesday	Germanic "Woden's day" => "Mercury's day"
+. Thursday	Germanic "Thor's day" => "Jupiter's day"
+. Friday	Germanic "Frigg's day" => "Venus' day"
+. Saturday	Latin "dies Saturni" => "Saturn's day"
+
+
+MEANINGS OF MONTH NAMES
+
+     The names of the months are from the Roman calendar:
+. January	Janus, protector of doorways
+. February	Februalia, a time for sacrifice to atone for sins
+. March		Mars, god of war
+. April		Latin "aperire" => "to open" buds
+. May		Maia, goddess of plant growth
+. June		Latin "juvenis" => "youth"
+. July		Julius Caesar
+. August	Augustus Caesar
+. September	Latin "septem" => "seven"
+. October	Latin "octo" => "eight"
+. November	Latin "novem" => "nine"
+. December	Latin "decem" => "ten"
+
+     As you'll notice, the last four months are numbered 7 to 10, which
+is an artifact of the time when the new year started in March.
+
+
+INTERESTING FORMULAE
+
+     There's another reason why the historical starting of the new year
+is significant.  Starting with March, the length of months follows a
+mathematical series:
+	31 30 31 30 31 31 30 31 30 31 31 28
+
+     This means that you can calculate the day of week for any
+arbitrary day/month/year of the Gregorian calendar with the following
+formula (note all divisions are integral):
+        _                                      _
+       |     7 + 31*(m - 1)       y    y     y  |
+ dow = | d + -------------- + y + - - --- + --- | MOD 7
+       |_          12             4   100   400_|
+where
+ d   := day of month (1..31)
+ m   := month in old style (March = 1..February = 12)
+ y   := year in old style
+ dow := day of week (Tuesday = 0..Monday = 6)
+
+     To convert from new style month/year to old style:
+  if (m > 2) m -= 2;		/* Mar-Dec: subtract 2 from month */
+  else m += 10,y--;		/* Jan-Feb: months 11 & 12 of previous year */
+
+     Here's another fun formula.  To find the number of days between two
+days, calculate a pair of calendar days with the formula (again, all
+divisions are integral), using new style month/year this time:
+                        m
+                    m + -
+                        8             y    y     y
+ d + 30 * (m - 1) + ----- + y * 365 + - - --- + --- - ld
+                      2               4   100   400
+
+where:
+ d   := day of month (1..31)
+ m   := month in new style (January = 1..December = 12)
+ y   := year in new style
+ ld  := leap day correction factor:
+	0 for January and February in non-leap years
+	1 for January and February in leap years
+	2 for all other months in all years        
+
+     In C code, the leap day correction factor is calculated as:
+  (m < 3) ? !(y % 4) && ((y % 100) || !(y % 400)) : 2
+
+     It's up to you to figure out how to adapt these formulas for the
+Y4K bugfix and the Orthodox calendar.  If you're really clever, try to
+use these formulae to implement the C library ctime(), gmtime(), and
+mktime() functions.  Most C library implementations use a table of the
+number of days in a month.  You don't need it.
+
+
+ACKNOWLEDGEMENT:
+
+The original version is from an old Digital Equipment Corporation SPR
+answer for VMS.  Modifications for c-client, and additional information
+added by Mark Crispin.

@@ -1,0 +1,24 @@
+/*----------------------------------------------------------------------
+       Return string describing the error
+
+   Args: errnumber -- The system error number (errno)
+
+ Result:  long string describing the error is returned
+  ----*/
+char *
+error_description(errnumber)
+    int errnumber;
+{
+    static char buffer[50+1];
+
+    buffer[0] = '\0';
+
+    if(errnumber >= 0)
+      sprintf(buffer, "%.*s", 50, strerror(errnumber));
+    else
+      sprintf(buffer, "Unknown error #%d", errnumber);
+
+    return ( (char *) buffer);
+}
+
+

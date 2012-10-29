@@ -1,0 +1,78 @@
+		       MD5 Based Authentication
+			     Mark Crispin
+			   1 November 1999
+
+
+     The IMAP toolkit makes available two MD5 based authentication
+mechanisms, CRAM-MD5 and APOP.  CRAM-MD5 is described in RFC 2195, and
+is a SASL (RFC 2222) authentication mechanism.  APOP is described in
+RFC 1939, the standard document for the POP3 protocol.
+
+     These mechanisms use the same general idea.  The server issues a
+challenge; the client responds with an MD5 checksum of the challenge
+plus the password; the server in compares the client's response with
+its own calculated value of the checksum.  If the client's response
+matches the server's calulated value, the client is authenticated.
+
+     Unlike plaintext passwords, this form of authentication is
+believed to be secure against the session being monitored; "sniffing"
+the session will not disclose the password nor will it provide usable
+information to authenticate in another session without knowing the
+password.
+
+     The key disadvantage with this form of authentication is that the
+server must know a plaintext form of the password.  In traditional
+UNIX authentication, the server only knows an encrypted form of the
+password.  Consequently, the authentication database for this form of
+authentication must be kept strictly confidential; a bad guy who
+acquires access to this database can access any account in the
+database.
+
+     CRAM-MD5 client support is implemented unconditionally; any
+client application built with the IMAP toolkit will use CRAM-MD5 with
+any server which advertises CRAM-MD5 SASL support.
+
+     CRAM-MD5 and APOP server support is implemented if, and only if,
+the CRAM-MD5 authentication database exists.  By default, the CRAM-MD5
+authentication database is in a UNIX file called
+	/etc/cram-md5.pwd
+It is recommended that this file be protected 0400.
+
+	NOTE: FAILURE TO PROTECT THIS FILE AGAINST UNAUTHORIZED
+	ACCESS WILL COMPROMSE CRAM-MD5 AND APOP AUTHENTICATION
+	FOR ALL USERS LISTED IN THIS DATABASE.
+
+     If the CRAM-MD5 authentication database exists, then plaintext
+password authentication (e.g. the LOGIN command) will also use the
+CRAM-MD5 passwords instead of UNIX passwords.  Alternatively, it is
+possible to build the IMAP toolkit so that plaintext password
+authentication is disabled entirely, by using PASSWDTYPE=nul, e.g.
+	make aix PASSWDTYPE=nul
+
+
+     The CRAM-MD5 authentication database file consists of a series of
+text lines, consisting of a UNIX user name, a single tab, and the
+password.  A line starting with a "#" character is ignored, as are any
+lines which are not in valid format.  For example:
+
+------------------------------Sample------------------------------
+# CRAM-MD5 authentication database
+# Entries are in form <user><tab><password>
+# Lines starting with "#" are comments
+
+bill	hubba-hubba
+hillary	nysenator
+monica	beret
+tripp	wired
+kenstarr	inquisitor
+reno	waco
+jessie	thebody
+billgates	ruleworld
+------------------------------Sample------------------------------
+
+     Every entry in the CRAM-MD5 authentication database must have a
+corresponding entry in the /etc/passwd file.  It is STRONGLY
+RECOMMENDED that the CRAM-MD5 password NOT be the same as the
+/etc/passwd password.  It is permitted for the /etc/passwd password to
+be disabled; /etc/passwd is just used to get the UID, GID, and home
+directory information.

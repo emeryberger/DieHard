@@ -1,0 +1,23 @@
+ReadMe file for newmat09, an matrix library in C++.
+---------------------------------------------------
+
+Documentation is in newmat.txt. An html version of the documentation
+can be downloaded from http://webnz.com/robert/ or
+http://webnz.co.nz/robert/.
+
+Read the section on "customising" in newmat.txt before attempting to
+compile this program. You will very likely need to edit the options in
+include.h.
+
+I now use bool, true and false in place of Boolean, TRUE and FALSE in
+line with the new C++ standard. If your compiler (Borland 5.0, MS Visual
+C++ 5 or Gnu 2.7.2) supports this construct you will need to edit
+include.h to disable my bool class.
+
+I have changed ReDimension to ReSize.
+
+Look at the section on "updating from previous versions" in newmat.txt
+for other changes. 
+
+Please look on http://webnz.com/robert/ or http://webnz.co.nz/robert/
+for any latest bug lists and current version information.

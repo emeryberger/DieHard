@@ -1,0 +1,75 @@
+#!/bin/bash
+
+BASEDIR=`dirname ${0}`
+
+if [[ ${BASEDIR:0:1} != / ]]
+    then
+    BASEDIR=`pwd`/${BASEDIR}
+fi
+
+ARCH=${BASEDIR}/../../libsparseheaps.so
+DIEHARD1024=${BASEDIR}/../../../diehard/src/libdiehard-1024.so
+DIEHARD2=${BASEDIR}/../../../diehard/src/libdiehard-2.so
+MTRACE=${BASEDIR}/../../tools/libmalloctrace.so
+EFENCE=${BASEDIR}/../../../electric-fence-2.1.13/libefence.so
+PTIME=${BASEDIR}/../../tools/pmem.py
+THTTPD="/usr/sbin/thttpd -d ${BASEDIR}/../.jail/http -p 8080 -nor -D"
+PIDFILE=/tmp/mythttpd.pid
+CHECK_PID="ps hp"
+ARGS="-p ${PIDFILE}" #-f '%.2fsec %uk %uk %uk'"
+
+while [[ $# > 0 ]]
+  do
+  case $1 in
+      "-m")
+	  ARGS="${ARGS} -e LD_PRELOAD=${MTRACE}"
+	  ;;
+
+      "-a" | "--archipelago" )
+	  if [[ -z "${USE_DIEHARD}" ]]
+	      then 
+	      USE_ARCH=1
+	      ARGS="${ARGS} -e LD_PRELOAD=${ARCH}"
+	  fi
+	  shift
+	  ;;
+      "-e" | "--efence")
+	  ARGS="${ARGS} -e LD_PRELOAD=${EFENCE}"
+	  shift
+	  ;;
+      "-d2" | "--diehard-2" )
+	  if [[ -z "${USE_ARCH}" ]]
+	      then 
+	      USE_DIEHARD=1
+	      ARGS="${ARGS} -e LD_PRELOAD=${DIEHARD2}"
+	  fi
+	  shift
+	  ;;
+      "-d1024" | "--diehard-1024" )
+	  if [[ -z "${USE_ARCH}" ]]
+	      then 
+	      USE_DIEHARD=1
+	      ARGS="${ARGS} -e LD_PRELOAD=${DIEHARD1024}"
+	  fi
+	  shift
+	  ;;
+     
+      "-o" | "--outfile")
+	  ARGS="${ARGS} -o ${2}"
+	  shift;shift
+	  ;;
+  esac
+done
+      
+rm -f ${PIDFILE}
+
+eval ${PTIME} ${ARGS} ${THTTPD} &
+
+sleep 1
+
+pid=`cat ${PIDFILE}`
+
+if [[ -z `${CHECK_PID} ${pid}` ]]
+    then
+    echo "Error starting thttpd"
+fi

@@ -1,0 +1,27 @@
+#if defined(USE_QUOTAS)
+
+/*----------------------------------------------------------------------
+   This system doesn't have disk quotas.
+   Return space left in disk quota on file system which given path is in.
+
+    Args: path - Path name of file or directory on file system of concern
+          over - pointer to flag that is set if the user is over quota
+
+ Returns: If *over = 0, the number of bytes free in disk quota as per
+          the soft limit.
+	  If *over = 1, the number of bytes *over* quota.
+          -1 is returned on an error looking up quota
+           0 is returned if there is no quota
+
+BUG:  If there's more than 2.1Gb free this function will break
+  ----*/
+long
+disk_quota(path, over)
+    char *path;
+    int  *over;
+{
+    return(0L);
+}
+#endif /* USE_QUOTAS */
+
+

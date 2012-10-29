@@ -1,0 +1,540 @@
+<html>
+<head>
+  <title>Config file options for bftpd.</title>
+</head>
+<body>
+Next
+<A HREF="bftpddoc-en-4.html">Previous</A>
+<A HREF="bftpddoc-en.html#toc5">Contents</A>
+<br><br><br>
+<h2>Config options for the bftpd configuration file</h2><br>
+Below are a list of options reconized by the bftpd server. These options
+and their values may be stored in the bftpd configureation file. This
+file is named /etc/bftpd.conf by default. Please note that all values
+must be given between quotation marks. For example, the following is
+correct:<br>
+<br>
+<b>PORT="21"</b><br>
+<br>
+However, this is <b>not</b> correct:<br>
+<br>
+<b>PORT=21</b><br>
+<br>
+Please also note that options should always be in UPPER CASE.<br>
+<br><br>
+There are two main parts to the bftpd.conf file. The first is the
+<b>global</b> section. This lays out the default values which are
+used by the server. The second section is the <b>users</b> section. This
+should always be appended at the bottom of the bftpd.conf file. The users
+section provides over-ride values for specific users. For example, by default
+the bftpd.conf file sets DENY_LOGIN to "no", which allows all users to login.
+This value is set in the global section. However, also by default, DENY_LOGIN
+is turned on in the users section for the user <i>root</i>. This prevents
+someone from logging in to your bftpd server using the <i>root</i> account.<br>
+<br><br>
+Now, without further delay, let's take a look at the options
+the bftpd server supports. These will be broken down by the
+name of the variable, a brief description and possible values.<br>
+<br><br>
+<b>Name:</b> DENY_LOGIN<br>
+<br>
+<b>Description:</b> This option instructs bftpd to either deny login
+attemps or to allow logins. It is recommended root
+access be restricted using this option.<br>
+<br>
+<b>Values:</b><br>
+"no" - allow login attempts<br>
+"yes" - prevent a user from logging in<br>
+"<i>Reason for denying access.</i>" - 
+Deny access to the server and tell the client why.<br>
+<br><br>
+  
+<b>Name:</b> PORT<br>
+<br>
+<b>Description:</b> This is the port number where the server should listen
+for incoming connections. This is for daemon mode only.<br>
+<br>
+<b>Values:</b><br>
+"21" - default<br>
+<br><br>
+
+<b>Name:</b> PASSIVE_PORTS<br>
+<br>
+<b>Description:</b>
+  You can force bftpd to use a specific port range in passive mode.
+  Passive mode means that the client will open data connections
+  and the server stays 'passive'.
+  This option can be very useful with some firewall configurations.
+  Seperate values with "," and define ranges with "-".
+  bftpd will try to bind one of these ports in ascending order as
+  you specify them here.
+  If none of the given ports could be bound, the connection is
+  is refused. If you want to bind any free port in that case, add
+  "0" to the list.<br>
+<br>
+<b>Values:</b><br>
+"0" - (zero) default<br>
+"10000-20000" - use ports 10,000 to 20,000<br>
+"15000-20000, 25000-30000" - use ports 15,000 to 20,000 and 25,000 to 30,000.<br>
+<br><br>
+
+<b>Name:</b> DATAPORT20<br>
+<br>
+<b>Description:</b>
+If PORT data connections should be opened from port 20, say yes here. You
+will probably need this if your server is behind a firewall that restricts
+outgoing packets from ports higher than 1024. Note that this may be a
+security hole, as the server can not drop its root privileges completely
+if you say yes here.<br>
+<br>
+<b>Values:</b><br>
+"no" - default. This is recommended for security reasons.<br>
+"yes" - enable data port 20. Recommended for dealing with firewalls which restrict
+out-going connections above port 1024.<br>
+<br><br>
+
+<b>Name:</b> ADMIN_PASS<br>
+<br>
+<b>Description:</b> The password which will be used by the system administrator
+to monitor and manage the bftpd server. The admin interface is not finished and,
+at this time, the password should remain as "x".<br>
+<br>
+<b>Values:</b><br>
+"x" - default and recommended.<br>
+<br><br>
+
+<b>Name:</b> INITIAL_CHROOT<br>
+<br>
+<b>Description:</b>
+With this option, you can put your entire FTP environment into a chroot
+jail. Apart from security, this offers you the possibility of having
+virtual users that don't exist in the system.
+Additionally, you can make some kind of 'file pool' by creating a directory
+with files which you can symlink from the users' homes (this means setting
+DO_CHROOT=no in order for the users to be able to access that dir.
+Note that you need the following files in your initial chroot directory:
+/etc/passwd, /etc/shadow, /etc/group
+On GNU systems, you will also need the NSS libraries in /lib.<br>
+<br>
+<b>Values:</b>
+This option is disabled by default. You should give an existing directory
+path if you wish to setup a traditional, secure ftp environment.<br>
+<br><br>
+
+<b>Name:</b> PATH_BFTPDUTMP<br>
+<br>
+<b>Description:</b> The bftpdutmp file allows you to record user logins and
+logouts. This is useful should you wish to restrict the number of users/computers
+logged in at the same time. Should you wish to run bftpd without these security
+features, you can set the path to an empty string.<br>
+<br>
+<b>Values:</b><br>
+"/var/run/bftpd/bftpdutmp" - default<br>
+"" - disable the log file.<br>
+<br><br>
+
+<b>Name:</b> XFER_BUFSIZE<br>
+<br>
+<b>Description:</b> This option controls the buffer size while transferring files.
+If you are on a very fast network (fast meaning 100 Mbit/s or more),
+you should set this to 64000 or something like that.
+Transferring from localhost to localhost, I had a transfer speed of
+approx. 15 MB/s with XFER_BUFSIZE=2048 and a speed of approx. 20 MB/s
+with XFER_BUFSIZE=64000. You should set smaller values for this if you have
+slow (dialup) clients.
+This option can also be used to (crudely) throttle back
+transfer speeds. Setting this to a very low value
+can slow transfer speeds.<br>
+<br>
+<b>Values:</b><br>
+"2048" - default<br>
+<br><br>
+
+<b>Name:</b> XFER_DELAY<br>
+<br>
+<b>Description:</b>
+This option allows you to add a delay (in microseconds) to
+the time between when one piece of data was sent
+and when the next will be sent. This is to aid in
+throttling bandwidth and applies to each client. The
+throttling effects the DATA transfers only (not control
+connections).
+A value of zero (0) means there is no added delay.
+A value of about 500000 (five hundred thousand) should
+delay for about half a second.
+These delays should be kept low to avoid triggering
+data transfer timeouts.<br>
+<br>
+<b>Values:</b><br>
+"0" - default (no delay)<br>
+<br><br>
+
+<b>Name:</b> ALLOW_FXP<br>
+<br>
+<b>Description:</b>
+When set to yes, this option makes the server allow data connections which
+don't go to the client who initiated them.
+This is needed for FXP. It is recommended this option be left
+disabled.<br>
+<br>
+<b>Values:</b><br>
+"no" - default (recommended)<br>
+"yes" - allow data connections which go to third party clients.<br>
+<br><br>
+
+<b>Name:</b> CONTROL_TIMEOUT<br>
+<br>
+<b>Description:</b> This option sets the amount of time a client may
+be connected without sending any control commands. The value is
+the number of seconds bftpd will wait for a command before dropping
+the connection.<br>
+<br>
+<b>Values:</b><br>
+"300" - default (wait five minutes)<br>
+<br><br>
+
+<b>Name:</b> DATA_TIMEOUT<br>
+<br>
+<b>Description:</b> This option sets the amount of time a client
+can be idle during a file transfer. The value is given in seconds.
+This option should usually be over ten,
+but below sixty. This allows for slow dial-up connections, without leaving
+stale connections too long.<br>
+<br>
+<b>Values:</b><br>
+"30" - default (wait thirty seconds)<br>
+<br><br>
+
+<b>Name:</b> RATIO<br>
+<br>
+<b>Description:</b>
+Use Ratio if you want the client to send a file before he can get a file.
+The format for this option is "<i>upload</i>/<i>download</i>". For
+example, "2/1" will allow the client to download 1MB of data if they
+first upload 2MB of data.<br>
+<br>
+<b>Values:</b><br>
+"none" - default. Do not restrict downloading.<br>
+"2/1" - allow 1MB download for every 2MB uploaded to the server.<br>
+<br><br>
+
+<b>Name:</b> ROOTDIR<br>
+<br>
+<b>Description:</b>
+ROOTDIR specifies the root directory of the client. It defaults to %h
+(the user's home directory). "%u" is replaced by the user name. This
+is handy if you have a set of sub-folders for bftpd to use. For example,
+/var/ftp/<i>username</i>/<br>
+This value should probably be set to some special value in the
+anonymous user's specific settings at the bottom of the config
+file.<br>
+<br>
+<b>Values:</b><br>
+"%h" - (default) login to the user's home directory.<br>
+"%u" - this symbol will be replaced by the client's username.<br>
+<br><br>
+
+<b>Name:</b> UMASK<br>
+<br>
+<b>Description:</b>
+Umask for the files or directories users create.<br>
+<br>
+<b>Values:</b><br>
+"022" - (default) New files are created with the permissions 755.<br>
+<br><br>
+
+<b>Name:</b> LOGFILE<br>
+<br>
+<b>Description:</b> This option gives the path of the file where
+bftpd will log general information. This includes files sent or received,
+login attempts and logouts. It is possible to use the system log by
+using the keyword "syslog" here.<br>
+<br>
+<b>Values:</b><br>
+"/var/log/bftpd.log" - default<br>
+"syslog" - send log data into system log.<br>
+"" - do not save log information to a file.<br>
+<br><br>
+
+<b>Name:</b> HELLO_STRING<br>
+<br>
+<b>Description:</b>
+This option tells bftpd what greeting to send clients when they
+first login to the server. You can use any string which fits on one
+line. Also, you can use three embedded symbols (%h, %i, %v) to
+provide extra information. The %h symbol will be replaced by the
+server's host name, %i is replaced by your IP address and %v
+will display bftpd's version number.<br>
+<br>
+Note: If you use the "%h" option and you do an inital CHROOT, then
+you'll need to copy your /etc/hosts and /etc/host.conf files into
+the chroot jail.<br>
+<br>
+<b>Values:</b><br>
+"bftpd %v at %i ready." - default (Show version and server's IP address)<br>
+"Welcome to bftpd at %h" - display welcome message with server's name.<br>
+<br><br>
+
+<b>Name:</b> AUTO_CHDIR<br>
+<br>
+<b>Description:</b> This option tells the bftpd server in which directory
+it should start. The directory path is relative to any chroot jail.<br>
+<br>
+<b>Values:</b><br>
+"/" - (default) go to the root directory of the current environment.<br>
+"/ftp" - start in the ftp directory<br>
+<br><br>
+
+<b>Name:</b> AUTH<br>
+<br>
+<b>Description:</b> This option tells bftpd which type of password
+authentication to use. Currently PAM and standard passwords are availible.<br>
+<br>
+<b>Values:</b><br>
+"PASSWD" - (default) use basic password checking.<br>
+"PAM" - use PAM verification.<br>
+<br><br>
+
+<b>Name:</b> FILE_AUTH<br>
+<br>
+<b>Description:</b> This option, when set, tells bftpd to ignore the <b>AUTH</b>
+variable and use a plain text file to authenticate users. The value
+should point to a text file, readable to the bftpd server. See the
+<i>values</i> section for the file format. The bftpd server will search
+through the text file for names matching the client's username. If
+a match is found, the client's password is checked against the one in
+the local text file.<br>
+WARNING: This option should be used very carefully and only in
+situations where you wish to over-ride your regular system security!<br>
+<br>
+<b>Values:</b><br>
+The text file should contain the format shown here:<br>
+<i>username password group home_directory</i><br>
+<br>
+Where username and password must match those sent by the client. Otherwise
+login is refused. The group should be the user's regular group and
+home_directory is where the client will be chrooted. For example:<Br>
+john secret users /home/john<br>
+jane mypassword users /home/jane/ftp<br>
+<br><br>
+<b>Name:</b> RESOLVE_CLIENT_IP<br>
+<br>
+<b>Description:</b>
+Enable this if you want the client's IP address to be resolved to a host
+name. Note that it increases the overhead and it may not work if your DNS
+is not configured correctly. Clients without a valid DNS name will take very
+long to connect.<br>
+<br>
+<b>Values:</b><br>
+"no" - default and recommended setting<br>
+"yes" - resolve client host names, when possible<br>
+<br><br>
+
+<b>Name:</b> MOTD_GLOBAL<br>
+<br>
+<b>Description:</b>
+This option tells bftpd where the "message of the day" file
+is stored. The content of this file (if it exists) is sent to the client
+before they login.<br>
+<br>
+<b>Values:</b>
+"/etc/ftpmotd" - default<br>
+<br><br>
+
+<b>Name:</b> MOTD_USER<br>
+<br>
+<b>Description:</b> The path to a "message of the day" file. The content
+of this file (if it exists) is sent to the client after a valid login. This
+path is relative to the user's root directory.<br>
+<br>
+<b>Values:</b><br>
+"/.ftpmotd" - default<br>
+<br><br>
+
+<b>Name:</b> RESOLVE_UIDS<br>
+<br>
+<b>Description:</b> If this option is enabled, user and group names
+are shown in directory listings instead of plain user/group ID numbers.
+This may slow down large directory listings.<br>
+<br>
+<b>Values:</b><br>
+"yes" - (default) show user and group names.<br>
+"no" - show user and group numbers.<br>
+<br><br>
+
+<b>Name:</b> DO_CHROOT<br>
+<br>
+<b>Description:</b> When this option is enabled ("yes") the client can
+not access any directories outside of the chroot jail. Disabling this
+feature ("no") is considered a serious security hole.<br>
+<br>
+<b>Values:</b><br>
+"yes" - (default) recommended to contain the user to their home directory.<br>
+"no" - (not recommended) this will allow the client to access any directory on the server.<br>
+<br><br>
+
+<b>Name:</b> LOG_WTMP<br>
+<br>
+<b>Description:</b>
+Enable this to log each login to wtmp. This
+can be useful for checking security issues.<br>
+<br>
+<b>Values:</b><br>
+"yes" - (default) Send login information to wtmp.<br>
+"no" - Do not log to wtmp.<br>
+<br><br>
+
+<b>Name:</b> BIND_TO_ADDR<br>
+<br>
+<b>Description:</b>
+If you would like bftpd to bind itself to one specific network interface,
+enter its IP address here. You can use the value "any" to take the
+first availible network interface. This option works in daemon mode
+only.<br>
+<br>
+<b>Values:</b><br>
+"any" - (default) Take the first availible network device.<br>
+"<i>your IP address here</i>" - try to bind to a specific address.<br>
+<br><br>
+
+<b>Name:</b> PATH_FTPUSERS<br>
+<br>
+<b>Description:</b>
+This option gives bftpd the path to a file (ftpusers) which
+contains a list of users which may <i>not</i> login to the server.
+If you want anyone to be able to login, you can put a non-existant
+filename here.<br>
+<br>
+<b>Values:</b><br>
+"/etc/ftpusers" - default<br>
+<br><br>
+
+<b>Name:</b> AUTH_ETCSHELLS<br>
+<br>
+<b>Description:</b>
+Enable this if you want to deny any user who has a shell which is not in
+/etc/shells.<br>
+<br>
+<b>Values:</b><br>
+"no" - (default) allow any user to login<br>
+"yes" - Deny login attemps to users with a shell not found in /etc/shells<br>
+<br><br>
+
+<b>Name:</b> ALLOWCOMMAND_<br>
+<br>
+<b>Description:</b>
+With the option ALLOWCOMMAND_<i>XXXX</i>, you can disable the command <i>XXXX</i>.
+For example, if you don't want any user to delete files, you can do
+ALLOWCOMMAND_DELE="no"
+You can also disable it for specific users by writing the appropiate
+lines into the user structures at the bottom of the config file.
+Please see the Values section for some examples.<br>
+<br>
+<b>Values:</b><br>
+ALLOWCOMMAND_DELE="no" - prevent users from deleting or over-writing files<br>
+ALLOWCOMMAND_STOR="yes" - allow users to store files on the server<br>
+ALLOWCOMMAND_SITE="yes" - allow use of the site command<br>
+ALLOWCOMMAND_RETR="no" - prevent user from downloading files<br>
+<br><br>
+
+<b>Name:</b> HIDE_GROUP<br>
+<br>
+<b>Description:</b>
+Files that belong to these groups (comma-separated) are hidden in LIST/NLST.
+This can help with security on systems where bftpd may have access to system
+files.<br>
+<br>
+<b>Values:</b><br>
+"" - (empty string) default. This does not hide any files.<br>
+"root" - hides any files belonging to the group root.<br>
+<br><br>
+
+<b>Name:</b> QUIT_MSG<br>
+<br>
+<b>Description:</b>
+When the client sends the "quit" command, this message is sent back.<br>
+<br>
+<b>Values:</b><br>
+"See you later..." - default.<br>
+Any message can be placed here in quotes as long as it fits on one line in
+the config file.<br>
+<br><br>
+
+<b>Name:</b> USERLIMIT_GLOBAL<br>
+<b>Description:</b>
+The number of users that can be logged in at the same time.
+If set to "0", an unlimited users will be able to connect. This is not
+recommended, as it makes DoS attacks possible, even if the clients are
+kicked after a short time.<br>
+<br>
+<b>Values:</b><br>
+"0" - (zero) default. This is not recommended.<br>
+On most small servers, the connection limit should probably be below twenty ("20")
+but above five ("5").<br>
+<br><br>
+
+<b>Name:</b> USERLIMIT_SINGLEUSER<br>
+<br>
+<b>Description:</b><br>
+This variable controls how often one user can be logged in at one time.
+This allows you to have a big connection limit (see above) and nevertheless
+prevent single users from having a lot of connections.<br>
+<br>
+<b>Values:</b><br>
+"0" - (zero) default. Allow an unlimited number of connections from a user.<br>
+<br><br>
+
+<b>Name:</b> USERLIMIT_HOST<br>
+<br>
+<b>Description:</b>
+This variable controls how many users are allowed to connect from the same IP
+address. This prvents one user (or machine) from taking all of the avail
+connections. If you want to allow unlimited connections, leave this option as "0".
+<br><br>
+<b>Values:</b><br>
+"0" - (zero) is the default, allowing unlimited connections from the same IP address.<br>
+<br><br>
+
+<b>Name:</b> GZ_UPLOAD<br>
+<br>
+<b>Description:</b>
+This option allows you to force files to be compressed
+on the fly during upload. A ".gz" extension will be given
+to the file. This should usually be turned off ("no"), but
+may be useful to servers with smaller storage space.
+To enable this option set the value to "yes".<br>
+<br>
+To use this option, bftpd must be configured using<br>
+"./configure --enable-libz" <i>before</i> running "make".<br>
+<br>
+<b>Values:</b><br>
+"no" - default (recommended for most setups)<br>
+"yes" - Force files to be zipped during uploads to the server.<br>
+<br><br>
+
+<b>Name:</b> GZ_DOWNLOAD<br>
+<br>
+<b>Description:</b>
+This options allows you to force gzipped files to
+be decompressed on the fly during download. A file
+with the extension ".gz" will be decompressed as it
+is sent to the client. This option should usually be
+turned off ("no"), but may be usefull on servers with
+many compressed files. To enable this option, set the
+value to "yes".<br>
+<br>
+To use this option, bftpd must be configured using<br>
+"./configure --enable-libz" <i>before</i> running "make".<br>
+<br>
+<b>Values:</b><br>
+"no" - default (recommended for most setups)<br>
+"yes" - Force files to be unzipped during downloads from the server.<br>
+<br><br>
+<br><br><br>
+Next
+<A HREF="bftpddoc-en-4.html">Previous</A>
+<A HREF="bftpddoc-en.html#toc5">Contents</A>
+
+</body>
+</html>
+

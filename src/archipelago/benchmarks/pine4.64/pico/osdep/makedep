@@ -1,0 +1,26 @@
+#! /bin/csh -f
+#
+# This only finds include dependencies 1-level deep.
+# It's just a big, dumb, grep.
+
+cp makefile makefile.bak
+rm -f /tmp/inc$$
+
+foreach i ( `/bin/ls *.ic | sed 's/.ic//'` )
+
+  echo -n ${i}.c: >> /tmp/inc$$
+
+  foreach j ( `(/bin/ls)` )
+
+    grep -s "include($j)" ${i}.ic
+    if ($status == 0)then
+      echo -n " ${j}" >> /tmp/inc$$
+    endif
+    
+  end
+  echo " ${i}.ic" >> /tmp/inc$$
+end
+
+cat makefile.bas /tmp/inc$$ > makefile
+
+rm -f /tmp/inc$$

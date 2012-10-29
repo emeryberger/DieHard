@@ -1,0 +1,8 @@
+
+Test Inputs to espresso program:
+
+espresso -t Input/Z5xp1.espresso
+espresso -t Input/mlp4.espresso
+espresso -t Input/cps.espresso
+espresso -t Input/largest.espresso
+

@@ -1,0 +1,395 @@
+<HTML><HEAD><TITLE>Pine Technical Notes: Background Details</TITLE></HEAD><BODY>
+<H1>Background Details</H1>
+
+<H2><A NAME="DNS">Domain Names</A></H2>
+
+<BR><P>
+
+Domain names are used to uniquely name each host on the Internet.  A
+domain name has a number of parts separated by periods.  Each label
+represents a level in the hierarchy.  An example of a name is: 
+
+<BLOCKQUOTE><CODE>
+olive.cac.washington.edu 
+</CODE></BLOCKQUOTE>
+
+In this domain name the top-level label is <EM>edu</EM>, indicating it is
+at an educational institution, the second-level label is
+<EM>washington</EM>, indicating the University of Washington. 
+<EM>cac</EM> is a specific department within the University of Washington,
+and <EM>olive</EM> is the host name.  The top-level names are assigned by
+Internet organizations, and other names are assigned at the appropriate
+level.  The Domain Name Service, DNS, is the distributed database used to
+look up these names.  <P>
+
+<EM>Pine</EM> relies on domain names in multiple places.
+A domain name is embedded
+into the message-id line generated for each piece of email.  A domain name
+is needed to contact an IMAP server to get access to remote INBOXes and
+folders.  Most importantly, domain names are needed to construct the From:
+line of your outgoing messages so that people on the Internet will be able
+to get email back to you.  <P>
+
+On UNIX systems, you can set the domain via the <A 
+HREF="config.html#user-domain"><EM>user-domain</EM></A>
+variable in the <EM>Pine</EM> configuration file, or rely on the file
+<CODE>/etc/hosts</CODE> which usually sets the name of the local host. 
+While <EM>Pine</EM> can often deliver email without the domain name
+being properly
+configured, it is best to have this set correctly.  Problems can usually be
+solved by adjusting the system's entry in the <CODE>/etc/hosts</CODE>
+file.  The fully-qualified name should be listed before any abbreviations. 
+
+<BLOCKQUOTE><CODE>
+128.95.112.99   olive.cac.washington.edu   olive
+</CODE></BLOCKQUOTE>
+
+is preferred over
+
+<BLOCKQUOTE><CODE>
+128.95.112.99   olive   olive.cac.washington.edu
+</CODE></BLOCKQUOTE>
+<P>
+
+On PCs, the task of configuring the domain name is a bit different.  Often
+times, PCs do not have domain names-they have <EM>IP addresses</EM>.  IP
+addresses are the numbers which uniquely identify a computer on the
+network.  The way you configure your IP address depends on the networking
+software which you use on the PC.  You can refer to the documentation
+which came with your networking software or see the <A
+HREF="installation.html#install-pc">PC specific installation notes</A> for
+help configuring the IP address with your network software.  <P>
+
+With PCs, it is vital that users set the variable <A
+HREF="config.html#user-domain"><EM>user-domain</EM></A> in the <EM>Pine</EM>
+configuration file (<CODE>PINERC</CODE>).  <P>
+
+Details on configuring <EM>Pine</EM> with correct domain names can be
+found in the <A HREF="config-notes.html#domain">Domain Settings</A>
+section of this document.  <P>
+
+<HR>
+
+<H2><A NAME="rfc822">RFC 822 Compliance</A></H2>
+
+<EM>Pine</EM> tries to adhere
+to <A HREF="ftp://ftp.isi.edu/in-notes/rfc822.txt">RFC
+822</A> a little more strongly than some other mailers and uses the
+<EM>"full name &lt;address&gt;"</EM> format rather than the older
+<EM>"address (full name)"</EM> format.  The intent of the standard is that
+parentheses should only be for comments.
+<EM>Pine</EM> displays and generates the
+newer format, but will parse the old format and attempt to turn it into
+the new one.  <P>
+
+As far as outgoing email is concerned, <EM>Pine</EM> fully-qualifies addresses
+whenever possible.  They are even displayed in fully-qualified form on the
+terminal as the user composes a message.  This makes addresses more clear
+and gives a hint to the user that the network extends beyond the local
+organization.
+<EM>Pine</EM> implements fully-qualified domain names by tacking on
+the local domain to all unqualified addresses which a user types in.  Any
+address which does not contain an "@" is considered unqualified.  <P>
+
+The newer format for addresses allows for spaces and special characters in
+the full name of an address.  For this reason, commas are required to
+separate addresses.  If any special characters as defined in RFC 822
+appear in the full name, quotes are required around the address.  <EM>Pine</EM>
+will insert the quotes automatically.  The common cases where this happens
+are with periods after initials and parentheses.  <P>
+
+Because <EM>Pine</EM> fully complies with RFC 822,
+it is sometimes difficult to use
+non-Internet address formats such as UUCP's <CODE>host!user</CODE> or
+DECNet's <CODE>USER::HOST</CODE> with <EM>Pine</EM>.
+People who run <EM>Pine</EM> on these
+systems have made local modifications to <EM>Pine</EM> or to the mail transport
+agent (e.g. <CODE>sendmail</CODE>) to make things work for them.  <P>
+
+<EM>Pine</EM> expects dates to be in the standard RFC 822 format
+which is something like: 
+
+<PRE>
+	[www, ] dd mmm yy hh:mm[:ss] [timezone] 
+</PRE>
+
+It will attempt to parse dates that are not in this format.  When an
+unparsable date is encountered it is displayed as <EM>xxx xx</EM> when
+shown in the FOLDER INDEX screen.  <P>
+
+<HR>
+
+<H2><A NAME="SMTP">SMTP and Sendmail</A></H2>
+
+<EM>Pine</EM> is a <EM>user agent</EM> not a <EM>message transfer agent.</EM> In
+plain English, that means <EM>Pine</EM> does not know how to interact with other
+computers on the Internet to deliver or receive email.  What <EM>Pine</EM> does
+know how to do is help users read, organize and create email.  The "dirty
+work" of delivering and accepting email is handled by other programs.  <P>
+
+All outgoing email is delivered to a mail transfer program or to an SMTP
+server.  The most common mail transfer program is <CODE>sendmail</CODE>.
+
+<DL>
+
+<DT> Pine 3.91 and earlier:
+
+<DD>
+When <EM>Pine</EM> on a UNIX computer uses the local <CODE>sendmail</CODE>, it
+first writes the message to a temporary file in <CODE>/tmp</CODE>. Then
+<EM>Pine</EM> runs a shell in the background that runs
+<CODE>sendmail</CODE> on the
+temporary file and then removes it.  This is done with a shell in the
+background so the user doesn't have to wait for <CODE>sendmail</CODE> to
+finish.  By default, <CODE>sendmail</CODE> is invoked with the
+<CODE>-t</CODE> flag to cause it to read and parse the header to determine
+the recipients; the <CODE>-oem</CODE> flag to cause errors to be mailed
+back; and the <CODE>-oi</CODE> flag to ignore dots in incoming messages. 
+Systems administrators can choose to configure <EM>Pine</EM> to use a different
+mail transfer program or even <CODE>sendmail</CODE> with different flags. 
+See the section on
+<A HREF="installation.html#pine-compile">UNIX Pine Compile-time Options</A>
+for more details on this.  <P>
+
+<EM>Pine</EM> can also operate as an SMTP client.  SMTP stands for <EM>Simple Mail
+Transfer Protocol</EM>; it specifies the rules by which computers on the
+Internet pass email to one another.  In this case, <EM>Pine</EM> passes outgoing
+email messages to a designated SMTP server instead of to a mail transfer
+program on the local machine.  A program on the server then takes care of
+delivering the message.  To make <EM>Pine</EM> operate as an SMTP client, the
+<A HREF="config.html#smtp-server"><EM>smtp-server</EM></A> variable
+must be set to the IP address or 
+host name of the SMTP server within your organization.  This variable accepts a
+comma separated list of servers, so you can specify multiple SMTP servers. 
+<EM>PC-Pine</EM> only runs as an SMTP client.  <P>
+
+
+<DT> Pine 3.92 and later:
+
+<DD> The selection of which MTA to use depends on the settings of
+<A HREF="config.html#sendmail-path"><EM>sendmail-path</EM></A>,
+<A HREF="config.html#smtp-server"><EM>smtp-server</EM></A>, and compile-time
+options.  The first MTA specified in the following list is used:
+
+<OL>
+
+<LI><EM>sendmail-path</EM> in
+<CODE>/usr/local/lib/pine.conf.fixed</CODE>
+
+<LI><EM>smtp-server</EM> in <CODE>/usr/local/pine.conf.fixed</CODE>
+
+<LI><EM>sendmail-path</EM> specified on the command line. 
+
+<LI><EM>smtp-server</EM> specified on the command line. 
+
+<LI><EM>sendmail-path</EM> in the user's <CODE>.pinerc</CODE> file. 
+
+<LI><EM>smtp-server</EM> in the user's <CODE>.pinerc</CODE> file. 
+
+<LI><EM>sendmail-path</EM> in <CODE>/usr/local/lib/pine.conf</CODE>
+
+<LI><EM>smtp-server</EM> in <CODE>/usr/local/pine.conf</CODE>
+
+<LI><CODE>DF_SENDMAIL_PATH</CODE> defined at compile time.
+
+<LI><CODE>SENDMAIL</CODE> and <CODE>SENDMAILFLAGS</CODE> defined at
+compile time. 
+
+</OL><P>
+
+If the <EM>sendmail-path</EM> form is used, a child process is forked,
+and the specified command is executed with the message passed on standard
+input.  Standard output is then passed back and displayed for the user. 
+<EM>NOTE: The program MUST read the message to be posted on standard
+input, AND operate in the style of sendmail's "-t" option.  </EM><P>
+
+If an <EM>smtp-server</EM> is specified, a connection to the server is
+opened.  If the message contains 8-bit text, ESMTP 8BITMIME negotiation is
+attempted.  The message is then sent using SMTP commands. <P>
+
+If none of the above are set, the default <CODE>sendmail</CODE> program is
+invoked with the "<CODE>-bs -odb -oem</CODE>" flags, ESMTP negotiation is
+attempted, and the message is sent. 
+
+</DL>
+
+<HR>
+
+<H2><A NAME="IMAP">Internet Message Access Protocol (IMAP)</A></H2>
+
+IMAP is a remote access protocol for message stores. <EM>Pine</EM> uses IMAP to get
+at messages and folders which reside on remote machines. With IMAP, all
+messages are kept on the server.  An IMAP client (such as <EM>Pine</EM>) can
+request specific messages, headers, message structures, etc.  The client
+can also issue commands which delete messages from folders on the server.
+IMAP's closest kin is POP, the Post Office Protocol, which works by
+transferring an entire mailbox to the client where all the mail is kept.
+For a comparison of IMAP and POP, see the paper "<A
+HREF="http://www.imap.org/imap.vs.pop.brief.html">Comparing Two Approaches
+to Remote Mailbox Access: IMAP vs. POP</A>" by Terry Gray.  A more
+detailed exploration of message access may be found in the paper "<A
+HREF="http://www.imap.org/imap.vs.pop.html"> Message Access Paradigms and
+Protocols</A>."  These papers may be found in the <CODE>/mail</CODE>
+directory of the anonymous FTP server at <A
+HREF="ftp://ftp.cac.washington.edu"><CODE>ftp.cac.washington.edu</CODE></A>. 
+<P>
+
+IMAP Features:  
+
+<UL> 
+
+<LI> Allows access to mail folders from more than one client computer. 
+ 
+<LI> Works well over low-bandwidth lines because information is sent in
+small pieces as needed by the user.  For example, only header information
+is sent to build index lists, and if someone sends a 2MB audio file via
+MIME, you can choose when (or if) you want to get that part of the
+message. 
+ 
+<LI> Email can be delivered and stored on a well-maintained and reliable
+server which is "always-up".
+ 
+<LI> Folders can be accessed and manipulated from anywhere on the
+Internet.
+ 
+<LI> Users can get to messages stored in different folders within the same
+<EM>Pine</EM> session. 
+ 
+<LI> Allows use of IMAP server for searching and parsing.  
+
+<LI> The latest revision of IMAP (IMAP4) also provides for disconnected
+operation, including resynchronization of message state between mail
+servers and message caches on clients.  <EM>Pine</EM> does not yet support this
+capability, however.
+
+</UL>
+
+IMAP2 is defined in <A HREF="ftp://ftp.isi.edu/in-notes/rfc1176.txt">RFC
+1176</A>.  IMAP4rev1, the revision to IMAP2, is described in <A
+HREF="ftp://ftp.isi.edu/in-notes/rfc3501.txt">RFC 3501</A>.  Further
+information about IMAP may be obtained from the University of Washington's
+<A HREF="http://www.washington.edu/imap/">IMAP Information Center</A> on
+the World Wide Web.<P>
+
+<EM>Pine</EM> 4.00 is an IMAP4rev1 client.
+<P>
+
+<HR>
+
+<H2><A NAME="MIME">Multipurpose Internet Mail Extensions (MIME)</A></H2>
+
+MIME is a way of encoding a multipart message structure into a standard
+Internet email message.  The parts may be nested and may be of seven
+different types:  Text, Audio, Image, Video, Message, Application and
+Multipart (nested).  The MIME specification allows email programs such as
+<EM>Pine</EM> to reliably and simply exchange binary data (images, spreadsheets,
+etc.). MIME includes support for international character sets, tagging each
+part of a message with the character set it is written in, and providing
+7-bit encoding of 8-bit character sets. It also provides a simple rich
+text format for marking text as bold, underlined, and so on. There is a
+mechanism for splitting messages into multiple parts and reassembling them
+at the receiving end.  <P>
+
+The MIME standard was officially published in June of 1992 as <A
+HREF="ftp://ftp.isi.edu/in-notes/rfc1341.txt">RFC 1341</A> and subsequently
+revised in <A HREF="ftp://ftp.isi.edu/in-notes/rfc2045.txt">RFC 2045</A>
+when it became a full Internet Standard.  <EM>Pine</EM> 3.0 was one of the first
+email programs to Implement MIME.  Now, there are dozens of commercial and
+freely available MIME-capable email programs. In addition, MIME is being
+added to newsreaders so MIME messages can be posted and read in USENET
+newsgroups.  <P>
+
+The MIME standard also includes support for non-ASCII text in message
+headers through the extensions described in <A
+HREF="ftp://ftp.isi.edu/in-notes/rfc1342.txt">RFC 1342</A> and subsequently
+revised in <A HREF="ftp://ftp.isi.edu/in-notes/rfc2047.txt">RFC 2047</A>. 
+Support for RFC 2047 was added in <EM>Pine</EM> 3.92.<P>
+
+An actual MIME message looks something like this: 
+ 
+<PRE>
+Date: Tue, 12 Mar 1996 15:39:35 -0800 (PST)
+From: David L Miller &lt;dlm@cac.washington.edu&gt;
+To: David L Miller &lt;dlm@cac.washington.edu&gt;
+Subject: =?iso-8859-1?Q?Test_MIME_message_with_RFC-1522_headers_=28=E1?=    =?iso-8859-1?Q?=E2=E3=29?=
+Message-Id: &lt;Pine.ULT.3.92.960312150851.21583I-101000@shiva2.cac.washington.edu&gt;
+Mime-Version: 1.0
+Content-Type: MULTIPART/MIXED; BOUNDARY="0-1737669234-826673975=:21583"
+Content-Id: &lt;Pine.ULT.3.92.960312153928.21583O@shiva2.cac.washington.edu&gt;
+
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
+  Send mail to mime@docserver.cac.washington.edu for more info.
+
+--0-1737669234-826673975=:21583
+Content-Type: TEXT/PLAIN; CHARSET=US-ASCII
+Content-ID: &lt;Pine.ULT.3.92.960312153104.21583L@shiva2.cac.washington.edu&gt;
+
+The text of the message would go here. It is readable if
+one doesn't mind wading around a little bit of the MIME
+formatting. After this is a binary file in base 64
+encoding.
+
+|\ |  |\/|  David L. Miller    dlm@cac.washington.edu  (206) 685-6240
+|/ |_ |  |  Software Engineer, Pine Development Team   (206) 685-4045 (FAX)
+University of Washington, Networks & Distributed Computing, JE-20
+4545 15th Ave NE, Seattle WA 98105, USA
+
+--0-1737669234-826673975=:21583
+Content-Type: APPLICATION/ZIP; NAME="test.zip"
+Content-Transfer-Encoding: BASE64
+Content-ID: &lt;Pine.ULT.3.92.960312153638.21583N@shiva2.cac.washington.edu&gt;
+Content-Description: Test Attachment
+
+UEsDBBQAAAAIAGh8bCBbZKT4ygIAAHgFAAAEAAAAdGVzdIVUX2vbMBB/16c4
+9rSBNyjsYX1UHSUROLInycv2qNhKI5ZYxlLa5dvvpDRLw6CFgJF09/t3Rxo3
+WDBDD43rPJjJQpxMbw9m+h3AbyHuLLSDe7JTcPGUbtYm7NzwGP3wBYQnnT8c
+7NQ5s4djsC8t4QbmYE6wsfjpLTy7uPPHCOPk/ATPk4vRDmS008GF4PzwPich
+zY3m4LfxOQlPNy4GcEO3P/a2h2j/xGyp9ONpco+7CHf33+4/393ff4XNibzL
+c1UVfXJXQIdIBRx877b4TYy9C3Fym2NEyzsX/pNDet8dD3aIJiagLbo2wwnG
+4zT6cK66ZLK1NhH9J4tcZQEy7OxkNyd4nMwQbV9glP7JZb87E3O32fgnm7We
+XQ8+us4SM47WTCkgMPt9enc2ZAW5c+Pj7o32l0IXXk/r8pSRE3A4jqOfIqqF
+G+PFlSdRDOaQduXNESTwtDcYfJ8191gWXUjYmOJ43Oxdh11JTzRuSPcY37+B
+vNqmf0O5RB1G27mt64rLCp4X8pW1L6BvxunCeYHNk3F7s9lb+GAwyvAhOyNE
+Lxm0gv9gUnH9C+o5rKlacrHQtYAZV2VF+UoBrSp8kJIKzZkqgP1sJFMKagl8
+1VSczQqy5noJki2onIGuQS+5AlXPNfaxArgoq3aGwJDq6lZDxVdcU82RKMG/
+4JArTVKzYrJc4pE+8CoJpGIGc65FIp8jO4WGSs3LtqISmlY2tUKyVMUFETWw
+H0xoUMvE8KbXB4aC6EPFzrDiF6iGlZxWBeFixiUrdXJb1kKx7y2C4hPM6Iou
+WI4hdVyO6yXVqkZqiXmottLJ9lzWK1LVKttqk8oZ1TS1NrJGS5jqeslQI0aK
+ieCvzNlgNZJqiccCc5WafLxmKdii4gsmSvYpISkteamzkRwXJiG5SoUpcERK
+8xIE8QQ7o+eh5WAUy1qYRP8rioip/maI+OfyF1BLAQIUAxQAAAAIAGh8bCBb
+ZKT4ygIAAHgFAAAEAAAAAAAAAAEAAACkgQAAAAB0ZXN0UEsFBgAAAAABAAEA
+MgAAAOwCAAAAAA==
+--0-1737669234-826673975=:21583--
+
+</PRE> 
+
+For details about <EM>Pine</EM>'s implementation of MIME, see the two MIME sections
+"<A HREF="low-level.html#MIME-read">MIME:  Reading a Message</A>" and
+"<A HREF="low-level.html#MIME-send">MIME:  Sending a Message</A>" later
+in this document.  <P>
+
+<HR>
+
+<H2><A NAME="collections">Folder Collections</A></H2>
+
+Folder Collections are <EM>Pine</EM>'s way of dealing with more than a single group
+of folders.  With advent of <EM>PC-Pine</EM> and the development of tools within
+IMAP to better manage remote folders, the time was ripe to provide a
+mechanism for defining a group of remote folders.  <EM>PC-Pine</EM> forced the
+issue in that many potential <EM>PC-Pine</EM> users would be migrating from UNIX
+<EM>Pine</EM> in a time-sharing environment and, thus, would have some investment
+in their archived messages on that host.  <P>
+
+For a more complete description of Folder Collections, see the section on
+"<A HREF="config-notes.html#collections">Syntax for Collections</A>."  <P>
+
+The <EM>Pine</EM> distribution is designed to require as little configuration and
+effort at compile time as possible.  Still, there are some <EM>Pine</EM> behaviors
+which are set at the time you compile <EM>Pine</EM>.  For each of these, there is a
+reasonable (our opinion) default built into the code, so most systems
+administrators will have no need for these steps.  <P>
+
+<!-- pnuts -->
+</BODY>
+</HTML>

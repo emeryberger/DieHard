@@ -1,0 +1,9 @@
+;
+; IMAPD.DEF - def file for IMAP server
+;
+
+NAME         IMAPD
+DESCRIPTION  'IMAP4 Server Application'
+;PROTMODE
+;CODE           PRELOAD MOVEABLE DISCARDABLE
+;DATA           PRELOAD MOVEABLE

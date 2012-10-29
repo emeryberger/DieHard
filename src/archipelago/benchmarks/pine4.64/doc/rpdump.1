@@ -1,0 +1,39 @@
+.TH rpdump 1
+.SH NAME
+rpdump \- pine remote data utility
+.SH SYNTAX 
+
+.B rpdump
+[ -f ] -l Local_file -r Remote_folder
+.SH DESCRIPTION
+
+Rpdump may be used to copy the actual data from
+remote Pine configuration files or address
+books into a local file.
+It is intended to be used by system administrators.
+Regular users should normally use the facilities provided within Pine.
+.LP
+Local_file will normally be a local temporary file.
+Remote_folder is the IMAP folder being used as a remote Pine configuration
+(with the help of Pine's -P, -p, and -x commands or PINECONF, PINERC,
+and PINERCEX environment variables) or remote Pine address book folder.
+A copy of the data from Remote_folder will be copied to Local_file.
+.IP \fB-f\fR 20
+Force the dump even if the remote folder is in an unrecognized format.
+.IP \fB-l\fR\ \fBLocal_file\fR 20
+The file on this system that is to be copied to.
+.IP \fB-r\fR\ \fBRemote_folder\fR 20
+A remote folder name to be copied from.
+See the Pine documentation for the syntax of a remote folder name.
+One example is
+.br
+{my.imap.server}remote_pinerc.
+.SH DIAGNOSTICS
+Exit status is zero if all goes well, -1 otherwise.
+.SH "SEE ALSO"
+Rpload(1).
+.LP
+Copyright 1989-2005 by the University of Washington.
+Pine and Pico are trademarks of the University of Washington.
+
+$Date: 2005-01-14 12:44:47 -0800 (Fri, 14 Jan 2005) $

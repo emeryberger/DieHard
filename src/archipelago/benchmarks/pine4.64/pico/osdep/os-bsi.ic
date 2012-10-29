@@ -1,0 +1,15 @@
+;
+; BSCI V1 os-bsi.ic file for building os-bsi.c.
+;
+; Boilerplate header.
+include(header)
+
+include(unix)
+
+include(spell.unx)
+
+include(read.sel)
+
+include(raw.brk)
+
+include(term.cap)

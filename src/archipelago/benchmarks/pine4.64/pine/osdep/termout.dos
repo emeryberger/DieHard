@@ -1,0 +1,574 @@
+#line 2 "osdep/termout.dos"
+
+/*======================================================================
+       Routines for painting the screen
+          - figure out what the terminal type is
+          - deal with screen size changes
+          - save special output sequences
+          - the usual screen clearing, cursor addressing and scrolling
+
+
+     This library gives programs the ability to easily access the
+     termcap information and write screen oriented and raw input
+     programs.  The routines can be called as needed, except that
+     to use the cursor / screen routines there must be a call to
+     InitScreen() first.  The 'Raw' input routine can be used
+     independently, however. (Elm comment)
+
+     Not sure what the original source of this code was. It got to be
+     here as part of ELM. It has been changed significantly from the
+     ELM version to be more robust in the face of inconsistent terminal
+     autowrap behaviour. Also, the unused functions were removed, it was
+     made to pay attention to the window size, and some code was made nicer
+     (in my opinion anyways). It also outputs the terminal initialization
+     strings and provides for minimal scrolling and detects terminals
+     with out enough capabilities. (Pine comment, 1990)
+
+
+This code used to pay attention to the "am" auto margin and "xn"
+new line glitch fields, but they were so often incorrect because many
+terminals can be configured to do either that we've taken it out. It
+now assumes it dosn't know where the cursor is after outputing in the
+80th column.
+*/
+
+#ifdef OS2
+#define INCL_BASE
+#define INCL_VIO
+#define INCL_DOS
+#define INCL_NOPM
+#include <os2.h>
+#undef ADDRESS
+#endif
+
+#define	PUTLINE_BUFLEN	256
+
+static int   _lines, _columns;
+static int   _line  = FARAWAY;
+static int   _col   = FARAWAY;
+static int   _in_inverse;
+
+
+/*----------------------------------------------------------------------
+      Initialize the screen for output, set terminal type, etc
+
+ Input: TERM and TERMCAP environment variables
+        Pointer to variable to store the tty output structure.
+
+ Result:  terminal size is discovered and set pine state
+          termcap entry is fetched and stored in local variables
+          make sure terminal has adequate capabilites
+          evaluate scrolling situation
+          returns status of indicating the state of the screen/termcap entry
+  ----------------------------------------------------------------------*/
+void
+init_screen()					/* DOS */
+{
+    return;					/* NO OP */
+}
+
+
+
+/*----------------------------------------------------------------------
+      End use of the screen. 
+  ----------------------------------------------------------------------*/
+void
+end_screen(message, exit_val)				/* DOS */
+    char *message;
+    int   exit_val;
+{
+    extern void exit_text_mode();
+    int footer_rows_was_one = 0;
+
+    if(FOOTER_ROWS(ps_global) == 1){
+	footer_rows_was_one++;
+	FOOTER_ROWS(ps_global) = 3;
+	mark_status_unknown();
+    }
+
+    flush_status_messages(exit_val ? 0 : 1);
+
+    blank_keymenu(_lines - 2, 0);
+
+    if(message){
+	StartInverse();
+	PutLine0(_lines - 2, 0, message);
+    }
+    
+    EndInverse();
+
+    MoveCursor(_lines - 1, 0);
+
+    exit_text_mode(NULL);
+
+    ibmclose();
+    if(footer_rows_was_one){
+	FOOTER_ROWS(ps_global) = 1;
+	mark_status_unknown();
+    }
+}
+
+#ifdef OS2
+static void
+get_dimen(int *width, int *length)
+{
+    VIOMODEINFO vm;
+    vm.cb = sizeof vm;
+    VioGetMode(&vm, 0);
+    *width = vm.col;
+    *length = vm.row;
+}
+#endif
+
+
+/*----------------------------------------------------------------------
+      Initialize the screen for output, set terminal type, etc
+
+   Args: tt -- Pointer to variable to store the tty output structure.
+
+ Result:  terminal size is discovered and set pine state
+          termcap entry is fetched and stored in local variables
+          make sure terminal has adequate capabilites
+          evaluate scrolling situation
+          returns status of indicating the state of the screen/termcap entry
+
+      Returns:
+        -1 indicating no terminal name associated with this shell,
+        -2..-n  No termcap for this terminal type known
+	-3 Can't open termcap file 
+        -4 Terminal not powerful enough - missing clear to eoln or screen
+	                                       or cursor motion
+
+  ----*/
+int
+config_screen(tt)				/* DOS */
+     struct ttyo **tt;
+{
+    struct ttyo *ttyo;
+    extern void enter_text_mode();
+
+    _line  =  0;		/* where are we right now?? */
+    _col   =  0;		/* assume zero, zero...     */
+
+#ifdef OS2
+    get_dimen(&_columns, &_lines);
+#else
+    _lines   = DEFAULT_LINES_ON_TERMINAL;
+    _columns = DEFAULT_COLUMNS_ON_TERMINAL;
+#endif
+    ttyo = (struct ttyo *)fs_get(sizeof(struct ttyo));
+    ttyo->screen_cols = _columns;
+    ttyo->screen_rows = _lines ;
+    ttyo->header_rows = 2;
+    ttyo->footer_rows = 3;
+
+    enter_text_mode(NULL);
+    ibmopen();
+
+    *tt = ttyo;
+
+    return(0);
+}
+
+
+    
+/*----------------------------------------------------------------------
+       Get the current window size
+  
+   Args: ttyo -- pointer to structure to store window size in
+
+  NOTE: we don't override the given values unless we know better
+ ----*/
+int
+get_windsize(ttyo)				/* DOS */
+struct ttyo *ttyo;     
+{
+#ifdef OS2
+    get_dimen(&_columns, &_lines);
+#endif
+
+    ttyo->screen_cols = _columns;
+    ttyo->screen_rows = _lines;
+    return(0);
+}
+    
+
+
+
+/*----------------------------------------------------------------------
+     Clear the terminal screen
+
+ Input:  none
+
+ Result: The screen is cleared
+         internal cursor position set to 0,0
+  ----------------------------------------------------------------------*/
+void
+ClearScreen()					/* DOS */
+{
+    _line = 0;			/* clear leaves us at top... */
+    _col  = 0;
+
+    if(ps_global->in_init_seq)
+      return;
+
+    mark_status_unknown();
+    mark_keymenu_dirty();
+    mark_titlebar_dirty();
+
+    ibmmove(0, 0);
+    ibmeeop();
+}
+
+
+
+/*----------------------------------------------------------------------
+        Move the cursor to the row and column number
+ Input:  row number
+         column number
+
+ Result: Cursor moves
+         internal position updated
+  ----------------------------------------------------------------------*/
+void
+MoveCursor(row, col)				/* DOS */
+     int row, col;
+{
+    /** move cursor to the specified row column on the screen.
+        0,0 is the top left! **/
+
+    if(ps_global->in_init_seq)
+      return;
+
+    ibmmove(row, col);
+    _line = row;
+    _col = col;
+}
+
+
+
+/*----------------------------------------------------------------------
+         Newline, move the cursor to the start of next line
+
+ Input:  none
+
+ Result: Cursor moves
+  ----------------------------------------------------------------------*/
+void
+NewLine()					/* DOS */
+{
+    /** move the cursor to the beginning of the next line **/
+
+    MoveCursor(_line+1, 0);
+}
+
+
+
+
+/*----------------------------------------------------------------------
+       Start painting inverse on the screen
+ 
+ Input:  none
+
+ Result: escape sequence to go into inverse is output
+         returns 1 if it was done, 0 if not.
+  ----------------------------------------------------------------------*/
+int
+StartInverse()					/* DOS */
+{
+    if(_in_inverse)
+      return(1);
+
+    _in_inverse = 1;
+    ibmrev(1);					/* libpico call */
+    return(1);
+}
+
+
+/*----------------------------------------------------------------------
+      End painting inverse on the screen
+ 
+ Input:  none
+
+ Result: escape sequence to go out of inverse is output
+         returns 1 if it was done, 0 if not.
+  ----------------------------------------------------------------------*/
+void
+EndInverse()					/* DOS */
+{
+    if(_in_inverse){
+	_in_inverse = 0;
+	ibmrev(0);				/* libpico call */
+    }
+}
+
+
+/*
+ * Character attriute stuff that could use some work
+ * MS 92.05.18
+ */
+
+int
+StartUnderline()				/* DOS */
+{
+    return(0);
+}
+
+void						/* DOS */
+EndUnderline()
+{
+}
+
+int
+StartBold()					/* DOS */
+{
+    return(0);
+}
+
+void
+EndBold()					/* DOS */
+{
+}
+
+
+/*----------------------------------------------------------------------
+       Insert character on screen pushing others right
+
+ Input:  character to output
+         termcap escape sequences
+
+ Result: charcter is inserted if possible
+         return -1 if it can't be done
+  ----------------------------------------------------------------------*/
+InsertChar(c)					/* DOS */
+     int c;
+{
+    return(-1);
+}
+
+
+/*----------------------------------------------------------------------
+         Delete n characters from line, sliding rest of line left
+
+ Input:  number of characters to delete
+         termcap escape sequences
+
+ Result: characters deleted on screen
+         returns -1 if it wasn't done
+  ----------------------------------------------------------------------*/
+DeleteChar(n)					/* DOS */
+     int n;
+{
+    char c;
+    int oc;				/* original column */
+
+    oc = _col;
+/* cursor OFF */
+    while(_col < 79){
+	ibmmove(_line, _col+1);
+    	readscrn(&c);
+	ibmmove(_line, _col++);
+	ibmputc(c);
+    }
+    ibmputc(' ');
+    ibmmove(_line, oc);
+/* cursor ON */
+}
+
+
+
+/*----------------------------------------------------------------------
+  Go into scrolling mode, that is set scrolling region if applicable
+
+ Input: top line of region to scroll
+        bottom line of region to scroll
+
+ Result: either set scrolling region or
+         save values for later scrolling
+         returns -1 if we can't scroll
+
+ Unfortunately this seems to leave the cursor in an unpredictable place
+ at least the manuals don't say were, so we force it here.
+----------------------------------------------------------------------*/
+static int __t, __b;
+BeginScroll(top, bottom)			/* DOS */
+     int top, bottom;
+{
+    __t = top;
+    __b = bottom;
+    return(-1);
+}
+
+/*----------------------------------------------------------------------
+   End scrolling -- clear scrolling regions if necessary
+
+ Input:  none
+
+ Result: Clear scrolling region on terminal
+  ----------------------------------------------------------------------*/
+void
+EndScroll()					/* DOS */
+{
+}
+
+
+/* ----------------------------------------------------------------------
+    Scroll the screen using insert/delete or scrolling regions
+
+ Input:  number of lines to scroll, positive forward
+
+ Result: Screen scrolls
+         returns 0 if scroll succesful, -1 if not
+
+ positive lines goes foward (new lines come in at bottom
+ Leaves cursor at the place to insert put new text
+
+ 0,0 is the upper left
+ ----------------------------------------------------------------------*/
+ScrollRegion(lines)				/* DOS */
+    int lines;
+{
+    return(-1);
+}
+
+
+/*----------------------------------------------------------------------
+    Write a character to the screen, keeping track of cursor position
+
+ Input:  charater to write
+
+ Result: character output
+         cursor position variables updated
+  ----------------------------------------------------------------------*/
+Writechar(ch, new_esc_len)				/* DOS */
+     register unsigned int ch;
+     int      new_esc_len;
+{
+    register int nt;
+
+    if(ps_global->in_init_seq)
+      return(0);
+
+    switch(ch){
+      case LINE_FEED :
+	_line = min(_line+1,ps_global->ttyo->screen_rows);
+        _col =0;
+        ibmmove(_line, _col);
+	break;
+
+      case RETURN :		/* move to column 0 */
+	_col = 0;
+        ibmmove(_line, _col);
+
+      case BACKSPACE :		/* move back a space if not in column 0 */
+	if(_col > 0)
+          ibmmove(_line, --_col);
+
+	break;
+	
+      case BELL :		/* ring the bell but don't advance _col */
+	ibmbeep();		/* libpico call */
+	break;
+
+      case TAB:			/* if a tab, output it */
+	do
+	  ibmputc(' ');
+	while(((++_col)&0x07) != 0);
+	break;
+
+      default:
+	/*if some kind of control or  non ascii character change to a '?'*/
+	if(iscntrl(ch & 0x7f))
+	  ch = '?';
+
+	ibmputc(ch);
+	_col++;
+    }
+
+    if(_col == ps_global->ttyo->screen_cols) {
+	  _col  = 0;
+	  if(_line + 1 < ps_global->ttyo->screen_rows)
+	    _line++;
+
+	  ibmmove(_line, _col);
+    }
+
+    return(0);
+}
+
+
+/*----------------------------------------------------------------------
+      Printf style write directly to the terminal at current position
+
+ Input: printf style control string
+        number of printf style arguments
+        up to three printf style arguments
+
+ Result: Line written to the screen
+  ----------------------------------------------------------------------*/
+void
+Write_to_screen(string)				/* DOS */
+      register char *string;
+{
+    if(ps_global->in_init_seq)
+      return;
+
+    while(*string)
+      Writechar(*string++, 0);
+}
+
+
+
+/*----------------------------------------------------------------------
+    Clear screen to end of line on current line
+
+ Input:  none
+
+ Result: Line is cleared
+  ----------------------------------------------------------------------*/
+void
+CleartoEOLN()					/* DOS */
+{
+    ibmeeol();					/* libpico call */
+}
+
+
+/*----------------------------------------------------------------------
+          Clear screen to end of screen from current point
+
+ Input: none
+
+ Result: screen is cleared
+  ----------------------------------------------------------------------*/
+void
+CleartoEOS()					/* DOS */
+{
+    ibmeeop();
+}
+
+
+/*----------------------------------------------------------------------
+     function to output string such that it becomes icon text
+
+   Args: s -- string to write
+
+ Result: string indicated become our "icon" text
+  ----*/
+void
+icon_text(s, type)				/* DOS */
+    char *s;
+    int  type;
+{
+    return;					/* NO OP */
+}
+
+
+/*
+ * readscrn - DOS magic to read the character on the display at the
+ *            current cursor position
+ */
+readscrn(c)					/* DOS */
+char *c;
+{
+    ibmgetc(c);
+}

@@ -1,0 +1,9 @@
+                           Pine Source Code
+
+This code is usually compiled by the "build" script in the directory
+above.  It can be compiled by specifying the appropriate makefile for
+the platform you are running on with the make -f option. The makefile
+will select the correct os-xxx.h and os-xxx.c files from the osdep
+subdirectory.  Pine depends on the c-client and pico libraries in
+adjacent directories.  For more details and porting notes see
+doc/tech-notes.

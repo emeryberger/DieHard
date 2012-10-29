@@ -1,0 +1,550 @@
+#line 2 "osdep/termin.dos"
+
+/*======================================================================
+
+       Things having to do with reading from the tty driver and keyboard
+          - initialize tty driver and reset tty driver
+          - read a character from terminal with keyboard escape seqence mapping
+          - initialize keyboard (keypad or such) and reset keyboard
+          - prompt user for a line of input
+          - read a command from keyboard with timeouts.
+
+ ====*/
+
+
+/*
+ * Helpful definitions
+ */
+#define	RETURN_CH(X)	return(key_recorder((X)))
+
+
+#ifdef OS2
+#define INCL_BASE
+#define INCL_DOS
+#define INCL_VIO
+#define INCL_KBD
+#define INCL_NOPM
+#include <os2.h>
+#undef ADDRESS
+#endif
+
+
+/*
+ * Internal prototypes
+ */
+void line_paint PROTO((int, int *));
+int  process_config_input PROTO((int *));
+
+
+
+#if	!(defined(WIN32) || defined(OS2))
+#include <dos.h>
+#include <bios.h>
+#endif
+
+/* global to tell us if we have an enhanced keyboard! */
+static int enhanced = 0;
+/* global function to execute while waiting for character input */
+void   (*while_waiting)() = NULL;
+
+#ifdef _WINDOWS
+/* global to tell us if the window was resized. */
+static int DidResize = FALSE;
+
+
+/*----------------------------------------------------------------------
+    Flag the fact the window has resized.
+*/
+int
+pine_window_resize_callback ()
+{
+    DidResize = TRUE;
+    mark_status_unknown();
+    mark_titlebar_dirty();
+    return(0);
+}
+#endif
+
+
+
+/*----------------------------------------------------------------------
+    Initialize the tty driver to do single char I/O and whatever else  (DOS)
+
+ Input:  struct pine
+
+ Result: tty driver is put in raw mode
+  ----------------------------------------------------------------------*/
+init_tty_driver(pine)
+     struct pine *pine;
+{
+#ifdef _WINDOWS
+    mswin_showwindow();
+    mswin_setresizecallback (pine_window_resize_callback);
+    init_mouse ();			/* always a mouse under windows? */
+#else
+#ifdef OS2
+    enhanced = 1;
+#else
+    /* detect enhanced keyboard */
+    enhanced = enhanced_keybrd();	/* are there extra keys? */
+#endif
+#endif
+    pine = pine;			/* Get rid of unused parm warning */
+    return(PineRaw(1));
+}
+
+
+
+/*----------------------------------------------------------------------
+       End use of the tty, put it back into it's normal mode          (DOS)
+
+ Input:  struct pine
+
+ Result: tty driver mode change
+  ----------------------------------------------------------------------*/
+void
+end_tty_driver(pine)
+     struct pine *pine;
+{
+    dprint(2, (debugfile, "about to end_tty_driver\n"));
+#ifdef _WINDOWS
+    mswin_clearresizecallback (pine_window_resize_callback);
+#endif
+}
+
+/*----------------------------------------------------------------------
+   translate IBM Keyboard Extended Functions to things pine understands.
+   More work can be done to make things like Home, PageUp and PageDown work. 
+
+/*
+ * extended_code - return special key definition
+ */
+extended_code(kc)
+unsigned  kc;
+{
+    switch(kc){
+#ifdef	_WINDOWS
+	case MSWIN_KEY_F1: return(PF1);
+	case MSWIN_KEY_F2: return(PF2);
+	case MSWIN_KEY_F3: return(PF3);
+	case MSWIN_KEY_F4: return(PF4);
+	case MSWIN_KEY_F5: return(PF5);
+	case MSWIN_KEY_F6: return(PF6);
+	case MSWIN_KEY_F7: return(PF7);
+	case MSWIN_KEY_F8: return(PF8);
+	case MSWIN_KEY_F9: return(PF9);
+	case MSWIN_KEY_F10: return(PF10);
+	case MSWIN_KEY_F11: return(PF11);
+	case MSWIN_KEY_F12: return(PF12);
+
+	case MSWIN_KEY_UP: return(KEY_UP);
+	case MSWIN_KEY_DOWN: return(KEY_DOWN);
+	case MSWIN_KEY_LEFT: return(KEY_LEFT);
+	case MSWIN_KEY_RIGHT: return(KEY_RIGHT);
+	case MSWIN_KEY_HOME: return(KEY_HOME);
+	case MSWIN_KEY_END: return(KEY_END);
+	case MSWIN_KEY_SCROLLUPPAGE:
+	case MSWIN_KEY_PREVPAGE: return(KEY_PGUP);
+	case MSWIN_KEY_SCROLLDOWNPAGE:
+	case MSWIN_KEY_NEXTPAGE: return(KEY_PGDN);
+	case MSWIN_KEY_DELETE: return(KEY_DEL);
+	case MSWIN_KEY_SCROLLUPLINE: return (KEY_SCRLUPL);
+	case MSWIN_KEY_SCROLLDOWNLINE: return (KEY_SCRLDNL);
+	case MSWIN_KEY_SCROLLTO: return (KEY_SCRLTO);
+
+	case MSWIN_KEY_NODATA:	return (NO_OP_COMMAND);
+#else
+	case 0x3b00 : return(PF1);
+	case 0x3c00 : return(PF2);
+	case 0x3d00 : return(PF3);
+	case 0x3e00 : return(PF4);
+	case 0x3f00 : return(PF5);
+	case 0x4000 : return(PF6);
+	case 0x4100 : return(PF7);
+	case 0x4200 : return(PF8);
+	case 0x4300 : return(PF9);
+	case 0x4400 : return(PF10);
+	case 0x8500 : return(PF11);
+	case 0x8600 : return(PF12);
+
+	case 0x4800 : return(KEY_UP);
+	case 0x5000 : return(KEY_DOWN);
+	case 0x4b00 : return(KEY_LEFT);
+	case 0x4d00 : return(KEY_RIGHT);
+	case 0x4700 : return(KEY_HOME);
+	case 0x4f00 : return(KEY_END);
+	case 0x4900 : return(KEY_PGUP);
+	case 0x5100 : return(KEY_PGDN);
+	case 0x5300 : return(KEY_DEL);
+	case 0x48e0 : return(KEY_UP);			/* grey key version */
+	case 0x50e0 : return(KEY_DOWN);			/* grey key version */
+	case 0x4be0 : return(KEY_LEFT);			/* grey key version */
+	case 0x4de0 : return(KEY_RIGHT);		/* grey key version */
+	case 0x47e0 : return(KEY_HOME);			/* grey key version */
+	case 0x4fe0 : return(KEY_END);			/* grey key version */
+	case 0x49e0 : return(KEY_PGUP);			/* grey key version */
+	case 0x51e0 : return(KEY_PGDN);			/* grey key version */
+	case 0x53e0 : return(KEY_DEL);			/* grey key version */
+#endif
+	default   : return(NO_OP_COMMAND);
+    }
+}
+
+
+
+/*----------------------------------------------------------------------
+   Read input characters with lots of processing for arrow keys and such (DOS)
+
+ Input:  none
+
+ Result: returns the character read. Possible special chars defined h file
+
+
+    This deals with function and arrow keys as well. 
+  It returns ^T for up , ^U for down, ^V for forward and ^W for back.
+  These are just sort of arbitrarily picked and might be changed.
+  They are defined in defs.h. Didn't want to use 8 bit chars because
+  the values are signed chars, though it ought to work with negative 
+  values. 
+
+  The idea is that this routine handles all escape codes so it done in
+  only one place. Especially so the back arrow key can work when entering
+  things on a line. Also so all function keys can be broken and not
+  cause weird things to happen.
+----------------------------------------------------------------------*/
+
+int
+read_char(tm)
+int tm;
+{
+    unsigned   ch = 0;
+    time_t     timein;
+#ifndef	_WINDOWS
+    unsigned   intrupt = 0;
+    extern int win_multiplex();
+#endif
+
+    if(process_config_input((int *) &ch))
+      RETURN_CH(ch);
+
+#ifdef _WINDOWS
+    if (DidResize) {
+	 DidResize = FALSE;
+	 RETURN_CH (get_windsize (ps_global->ttyo));
+    }
+#endif
+
+#ifdef _WINDOWS
+    mswin_setcursor(MSWIN_CURSOR_ARROW);
+#endif
+
+#ifdef OS2
+    vidUpdate();
+#endif
+#ifdef MOUSE
+    mouseon();
+#endif
+
+    if(tm){
+	timein = time(0L);
+#ifdef _WINDOWS
+	/* mswin_charavail() Yeilds control to other window apps. */
+	while (!mswin_charavail()) {
+#else
+#ifdef OS2
+	while (!kbd_ready()) {
+#else
+	while(!_bios_keybrd(enhanced ? _NKEYBRD_READY : _KEYBRD_READY)){
+#endif
+#endif
+	    if(time(0L) >= timein + (time_t) tm){
+		ch = (tm < IDLE_TIMEOUT) ? NO_OP_COMMAND : NO_OP_IDLE;
+		goto gotone;
+	    }
+#ifdef _WINDOWS
+	    if (DidResize) {
+		DidResize = FALSE;
+		RETURN_CH( get_windsize (ps_global->ttyo));
+	    }
+#endif
+#ifdef	MOUSE
+ 	    if(checkmouse(&ch,0,0,0))
+	      goto gotone;
+#endif
+#ifndef	WIN32
+	    if(while_waiting)
+	      (*while_waiting)();
+#endif
+
+#if	defined(_WINDOWS) && !defined(WIN32)
+	    /*
+	     * the number "30" was not reached via experimentation
+	     * or scientific analysis of any kind.
+	     */
+	    if(((intrupt++) % 30) == 0)	/* surrender CPU to windows */
+	      win_multiplex();
+#endif
+	}
+    }
+#ifdef	_WINDOWS
+    else
+      while(!mswin_charavail())
+	if(checkmouse(&ch,0,0,0))
+	  goto gotone;
+#endif
+
+#ifdef _WINDOWS
+    ch = mswin_getc_fast();
+#else
+#ifdef OS2
+    ch = kbd_getkey();
+#else
+    ch = _bios_keybrd(enhanced ? _NKEYBRD_READ : _KEYBRD_READ);
+#endif
+#endif
+
+gotone:
+#if defined(MOUSE)
+    mouseoff();
+
+    /* More obtuse key mapping.  If it is a mouse event, the return
+     * may be KEY_MOUSE, which indicates to the upper layer that it
+     * is a mouse event.  Return it here to avoid the code that
+     * follows which would do a (ch & 0xff).
+     */
+    if (ch == KEY_MOUSE)
+      RETURN_CH(ch);
+#endif
+
+    /*
+     * WARNING: Hack notice.
+     * the mouse interaction complicates this expression a bit as 
+     * if function key mode is set, PFn values are setup for return
+     * by the mouse event catcher.  For now, just special case them
+     * since they don't conflict with any of the DOS special keys.
+     */
+    if((ch & 0xff) == ctrl('Z'))
+      RETURN_CH(do_suspend());
+
+#ifdef _WINDOWS
+    if (ch >= MSWIN_RANGE_START && ch <= MSWIN_RANGE_END)
+	    RETURN_CH (extended_code (ch));
+
+    RETURN_CH (ch);
+#else /* DOS */
+    RETURN_CH((ch >= PF1 && ch <= PF12)
+	       ? ch
+	       : ((ch&0xff) && ((ch&0xff) != 0xe0))
+		  ? (ch&0xff)
+		  : extended_code(ch));
+#endif
+}
+
+#ifdef OS2
+static KBDINFO initialKbdInfo;
+#endif
+
+/* -------------------------------------------------------------------
+     Set up the keyboard -- usually enable some function keys     (DOS)
+
+  Input: struct pine (terminal type)
+
+  Result: keyboard set up
+
+-----------------------------------------------------------------------*/
+void
+init_keyboard(use_fkeys)
+     int use_fkeys;
+{
+#ifdef OS2
+  KBDINFO kbdInfo;
+  KbdGetStatus(&initialKbdInfo, 0);
+  kbdInfo = initialKbdInfo;
+  kbdInfo.fsMask &= ~(0x0001|0x0008|0x0100); /* echo cooked off */
+  kbdInfo.fsMask |= (0x002|0x004|0x0100); /* noecho,raw,shiftrpt on */
+  KbdSetStatus(&kbdInfo, 0);
+#endif
+}
+
+
+
+/*----------------------------------------------------------------------
+     Clear keyboard, usually disable some function keys            (DOS)
+
+ Input:  pine state (terminal type)
+
+ Result: keyboard state reset
+  ----------------------------------------------------------------------*/
+/* BUG shouldn't have to check for pine != NULL */
+void
+end_keyboard(use_fkeys)
+     int use_fkeys;
+{
+#ifdef OS2
+  KbdSetStatus(&initialKbdInfo, 0);
+#endif
+}
+
+
+
+/*----------------------------------------------------------------------
+   Discard any pending input characters				(DOS)
+
+   Args:  none
+
+ Result: pending input buffer flushed
+  ----*/
+void
+flush_input()
+{
+#ifdef _WINDOWS
+    mswin_flush_input();
+#else
+#ifdef OS2
+    kbd_flush();
+#else
+    while(_bios_keybrd(enhanced ? _NKEYBRD_READY : _KEYBRD_READY))
+      (void) _bios_keybrd(enhanced ? _NKEYBRD_READ : _KEYBRD_READ);
+#endif
+#endif
+}
+
+    
+/*----------------------------------------------------------------------
+    Actually set up the tty driver                             (DOS)
+
+   Args: state -- which state to put it in. 1 means go into raw, 0 out of
+
+  Result: returns 0 if successful and -1 if not.
+  ----*/
+
+PineRaw(state)
+int state;
+{
+#ifdef OS2
+    KBDINFO ki = initialKbdInfo;
+    if (state)
+    {
+        ki.fsMask &= ~(0x0001|0x0008|0x0100); /* echo cooked off */
+        ki.fsMask |= (0x002|0x004|0x0100); /* noecho,raw,shiftrpt on */
+    }
+    KbdSetStatus(&ki, 0);
+#endif
+
+/* of course, DOS never runs at low speed!!! */
+    ps_global->low_speed = 0;
+    return(0);
+}
+
+
+/*----------------------------------------------------------------------
+    Set up the tty driver to use XON/XOFF flow control		(DOS)
+
+   Args: state -- True to make sure XON/XOFF turned on, FALSE default state
+
+  Result: none.
+  ----*/
+void
+xonxoff_proc(state)
+    int state;
+{
+    return;					/* no op */
+}
+
+
+/*----------------------------------------------------------------------
+    Set up the tty driver to do LF->CR translation		(DOS)
+
+   Args: state -- True to turn on translation, false to write raw LF's
+
+  Result: none.
+
+  ----*/
+void
+crlf_proc(state)
+    int state;
+{
+    return;					/* no op */
+}
+
+
+/*----------------------------------------------------------------------
+    Set up the tty driver to hanle interrupt char		(DOS)
+
+   Args: state -- True to turn on interrupt char, false to not
+
+  Result: tty driver that'll send us SIGINT or not
+
+  ----*/
+void
+intr_proc(state)
+    int state;
+{
+    return;					/* no op */
+}
+
+
+int
+pre_screen_config_opt_enter(string, field_len, prompt, escape_list, help, flags)
+     char       *string, *prompt;
+     ESCKEY_S   *escape_list;
+     HelpType	 help;
+     int         field_len;
+     int	*flags;
+{
+#ifdef _WINDOWS
+    mswin_setwindow(NULL, NULL, NULL, NULL, NULL, NULL);
+    return(win_dialog_opt_enter(string, field_len, prompt, escape_list,
+				help, flags));
+#endif
+}
+
+
+#ifdef _WINDOWS
+int
+win_dialog_opt_enter(string, field_len, prompt, escape_list, help, flags)
+     char       *string, *prompt;
+     ESCKEY_S   *escape_list;
+     HelpType	 help;
+     int         field_len;
+     int	*flags;
+{
+    MDlgButton button_list[12];
+    int        i, b, return_v;
+    char     **help_text;
+    char      *saved_string = NULL;
+
+    memset (&button_list, 0, sizeof (MDlgButton) * 12);
+    b = 0;
+    for (i = 0; escape_list && escape_list[i].ch != -1 && i < 11; ++i) {
+	if (escape_list[i].name != NULL
+	    && escape_list[i].ch > 0 && escape_list[i].ch < 256) {
+	    button_list[b].ch = escape_list[i].ch;
+	    button_list[b].rval = escape_list[i].rval;
+	    button_list[b].name = escape_list[i].name;
+	    button_list[b].label = escape_list[i].label;
+	    ++b;
+	}
+    }
+    button_list[b].ch = -1;
+
+    if(string)
+      saved_string = cpystr(string);
+
+    help_text = get_help_text (help);
+    return_v = mswin_dialog (prompt, string, field_len, 
+			     (flags && *flags & OE_APPEND_CURRENT),
+			     (flags && *flags & OE_PASSWD),
+			     button_list,
+			     help_text, flags ? *flags : OE_NONE);
+    free_list_array (&help_text);
+    if(flags && (saved_string && !string || !saved_string && string ||
+       (saved_string && string && strcmp(saved_string, string))))
+      *flags |= OE_USER_MODIFIED;
+
+    if(saved_string)
+      fs_give((void **)&saved_string);
+
+    return (return_v);
+}
+#endif

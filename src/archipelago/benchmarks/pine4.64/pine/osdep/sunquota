@@ -1,0 +1,135 @@
+static char *device_name();
+
+/*----------------------------------------------------------------------
+   Return space left in disk quota on file system which given path is in.
+
+    Args: path - Path name of file or directory on file system of concern
+          over - pointer to flag that is set if the user is over quota
+
+ Returns: If *over = 0, the number of bytes free in disk quota as per
+          the soft limit.
+	  If *over = 1, the number of bytes *over* quota.
+          -1 is returned on an error looking up quota
+           0 is returned if there is no quota
+
+BUG:  If there's more than 2.1Gb free this function will break
+  ----*/
+long
+disk_quota(path, over)
+    char *path;
+    int  *over;
+{
+    static int   no_quota = 0;
+    struct stat  statx;
+    struct dqblk quotax;
+    long         q;
+    char        *dname;
+
+    if(no_quota)
+      return(0L); /* If no quota the first time, then none the second. */
+
+    dprint(5, (debugfile, "quota_check path: %s\n", path ? path : "?"));
+    if(stat(path, &statx) < 0) {
+        return(-1L);
+    }
+
+    *over = 0;
+    errno = 0;
+
+    dname = device_name(statx.st_dev);
+    if(dname == NULL)
+      return(-1L);
+
+    dprint(7, (debugfile, "Quota check: UID:%d  device: %s\n", 
+           getuid(), dname ? dname : "?"));
+    if(quotactl(Q_GETQUOTA, dname, getuid(), (char *)&quotax) < 0) {
+        dprint(5, (debugfile, "Quota failed : %s\n",
+                   error_description(errno)));
+        return(-1L); /* Something went wrong */
+    }
+
+    dprint(5,(debugfile,"Quota: bsoftlimit:%d  bhardlimit:%d  curblock:%d\n",
+          quotax.dqb_bsoftlimit, quotax.dqb_bhardlimit, quotax.dqb_curblocks));
+
+    if(quotax.dqb_bsoftlimit == -1)
+      return(-1L);
+
+    q = (quotax.dqb_bsoftlimit - quotax.dqb_curblocks) * 512;    
+
+    if(q < 0) {
+        q = -q;
+        *over = 1;
+    }
+    dprint(5, (debugfile, "disk_quota returning :%d,  over:%d\n", q, *over));
+    return(q);
+}
+
+
+/*----------------------------------------------------------------------
+ *		devNumToName
+ *
+ *	This routine is here so that ex can get a device name to check
+ *	disk quotas.  One might wonder, why not use getmntent(), rather
+ *	than read /etc/mtab in this crude way?  The problem with getmntent
+ *	is that it uses stdio, and ex/vi pointedly doesn't.
+ ----*/
+static  char
+*device_name(st_devArg)
+    dev_t st_devArg;
+{
+#ifndef MTABNAME
+#define MTABNAME "/etc/mtab"
+#endif
+    char *mtab;
+    static char devName[48];
+    static char *answer = (char *) 0;
+    struct stat devStat;
+    static dev_t st_dev;
+    int nb, cur, bol;
+    char c;
+    int dname;
+
+    if (st_devArg == st_dev)
+      return answer;
+
+    mtab = read_file(MTABNAME);
+    if(mtab == NULL)
+      return((char *)NULL);
+
+    /* Initialize save data. */
+    st_dev = st_devArg;
+    answer = (char *) 0;
+    nb = strlen(mtab);
+
+    for (cur=bol=0, dname=1; cur < nb; ++cur) {
+
+	if (dname && (mtab[cur] <= ' ')) {
+	/*	Space, tab or other such character has been found,
+		presumably marking the end of the device name string. */
+	
+	    dname = 0;
+	    c = mtab[cur];	/* Save current character. */
+	    mtab[cur] = 0;	/* C zero-terminated string. */
+
+	    /*	Get device number, via stat().  If it's the right
+		number, copy the string and return its address. */
+	    if (stat (&mtab[bol], &devStat) == 0) {
+		if (devStat.st_rdev == st_dev) {
+		    if ((cur - bol + 1) < sizeof (devName)) {
+			strcpy (devName, &mtab[bol]);
+                        answer = &devName[0];
+			return(answer);
+		    }
+		}
+	    }
+	    mtab[cur] = c;
+	}
+	if (mtab[cur] == '\n') {
+	    dname = 1;
+	    bol = cur + 1;
+	}
+    }
+    answer = NULL;
+
+    return(answer);
+}

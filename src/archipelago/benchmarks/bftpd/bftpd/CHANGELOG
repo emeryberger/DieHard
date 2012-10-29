@@ -1,0 +1,511 @@
+This file contains all major changes made during the development of bftpd.
+The uppermost change is the newest one.
+
+Jesse Smith <jessefrgsmith@yahoo.ca> -> 1.9.1
+	- Avoid segfaults in options.c and main.c
+	
+Jesse Smith <jessefrgsmith@yahoo.ca> -> 1.9
+	- Added limits.h entry to main.c and options.c
+	for compatibility with FreeBSD.
+	(All problems with bftpd on FreeBSD were found and 
+	corrected by Beech of the FreeBSD team.)
+
+Jesse Smith <jessefrgsmith@yahoo.ca> -> 1.8.4
+	- When printing file sizes for files larger than 4GB
+	the file size is now displayed correctly.
+	- When a FTP client drops a connection without sending
+	an ABORT (ABOR) signal, Bftpd will detect the dropped
+	connection and log it. This prevents stale connections
+	preventing new users from connecting.
+	(Bug found and fixed by: Thorsten)
+	- Added limits.h and signal.h to list of headers used
+	in commands.c, for compatibility with BSD.
+	- Changed sighandler_t in "run_script()" to sig_t
+	for compatibility between Linux and BSD.
+	- Added OpenPAM patch from FreeBSD (login.c)
+	- Added limits.h include to login.c file for
+	compatibility with BSD.
+
+
+Jesse Smith <jessefrgsmith@yahoo.ca> -> 1.8.3
+	- If Bftpd is unable to create bftpdutmp file, an error
+	should now be written to the log file.
+	- Directory output corrected for when large files (> 2GB)
+	are listed.
+	- Documentation for xinetd config updated.
+
+Jesse Smith <jessefrgsmith@yahoo.ca> -> 1.8.2
+	- Changed bftpd's direcotry name to plain "bftpd"
+	rather than "bftpd-version". This will, hopefully, make
+	it easier to run scripts which build/run bftpd.
+
+Jesse Smith <jessefrgsmith@yahoo.ca> -> 1.8.1
+	- Avoid segfault in getoption() (options.c)
+	  Credit to Mats Erik Andersson for finding this bug.
+	- Fixed potential memory leaks in commands.c
+
+Jesse Smith <jessefrgsmith@yahoo.ca> -> 1.7.2
+	- Fixed serious bug which would cause bftpd to crash
+	while sending a file. Double-free error.
+	(Credit to Davide Pozza for reporting these bugs below.)
+	- Prevent buffer over-flow in parsecmd() when
+	forming confstr variable.
+	- Check return values of strtoul() to make sure they
+	do not over-flow an int.
+
+Jesse Smith <jessefrgsmith@yahoo.ca> -> 1.7.1
+	(Credit to Davide Pozza for reporting these bugs.)
+	- Avoid memory over-flow in bftpd_login (login.c)
+	with the str[] variable. Made size 512 + 1.
+	- Avoid buffer over-flow in str[] variable in
+	main().
+	- Prevent buffer over-flow in check_file_password()
+	when performing fscanf().
+	- In check_file_password() made calloc() allocate
+	larger buffer to prevent over-flow.
+	- Performed range checking on the number of users on
+	the system to make sure they don't over-flow a 32-bit int.
+	- Make sure malloc calls in commands.c do not allocate
+	too much or too little memory.
+
+Jesse Smith <jessefrgsmith@yahoo.ca> -> 1.6.6
+	- Perform memory allocation check in bftpd_cwd_mappath()
+	- Changed a strcmp() to strcasecmp() in command_retr function.
+	- Performed free(mapped) at end of command_retr.
+	- Performed memory checks and clean-up in various functions.
+
+Jesse Smith <jessefrgsmith@yahoo.ca> -> 1.6.5
+	- The when using the FILE_AUTH option, the text
+	password file can contain anonymous users. That is,
+	users who do not require passwords. THIS IS DANGEROUS
+	ON MOST SYSTEMS. A entry with the password field set to
+	a * (star) does not require a password. See the
+	config file option FILE_AUTH for more information.
+
+Jesse Smith <jessefrgsmith@yahoo.ca> -> 1.6.4
+	- Allow ANONYMOUS_USER config file option to be used with
+	the FILE_AUTH option. This basically allows anyone
+	to login to the system without a password if both
+	options are used!
+	- When a chroot fails during login the server will
+	no longer tell the client which directory it was trying
+	to chroot to.
+	- When the config.h file contains a definition for
+	NO_GETPWNAM then the getpwnam() function is not used.
+	Also, this forces the use of the FILE_AUTH option. If
+	NO_GETPWNAM is defined and FILE_AUTH is not used, all
+	connections are dropped.
+
+
+Jesse Smith <jessefrgsmith@yahoo.ca> -> 1.6.3
+	- Introduced option to over-ride the local/LAN
+	IP address assigned to the host computer. This
+	option takes a 4-number IP address in the format
+	of "127.0.3.101". See OVERRIDE_IP in bftpd.conf for
+	more information.
+	- Removed description-pak file from source tree.
+	- The options PRE_WRITE_SCRIPT and POST_WRITE_SCRIPT
+	have been added to the bftpd.conf file. These options
+	let you run scripts before and after any command writes
+	to the file system. Handy if you want to re-mount.
+	Please see the bftpd.conf file for details.
+
+
+Jesse Smith <jessefrgsmith@yahoo.ca> -> 1.6.2
+	- When using FILE_AUTH to login, check
+	DO_CHROOT option before performing
+	a chroot().
+
+Jesse Smith <jessefrgsmith@yahoo.ca> -> 1.6.1
+	- Removed code which uses sendfile().
+	The sendfile code appears to cause a
+	conflict on some systems when used
+	with 64-bit file size variables.
+
+Jesse Smith <jessefrgsmith@yahoo.ca> -> 1.6
+	- Released bftpd without code changes, but
+	with updated Polish documentation.
+
+Jesse Smith <jessefrgsmith@yahoo.ca> -> 1.5
+	- Added Polish documentation to website.
+
+Jesse Smith <jessefrgsmith@yahoo.ca> -> 1.4.1
+	- Added ability to use a plain text file
+	  for authentication. See config file option
+	  FILE_AUTH for details.
+
+Jesse Smith <jessefrgsmith@yahoo.ca> -> 1.4
+	- Fixed default configuration.
+	- Fixed compile warnings for vanilla config.
+
+Jesse Smith <jessefrgsmith@yahoo.ca> -> 1.3.2
+	- Fixed Makefile to erase config.cache file during
+	  "make clean"
+	- Added ability to uncompress files on the fly
+	  during downloads. Any file with the extension
+	  ".gz" can be decompressed during transfer to
+	  the client with the use of the GZ_DOWNLOAD
+	  in the config file. This option requires bftpd
+	  be configured (pre-compile time) with the flag
+	  --enable-libz.
+
+
+Jesse Smith <jessefrgsmith@yahoo.ca> -> 1.3.1
+	- Changed ratio values to unsigned long
+	  variables to support large files.
+	- Editted Makefile to allow bftpd to handle large
+	  files (2GB+).
+
+Jesse Smith <jessefrgsmith@yahoo.ca> -> 1.2.2
+	- Added ability to upload files and
+	  compress them into .gz files on the fly.
+	  See bftpd.conf file for the option.
+	  This option requires --enable-libz be
+	  used when running the configure script.
+
+	- Cleaned up code to avoid compiler warnings
+	  from gcc 4.0.2.
+	  Files changed: main.c commands.c
+
+Jesse Smith <jessefrgsmith@yahoo.ca> -> 1.2.1
+	- When the config file is re-read, global
+          are changed only.   
+          Files changes: options.c options.h
+
+
+Jesse Smith <jessefrgsmith@yahoo.ca> -> 1.2
+	- Made re-reable options be able to hold larger
+	  values. Up to 256 bytes/characters long.
+	- Replaced old rpm spec file with one from
+	  Joe, which will be used from now on for
+	  rpm builds.
+
+Jesse Smith <jessefrgsmith@yahoo.ca> -> 1.1.3
+	- When a child/client dies, the
+	  parent process will now attempt to
+	  remove the client's log entry
+	  from the bftpdutmp file. This
+	  should prevent stale entries.
+	- Changed some default values to
+          constants in options.h
+	- Fixed typo(s) in bftpd.conf
+	- Set delete/over-write for global
+	  users to be disabled by default
+          in bftpd.conf.
+        - Added the XFER_DELAY option to
+          the bftpd.conf file. This allows
+          the admin to set a time delay
+          between data transfer bursts.
+          This aid in bandwidth throttling.
+          Please see bftpd.conf for more
+          details on this feature.
+	- Added more re-read options
+          when catching signal SIGHUP.
+          The re-readable options are now:
+          HELLO_STRING, QUIT_MSG, XFERBUFSIZE,
+          DATA_TIMEOUT, CONTROL_TIMEOUT,
+          USERLIMIT_GLOBAL, USERLIMIT_SINGLEUSER,
+          USERLIMIT_HOST, DENY_LOGIN and XFER_DELAY.
+
+Jesse Smith <jessefrgsmith@yahoo.ca> -> 1.1.2
+	- Program now catches signal SIGHUP.
+	- When bftpd catches the SIGHUP (hang up)
+          it re-reads the config file. It looks
+          for some config values, but not all.
+          At this time, the values which are
+          re-read are:
+          HELLO_STRING, QUIT_MSG and XFERBUFSIZE
+
+Jesse Smith <jessefrgsmith@yahoo.ca> -> 1.1.1
+	- Added rpm spec file to redhat directory.
+	- Changed numberic string length (512) to a defined
+          string length (MAXCMD). Makes code more
+          compatible with main.c and uses less stack
+          memory. File changed: commands.c
+	- When receiving files, the transfer buffer
+          (XFER_BUFSIZE) is divided by the number of 
+          connected clients. This should prevent bandwidth
+          being sucked back by multiple connections.
+	- Minor fixes, checking for malloc errors,
+          freeing memory and closing sockets.
+          File changed: commands.c
+        - When sending files, the transfer buffer
+          (XFER_BUFSIZE) is divided by the number
+          of connected clients. This should prevent
+          bandwidth being taken over by multiple connections.
+	- Changed Makefile so bftpd.8 gets installed as
+	  a manual page in the proper location.
+          Also updated rpm spec file to include man page.
+
+
+Jesse Smith <slicer69@hotmail.com> -> 1.1.0
+	- Changed some bftpdutmp_log(0) lines to
+	calls to bftpdutmp_end(). This should be safer.	
+	- Made sure that clients cannot write or append
+	to files if the "delete" command is disabled. I
+	think if they cannot delete the file they shouldn't
+	be allowed to truncate it to zero bytes either.
+	- Added reason for login failure to log file.
+	- Removed logging of getting user count from
+	temp file. Just seems to be taking up space.
+
+Jesse Smith <slicer69@hotmail.com> -> 1.0.24-2
+	- Added ability to block multiple connections from the
+	  same IP address. This will keep download managers and
+	  Internet Explorer from taking up multiple connections.
+          See the new option USERLIMIT_HOST in bftpd.conf.
+	- Made sure that bftpd logs out stale control connections
+	  via added calls to bftpdutmp_log(0).
+	- Added alarm() calls before trying to read from
+	  the control socket. We shouldn't assume we are going to
+	  get anything.
+
+Jesse Smith <slicer69@hotmail.com> -> 1.0.24-1
+	- Fixed bug with NLIST command. The bftpd server should not be
+	  sending leading path in front of filename when using NLIST.
+	  File(s) affected: dirlist.c
+	- Added the MGET command. Allows client to receive multiple files
+	  with one command.
+	  File(s) affected: commands.c
+	- Added the MPUT command. Allows client to send multiple files
+	  to the server with one command.
+	  File(s) affected: commands.c
+
+Max-Wilhelm Bruker <brukie@gmx.net> -> 1.0.24
+	- The PATH_BFTPDUTMP configuration option was added (idea by Szabo Peter
+	  <pts@math.bme.hu>).
+	- Whenever a data connection is established, the reply message now
+	  contains the transfer mode (idea by Szabo Peter).
+	- The -D, -h and -n command line options have been added (idea by Szabo
+	  Peter). Some code was changed to support operation without a configuration
+	  file.
+	- ATTENTION! The option LOGFILE has changed. See sample config file.
+	- In daemon mode, bftpd closes its sockets correctly now (important if you
+	  have a lot of connections), problem discovered by Olivier Kaloudoff.
+	- Fixed a bug that prevented Mozilla from getting directory lists (found
+	  by Marc Pauls).
+	- Daniel Mack fixed a memory leak in his code.
+	- The configuration parser handles comments better now.
+	- The USERLIMIT_GLOBAL configuration option has been added.
+	- The USERLIMIT_SINGLEUSER configuration option has been added.
+	- Some memory leaks discovered by David Heine <dlheine@suif.stanford.edu>
+	  were fixed.
+
+Max-Wilhelm Bruker <brukie@gmx.net> -> 1.0.23
+    - A serious file corruption bug using sendfile was fixed.
+    - A makefile bug was fixed.
+    - The AUTO_CHDIR and HIDE_GROUP configuration options were added.
+    - A bug in the RNFR and RNTO functions has been fixed.
+    - A bug occuring when compiling on StrongARM has been fixed.
+    - The config file has been made more tolerant to missing spaces (error
+      reported by Saus101 <Saus101@prime.gushi.org>).
+    - A bug in the HELP function was fixed.
+    - Two BSD incompatibilities have been fixed.
+    - A STAT bug was fixed.
+	- bftpd now follows symlinks.
+	- A bug in the daemonmode code was fixed.
+
+Max-Wilhelm Bruker <brukie@gmx.net> -> 1.0.22
+    - The ALLOW_FXP configuration option has been added.
+    - The DATA_TIMEOUT configuration option has been added.
+    - The PASSIVE_PORTS configuration option has been added.
+    - A control timeout bug has been fixed.
+    - Configuration options are now written like name="value", allowing
+      comments after the option. Directories are written like
+      directory "/foo/bar" {. Please update your config files!
+    - bftpdutmp logging has been implemented as well as some administration
+      functions using it. Read the updated documentation for details on how
+      to use them.
+    - You needn't link gzip statically to bftpd any more if you want on-the-fly
+      compression, but you can dynamically link against zlib instead now.
+      The pax sources are still needed for tar on-the-fly.
+    - A directory listing bug reported by Hendrik Harms
+      <hendrik.harms@bigfoot.de> has been fixed.
+
+Max-Wilhelm Bruker <brukie@gmx.net> -> 1.0.21
+    - The XFER_BUFSIZE configuration option has been added, allowing tweaking
+      of data throughput. If you and your clients are on a very fast network
+      (fast meaning 100 Mbit/s or more), you should set this to 64000 or
+      something like that.
+    - The APPE command has been implemented.
+    - The ALLO command has been implemented as an alias to NOOP.
+    - The INITAL_CHROOT configuration option has been added. See the new
+      example config file for details.
+    - The ability to disable logging has been added :)
+    - A bug making file transmissions impossible with old config files has
+      been fixed.
+    - A bug concerning file truncating when STORing has been fixed.
+
+Max-Wilhelm Bruker <brukie@gmx.net> -> 1.0.20
+    - The FEAT function has been implemented.
+    - A permission bug in the STOR function has been fixed.
+    - The UMASK configuration option can now be used directory-specifically.
+    - The EPSV and EPRT functions have been implemented, making IPv6 support
+      possible somewhere in the future.
+
+Max-Wilhelm Bruker <brukie@gmx.net> -> 1.0.19
+    - The NLST function has been made usable again. There has been an
+      unnoticed bug in it since the globbing function has been implemented.
+    - The XCWD, XCUP, XMKD, XRMD and XPWD functions have been implemented
+      as aliases to CWD, CDUP, MKD, RMD and PWD.
+    - The documentation is now in the SGML format, making it more extensible,
+      hopefully.
+    - The DATAPORT20 configuration option has been added. If set to yes,
+      the server will open data connections from port 20, which should make
+      firewall users happier.
+
+Max-Wilhelm Bruker <brukie@gmx.net> -> 1.0.18
+    - The configuration file has been restructured. See README for details.
+    - The PORT configuration option has been added, allowing you to change
+      the port number the daemon should listen on (only for daemon mode).
+    - A workaround for the /*/../* vulnerability mentioned on Bugtraq has
+      been added, although it's not the right thing to do, really.
+    - Compatibility to Solaris 8 has been improved. Josh Woodcock
+      <josh@hamparts.com> and Michael Smirnov <smb@mh.vstu.edu.ru> gave
+      some hints.
+    - The CONTROL_TIMEOUT configuration option has been added. You can now
+      say after how many seconds of idle time users should be kicked.
+    - Hashes (#) in /etc/passwd and /etc/group are now supported as comments.
+      This improves FreeBSD compatibility, I'm not sure about other systems.
+
+Max-Wilhelm Bruker <brukie@gmx.net> -> 1.0.17
+	- A globbing bug was fixed, making Midnight Commander able to connect
+	  to bftpd.
+    - A bug which appeared when doing LIST if a group line in /etc/group
+      had more than 256 characters was fixed.
+    - /etc/shells and /etc/ftpusers authentication were implemented by
+      Christophe Bailleux.
+    - You can now indent your configuration options with tabulators.
+    - A small problem with the ip_conntrack_ftp kernel module has been fixed,
+      which was the fault of ip_conntrack_ftp. It was found by Erik Hensema
+      <erik@hensema.xs4all.nl>.
+    - ASCII transfer mode has been implemented.
+    - You can now prevent a user from executing specific commands by using
+      the ALLOWCOMMAND_XXXX=no option.
+
+Max-Wilhelm Bruker <brukie@gmx.net> -> 1.0.16
+	- .tar and .gz on-the-fly support has been implemented. Look in the
+	  README file if you want to do that.
+	- Supplementary group IDs are now initialized correctly.
+	- PORT commands now check if the supplied IP address really belongs
+	  to the client, so that an attacker can't make the server connect
+	  to a machine in its LAN.
+	- A bug making the wtmp logging system unusable under BSD systems was
+	  fixed.
+	- A bug making the server crash when logging in a non-existent user
+	  with ANONYMOUS_USER enabled was fixed.
+	- A patch supplied by Christophe Bailleux was applied, changing the
+	  following:
+	    - Spaces after a command in each command string are removed.
+	    - The HELP command was implemented.
+	    - CWD to ~ now works.
+	  
+Max-Wilhelm Bruker <brukie@gmx.net> -> 1.0.15
+	- You can override the default path to the config file with the command
+	  line parameter '-c'.
+	- wtmp logging was implemented, so that bftpd logins show up in
+	  commands like 'last'.
+	- You can have bftpd bind to only one interface, for example, if you
+	  want to run an FTP proxy server on the same port on another network
+	  interface.
+	- The LIST and NLST commands now support globbing.
+	- A security problem in the syslog code was fixed.
+
+Max-Wilhelm Bruker <brukie@gmx.net> -> 1.0.14
+	- A lot of bugs found by Christophe Bailleux <cb@grolier.fr> have been
+	  fixed, as always.
+	- bftpd can now cope with special characters, such as umlauts.
+	- SITE commands are now disabled by default.
+	- A bug preventing resolution of GIDs on some systems has been fixed.
+	- Debian packages are now built for every new version.
+	- You can now specify if any password should fit for a particular user,
+	  so that you don't have to set a user's password to nothing
+	  (security).
+	- You can now turn off chroot() for particular users.
+
+Max-Wilhelm Bruker <brukie@gmx.net> -> 1.0.13
+	- David L. Nicol <david@kasey.umkc.edu> tested bftpd on Tru64.
+	  He also improved the character filtering routine.
+	- Some RFC incompliance was fixed, improving compatibility with
+	  FTPExplorer and LeechFTP.
+	- The SIZE command was implemented.
+	- A bug making the server segfault when being killed was fixed.
+	- A buffer overflow bug found by asynchro <asynchro@pkcrew.org>,
+      Jonathan Heusser <jonathanheusser@gyml.unibas.ch> and Christophe
+	  Bailleux <cb@grolier.fr> was fixed.
+	- The SITE CHMOD and SITE CHOWN commands were implemented. You can turn
+	  them off in the config file.
+	- A lot of useful changes proposed by Heiko Rother <rother@cmsnet.de>
+          were made:
+		- Standalone mode, independent from inetd
+    	- Better support for symbolic links
+		- Display of user/group name instead of UID/GID
+		- Ability to set the umask
+		- Ability to log into syslog
+
+Max-Wilhelm Bruker <brukie@gmx.net> -> 1.0.12
+	- SmartFTP support was improved (parameters to LIST beginning with -
+	  are discarded).
+	- A buffer overflow bug found by Christophe Bailleux <cb@grolier.fr>
+	  was fixed.
+
+Max-Wilhelm Bruker <brukie@gmx.net> -> 1.0.11
+	- PAM support was implemented. Specify --enable-pam while starting
+          configure to use it.
+	- You can now specify users who should be unable to log in.
+
+Max-Wilhelm Bruker <brukie@gmx.net> -> 1.0.10
+	- Applied a big patch from Daniel Mack that makes some things better,
+      for example virtual host support, a FreeBSD correction for the
+      directory listings, etc.
+    - The MDTM command was implemented.
+
+Max-Wilhelm Bruker <brukie@gmx.net> -> 1.0.9
+	- Fixed another bug preventing successful running on Solaris.
+	- Implemented "message of the day".
+	- Fixed an evil bug in string substitution.
+	- Fixed a bug causing the server to crash when listing an empty
+	  directory.
+	- The NLST command was implemented.
+
+Max-Wilhelm Bruker <brukie@gmx.net> -> 1.0.8
+	- Fixed a bug that caused StarOffice not to work.
+	- Removed the use of a non-Posix function that prevented compiling
+	  on Solaris.
+	- Implemented an option to let root have / as his home directory
+      independent of his real one.
+
+Max-Wilhelm Bruker <brukie@gmx.net> -> 1.0.7
+	- The PASV command was implemented.
+
+Max-Wilhelm Bruker <brukie@gmx.net> -> 1.0.6
+	- bftpd also compiles on FreeBSD and Solaris.
+	- Aliases for users can be set.
+	- Error messages are now printed correctly.
+	- "In bftpd.conf you can define if you want bftpd to use /etc/shadow"
+	  was removed again because it was stupid.
+	- Ratio was added.
+
+Max-Wilhelm Bruker <brukie@gmx.net> -> 1.0.5
+	- ls-independant directory listing was implemented. You don't need
+	  special directories or files in your home directory any longer.
+	- Compiling works with configure for portability reasons now.
+	- bftpd also compiles on BSD/OS and DG-UX.
+	- The name of the log file can now be set in bftpd.conf.
+	- The RMD command was implemented.
+	- Internet Explorer and Netscape compatability was improved.
+	- The REST command was implemented.
+	- The ABOR command was implemented (but with very stupid code!).
+	- In bftpd.conf you can define if you want bftpd to use /etc/shadow.
+
+Max-Wilhelm Bruker <brukie@gmx.net> -> 1.0.4
+	- Logging was implemented.
+	- A wrong error number for 'Permission denied' was fixed.
+
+Max-Wilhelm Bruker <brukie@gmx.net> -> 1.0.3
+	- A config file and two options have been implemented: You can
+	  disable the server and you can disable .ftp.
+
+Max-Wilhelm Bruker <brukie@gmx.net> -> 1.0.2
+	- It is now checked if .ftp is a symbolic link so that users don't
+	  link .ftp to /.

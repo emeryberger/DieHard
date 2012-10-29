@@ -1,0 +1,13 @@
+#!/bin/bash
+BIN=.
+LIB=../..
+
+ulimit -c unlimited
+
+if [[ $1 == -q ]]
+then
+shift
+LD_PRELOAD=${LIB}/libsparseheaps.so ${BIN}/espresso $@ > /dev/null
+else
+LD_PRELOAD=${LIB}/libsparseheaps.so ${BIN}/espresso $@ 
+fi

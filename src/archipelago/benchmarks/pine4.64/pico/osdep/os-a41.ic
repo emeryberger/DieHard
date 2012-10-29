@@ -1,0 +1,15 @@
+;
+; AIX 4.1 os-a41.ic file for building os-a41.c.
+;
+; Boilerplate header.
+include(header)
+
+include(unix)
+
+include(spell.unx)
+
+include(read.sel)
+
+include(raw.ios)
+
+include(term.inf)

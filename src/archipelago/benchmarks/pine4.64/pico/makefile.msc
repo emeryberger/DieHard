@@ -1,0 +1,116 @@
+# $Id: makefile.msc 7883 1998-02-28 00:10:21Z hubert $
+#
+#   Michael Seibel
+#   Networks and Distributed Computing
+#   Computing and Communications
+#   University of Washington
+#   Administration Builiding, AG-44
+#   Seattle, Washington, 98195, USA
+#   Internet: mikes@cac.washington.edu
+#
+#   Please address all bugs and comments to "pine-bugs@cac.washington.edu"
+#
+#
+#   Pine and Pico are registered trademarks of the University of Washington.
+#   No commercial use of these trademarks may be made without prior written
+#   permission of the University of Washington.
+#
+#   Pine, Pico, and Pilot software and its included text are Copyright
+#   1989-1998 by the University of Washington.
+#
+#   The full text of our legal notices is contained in the file called
+#   CPYRIGHT, included with this distribution.
+#
+
+#
+#
+# Makefile for MS-DOS version of the PINE composer library and 
+# stand-alone editor pico.
+#
+# MSC version of makefile
+#
+CC=cl
+RM=del
+CP=copy 
+
+#includes mouse support
+MOUSE=		-DMOUSE
+#includes symbol info for debugging 
+DEBUG=			#-Zi -Od
+
+!IF	DEFINED(PCTCP)
+NET=	-DPCTCP
+!ELSE
+NET=
+!ENDIF
+
+#in general, no debugging and optimize for size
+CFLAGS=	-Os $(DEBUG) -WX -AL -Gt4 -Gy $(NET) -DJOB_CONTROL -DDOS $(MOUSE)
+
+# switches for library building
+LIBER=lib
+LIBARGS=/NOL -+
+
+HFILES=		headers.h estruct.h edef.h efunc.h pico.h os.h
+
+CFILES=		attach.c basic.c bind.c browse.c \
+		buffer.c composer.c display.c file.c fileio.c \
+		line.c pico_os.c pico.c random.c region.c \
+		search.c window.c word.c
+
+OFILES=		attach.obj basic.obj bind.obj browse.obj \
+		buffer.obj composer.obj display.obj file.obj fileio.obj \
+		line.obj pico_os.obj pico.obj random.obj region.obj \
+		search.obj window.obj word.obj
+
+all:		blddate.exe pico.exe
+
+.c.obj:
+	$(CC) -c $(CFLAGS) $*.c
+	$(LIBER) libpico $(LIBARGS) $*;
+
+$(OFILES):	$(HFILES)
+pico.o:		ebind.h
+
+#
+# dependencies for the Unix versions of pico and libpico.a
+#
+os.h:		osdep\os-dos.h
+		$(RM) os.h
+		$(CP) osdep\os-dos.h os.h
+
+pico_os.c:	osdep\os-dos.c
+		$(RM) pico_os.c
+		$(CP) osdep\os-dos.c pico_os.c
+
+osdep\os-dos.c:	osdep\header osdep\dos osdep\dosgen osdep\term.dos
+		cd osdep
+		$(MAKE) -f makefile.dos includer.exe os-dos.c
+		cd ..
+
+pico_os.o:	osdep\dos_gen.h
+
+
+libpico.lib:	$(OFILES)
+#	del libpico.lib
+#	$(LIBER) libpico +ansi+attach+basic+bind+browse;
+#	$(LIBER) libpico +buffer+composer+display+file+fileio;
+#	$(LIBER) libpico +line+ibmpc+osdep+pico+random+region;
+#	$(LIBER) libpico +search+spell+window+word;
+
+blddate.exe:	blddate.c
+	$(CC) blddate.c
+
+main.obj: main.c $(HFILES)
+	$(CC) /c $(CFLAGS) main.c
+
+pico.exe: libpico.lib main.obj
+	link /I /NOI /NOE /stack:32768 main.obj,pico.exe,nul,libpico.lib;
+#	link /CO /I /NOI /NOE /stack:32768 main.obj,pico.exe,nul,libpico.lib;
+
+#clean:
+#		$(RM) *.lib
+#		$(RM) *.obj
+#		$(RM) pico_os.c
+#		$(RM) os.h
+#

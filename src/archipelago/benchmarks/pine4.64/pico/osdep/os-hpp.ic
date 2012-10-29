@@ -1,0 +1,15 @@
+;
+; HP/UX os-hpp.ic file for building os-hpp.c.
+;
+; Boilerplate header.
+include(header)
+
+include(unix)
+
+include(spell.unx)
+
+include(read.sel)
+
+include(raw.io)
+
+include(term.cap)

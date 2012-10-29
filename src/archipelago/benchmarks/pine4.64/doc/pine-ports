@@ -1,0 +1,180 @@
+Here is the full list of Pine ports:
+
+    AIX
+	a41	IBM RS/6000 running AIX 4.1 or 4.2
+	ga4	IBM RS/6000 running AIX 4.1 or 4.2 using gcc compiler
+	a32	IBM RS/6000 running AIX 3.2 or earlier
+	aix	IBM S/370 AIX
+
+    AOS for IBM RT
+	aos	AOS for IBM RT (untested)
+
+    Atari
+	mnt	FreeMint
+
+    A/UX
+	aux	Macintosh A/UX
+
+    BSD (original BSD 4.3 from U.C. Berkeley)
+	bsd	BSD 4.3
+
+    BSDi
+	bs3	BSDi BSD/386 Version 3 and Version 4
+	bs2	BSDi BSD/386 Version 2
+	bsi	BSDi BSD/386 Version 1
+
+    Bull DPX
+	dpx	Bull DPX/2 B.O.S.
+
+    Convex
+	cvx	Convex
+
+    Cygwin
+	cyg	Cygwin environment under Windows (use buildcyg script),
+		  with SSLDIR=/usr/ssl, SSLINCLUDE=/usr/share/ssl,
+		  and SSLLIB=/usr/lib
+
+    Data General
+	d54	Data General DG/UX 5.4
+	d41	Data General DG/UX 4.11 or earlier
+	d-g	Data General DG/UX (even earlier)
+
+    Digital Ultrix
+	ult	DECstation Ultrix 4.1 or 4.2
+	gul	DECstation Ultrix using gcc compiler
+	vul	VAX Ultrix
+
+    Digital Unix
+	os4	Digital Unix v4.0
+	osf	DEC OSF/1 v2.0 and Digital Unix (OSF/1) 3.n
+	sos	DEC OSF/1 v2.0 with SecureWare
+
+    EP/IX
+	epx	EP/IX System V
+
+    FreeBSD
+	bsf	FreeBSD
+
+    Fujitsu-Siemens
+        snx     Reliant Unix
+
+    Generic (not intended for direct use)
+	gen	Generic port
+
+    HP-UX
+	hpx	Hewlett Packard HP-UX 10.x
+	hxd	Hewlett Packard HP-UX 10.x with DCE security
+	ghp	Hewlett Packard HP-UX 10.x using gcc compiler
+	hpp	Hewlett Packard HP-UX 8.x and 9.x
+	shp	Hewlett Packard HP-UX 8.x and 9.x with Trusted Computer Base
+	gh9	Hewlett Packard HP-UX 8.x and 9.x using gcc compiler
+
+    ISC
+	isc	Interactive Systems Unix
+
+    Linux
+	(On some platforms the vsnprintf implementation is apparently not
+	 correct, and pine will crash early on with a SegFault. The only
+	 place where pine uses vsnprintf is in the debugjournal() routine
+	 in .../pine/osdep/debuging.tim. You can exclude this by compiling
+	 without DEBUGJOURNAL defined. Try a build command like
+	   ./build DEBUG="-g -DDEBUG" lnp
+	 to work around this problem. August, 2003)
+	lnx	Linux using crypt from the C library
+	lnp	Linux using Pluggable Authentication Modules (PAM)
+	slx	Linux using -lcrypt to get the crypt function
+	sl4	Linux using -lshadow to get the crypt() function
+	sl5	Linux using shadow passwords, no extra libraries
+	ldb     Debian Linux. Same as lnp but with SSLDIR=/usr,
+		  SSLINCLUDE=/usr/include/openssl, SSLCERTS=/etc/ssl/certs,
+		  SSLKEYS=/etc/ssl/private. The packages libssl-dev, libpam-dev,
+		  and ncurses-dev are required for building
+	lmd     Mandrakelinux. Same as lnp but with SSLDIR=/usr/lib/ssl,
+		  SSLINCLUDE=/usr/include, SSLLIB=/usr/lib
+	lrh	RedHat Enterprise and RedHat 7.2 or later.
+		  Same as lnp but with SSLDIR=/usr/share/ssl,
+		  SSLINCLUDE=/usr/include/openssl, SSLLIB=/usr/lib,
+		  GSSDIR=/usr/kerberos
+	lsu     SuSE Linux.  Same as lnp but with SSLDIR=/usr/ssl,
+		  SSLINCLUDE=/usr/include/openssl, SSLLIB=/usr/lib
+
+    Lynx
+	lyn	Lynx Real-Time System (Lynxos)
+
+    MachTen
+	mct	Tenon MachTen (Mac)
+
+    Macintosh
+	osx     Macintosh OS X.  With SSLDIR=/System/Library/OpenSSL,
+		  SSLINCLUDE=/usr/include/openssl, and SSLLIB=/usr/lib.
+		(For OS X 10.1.5 or earlier try removing -lncurses from
+		 pico/makefile.osx and from pine/makefile.osx.)
+	ox2     Macintosh OS X 10.2 and earlier.  Disables PAM support.
+
+    NetBSD
+	neb	NetBSD
+
+    NeXT
+	nxt	NeXT 68030's and 68040's Mach 2.0
+
+    OpenBSD
+	bso	OpenBSD with shared-lib
+    
+    QNX
+        nto	Neutrino
+
+    SCO
+	sc5	SCO Open Server 5.x
+	go5	SCO Open Server 5.x using gcc compiler
+	sco	SCO Unix
+	gsc	SCO Unix using gcc compiler
+
+    Sequent
+	pt1	Sequent Dynix/ptx v1.4
+	ptx	Sequent Dynix/ptx
+		  (also, see contrib/ports/sequent_ptx_4.4.6)
+	dyn	Sequent Dynix (not ptx)
+
+    SGI Irix
+	sgi	Silicon Graphics Irix
+	sg6	Silicon Graphics Irix >= 6.5
+
+    Sun Solaris (Solaris 9 is the same as SunOS 5.9)
+	gs5	Sun Solaris >= 2.5 using gcc compiler
+	soc	Sun Solaris >= 8 using Sun C compiler
+	gs4	Sun Solaris <= 2.4 using gcc compiler
+	so5	Sun Solaris >= 2.5    (not sure this works, try soc or gs5)
+	so4	Sun Solaris <= 2.4
+
+    Sun SunOS (This is pre-Solaris SunOS)
+	sun	Sun SunOS 4.1
+	ssn	Sun SunOS 4.1 with shadow password security
+	gsu	SunOS 4.1 using gcc compiler
+	s40	Sun SunOS 4.0
+
+    System V Release 4
+	sv4	System V Release 4
+
+    UnixWare
+	uw2	UnixWare 2.x and 7.x
+
+    Windows
+	wnt	Windows NT 3.51
+
+
+The following ports are incomplete:
+
+	3b1	AT&T UnixPC (Pico only)
+	art	AIX 2.2.1 for RT (c-client only, maybe sv4 for pine)
+	att	??? (Pico only)
+	drs	ICL DRS/NX (c-client only, maybe sv4 for pine)
+	mac	MacOS (c-client only)
+	msc	MS-DOS (Microsoft C)
+	pyr	Pyramid OSx (c-client only)
+	qnx	QNX (c-client only, maybe sv4 for pine)
+	snx	Siemens Nixdorf SINIX (c-client only, maybe sv4 for pine)
+	sv2	System V Release 2 (c-client only)
+	t20	TOPS/20 (c-client only)
+	snx	VAX Ultrix 2.3 (c-client only, maybe vul for pine)
+	vms	OpenVMS (see contrib/vms)
+	win	MS Windows 3.1

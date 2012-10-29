@@ -1,0 +1,19 @@
+;
+; SCO os-sco.ic file for building os-sco.c.
+;
+; Boilerplate header.
+include(header)
+
+include(unix)
+
+include(spell.unx)
+
+include(read.sel)
+
+include(raw.io)
+
+include(term.inf)
+
+include(truncate)
+
+include(fsync.non)

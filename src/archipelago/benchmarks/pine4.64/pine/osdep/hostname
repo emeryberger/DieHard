@@ -1,0 +1,17 @@
+/*----------------------------------------------------------------------
+       Call system gethostname
+
+  Args: hostname -- buffer to return host name in 
+        size     -- Size of buffer hostname is to be returned in
+
+ Result: returns 0 if the hostname is correctly set,
+         -1 if not (and errno is set).
+ ----*/
+hostname(hostname,size) 
+    char *hostname;
+    int size;
+{
+    return(gethostname(hostname, size));
+}
+
+

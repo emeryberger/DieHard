@@ -1,0 +1,199 @@
+%Memory errors are a notorious source of security vulnerabilities. They cause service interruptions, information leakage and unauthorized access. Moreover, they are hard to debug and remedy. Dedicated security teams that track and fix vulnerabilities can take weeks or even months to come out with updates, leaving users vulnerable to attack. A variety of approaches have been introduced to combat these errors, but they often incur large runtime overheads and generally abort in response to errors or attempt to continue execution in an unsound way. 
+%\par
+%In this paper we present \qih, a runtime system that automatically makes most buffer overflows and dangling pointer errors in unmodified programs benign. \qih\ replaces the standard memory allocator and dramatically reduces the likelihood of memory errors causing incorrect execution. It expands the heap in order to place live objects far from each other in address space, therefore isolating every object in memory and drastically reducing the possibility of a buffer overflow landing on a live object. It also extends the lifetime of most objects and therefore provides protection against dangling pointer errors. \qih\ limits its physical memory consumption by tracking the working set of an application and compacting objects that are not currently in use.
+%\par 
+%\qih\ provides protection against both buffer overflows and dangling pointer errors at moderate cost. Our experiments show that \qih\ allows applications to tolerate thousands of memory errors. We demonstrate that the average performance overhead of using \qih\ is 5\%, which we believe is more than acceptable for server applications, making \qih\ suitable for real-world deployment.
+
+
+\begin{thebibliography}{10}
+
+\bibitem{178446}
+T.~M. Austin, S.~E. Breach, and G.~S. Sohi.
+\newblock Efficient detection of all pointer and array access errors.
+\newblock In {\em Proceedings of the ACM SIGPLAN 1994 Conference on Programming  Language Design and Implementation}, pages 290--301, New York, NY, USA, 1994.
+  ACM Press.
+
+\bibitem{1062520}
+D.~Avots, M.~Dalton, V.~B. Livshits, and M.~S. Lam.
+\newblock Improving software security with a {C} pointer analysis.
+\newblock In {\em Proceedings of the 27th International Conference on Software Engineering}, pages 332--341, New York, NY, USA, 2005. ACM Press.
+
+\bibitem{diehard}
+E.~D. Berger and B.~G. Zorn.
+\newblock {DieHard}: Probabilistic memory safety for unsafe languages.
+\newblock In {\em Proceedings of the 2006 ACM SIGPLAN Conference on Programming  Language Design and Implementation}, pages 158--168, New York, NY, USA, 2006.
+  ACM Press.
+
+%\bibitem{berg07}
+%E.~D. Berger and B.~G. Zorn.
+%\newblock Efficient probabilistic memory safety.
+%\newblock Technical Report UMCS TR-2007-17, Department of Computer Science,  University of Massachusetts Amherst, Mar. 2007.
+
+\bibitem{heaplayers}
+E.~D. Berger, B.~G. Zorn, and K.~S. McKinley.
+\newblock Composing high-performance memory allocators.
+\newblock In {\em Proceedings of the 2001 ACM SIGPLAN Conference on Programming  Language Design and Implementation}, Snowbird, Utah, June 2001.
+
+%\bibitem{bhatkar03}
+%S.~Bhatkar, D.~C. DuVarney, and R.~Sekar.
+%\newblock Address obfuscation: An efficient approach to combat a broad range of memory error exploits.
+%\newblock In {\em Proceedings of the 12th USENIX Security Symposium}, pages 105--120. USENIX, Aug. 2003.
+
+%\bibitem{bhatkar05}
+%S.~Bhatkar, R.~Sekar, and D.~C. DuVarney.
+%\newblock Efficient techniques for comprehensive protection from memory error exploits.
+%\newblock In {\em Proceedings of the 14th USENIX Security Symposium}, pages 271--286. USENIX, Aug. 2005.
+
+\bibitem{bhw}
+H.-J. Boehm and M.~Weiser.
+\newblock Garbage collection in an uncooperative environment.
+\newblock {\em Software Practice and Experience}, 18(9):807--820, 1988.
+
+\bibitem{denning}
+P.~J. Denning.
+\newblock The Working Set Model for Program Behavior.
+\newblock In {\em Communications of the ACM}, volume 11(5), pages 323--333, New York, NY, May 1968. ACM Press.
+
+\bibitem{da06icse}
+D.~Dhurjati and V.~Adve.
+\newblock {Backwards-Compatible Array Bounds Checking for C with Very Low  Overhead}.
+\newblock In {\em {Proceedings of the 2006 International Conference on Software Engineering}}, Shanghai, China, May 2006.
+
+%\bibitem{da-efficiently06}
+%D.~Dhurjati and V.~Adve.
+%\newblock {Efficiently Detecting All Dangling Pointer Uses in Production   Servers}.
+%\newblock In {\em International Conference on Dependable Systems and Networks  (DSN'06)}, pages 269--280, 2006.
+
+\bibitem{1133999}
+D.~Dhurjati, S.~Kowshik, and V.~Adve.
+\newblock SAFEcode: enforcing alias analysis for weakly typed languages.
+\newblock In {\em Proceedings of the 2006 ACM SIGPLAN Conference on Programming   Language Design and Implementation}, pages 144--157, New York, NY, USA, 2006.
+  ACM Press.
+
+\bibitem{dhur03}
+D.~Dhurjati, S.~Kowshik, V.~Adve, and C.~Lattner.
+\newblock Memory safety without runtime checks or garbage collection.
+\newblock In {\em {ACM} {SIGPLAN} 2003 Conference on Languages, Compilers, and  Tools for Embedded Systems ({LCTES'2003})}, San Diego, CA, June 2003. ACM Press.
+
+\bibitem{cyclone:regions}
+D. Grossman, G. Morrisett, T. Jim, M. Hicks, Y. Wang, and J. Cheney.
+\newblock Region-based memory management in Cyclone. 
+\newblock In {\em {PLDI} ’02: Proceedings of the {ACM} {SIGPLAN} 2002 Conference on Programming language design and implementation}, pages 282–-293, New York, NY, 2002. ACM Press.
+
+%\bibitem{grun93}
+%D.~Grunwald, B.~Zorn, and R.~Henderson.
+%\newblock Improving the cache locality of memory allocation.
+%\newblock In {\em Proceedings of {SIGPLAN'93} Conference on Programming  Languages Design and Implementation}, volume 28(6) of {\em ACM SIGPLAN Notices}, pages 177--186, Albuquerque, NM, June 1993. ACM Press.
+
+\bibitem{purify}
+R.~Hastings and B.~Joyce.
+\newblock Purify: Fast detection of memory leaks and access errors.
+\newblock In {\em Proc.\ of the Winter 1992 USENIX Conference}, pages 125--138,
+  San Francisco, California, 1991.
+
+\bibitem{cyclone}
+T. Jim, J. G. Morrisett, D. Grossman, M. W. Hicks, J. Cheney, and Y. Wang. \newblock Cyclone: A safe dialect of C. 
+\newblock In {\em Proceedings of the General Track: 2002 {USENIX} Annual Technical Conference}, pages 275–-288, Berkeley, CA, 2002. USENIX Association.
+
+%\bibitem{john97}
+%M.~S. Johnstone and P.~R. Wilson.
+%\newblock The memory fragmentation problem: Solved?
+%\newblock In P.~Dickman and P.~R. Wilson, editors, {\em OOPSLA '97 Workshop on Garbage Collection and Memory Management}, Oct. 1997.
+
+\bibitem{1168884}
+M.~Kharbutli, X.~Jiang, Y.~Solihin, G.~Venkataramani, and M.~Prvulovic.
+\newblock Comprehensively and efficiently protecting the heap.
+\newblock In {\em Proceedings of the 12th International Conference on Architectural Support for Programming Languages and Operating Systems}, pages 207--218, New York, NY, USA, 2006. ACM Press.
+
+\bibitem{dlmalloc}
+D.~Lea.
+\newblock A memory allocator.
+\newblock \url{http://gee.cs.oswego.edu/dl/html/malloc.html}.
+
+\bibitem{pageheap}
+\emph{Microsoft Corp}.
+\newblock PageHeap.
+\newblock \url{http://support.microsoft.com/kb/286470}.
+
+\bibitem{ccured}
+G.~C. Necula, S.~McPeak, and W.~Weimer.
+\newblock {CCured}: type-safe retrofitting of legacy code.
+\newblock In {\em Proceedings of the 29th ACM SIGPLAN-SIGACT symposium on Principles of Programming Languages}, pages 128--139, New York,
+  NY, USA, 2002. ACM Press.
+
+\bibitem{Net:bounds-checking2004}
+N.~Nethercote and J.~Fitzhardinge.
+\newblock Bounds-checking entire programs without recompiling.
+\newblock In {\em SPACE 2004}, Venice, Italy, Jan. 2004.
+
+%\bibitem{paxaslr}
+%{PaX Team}.
+%\newblock {PaX address space layout randomization (ASLR)}.
+%\newblock \url{http://pax.grsecurity.net/docs/aslr.txt}.
+
+\bibitem{efence}
+B.~Perens.
+\newblock {Electric Fence} v2.1.
+\newblock \url{http://perens.com/FreeSoftware/ElectricFence/}.
+
+\bibitem{rx}
+F.~Qin, J.~Tucek, J.~Sundaresan, and Y.~Zhou.
+\newblock {Rx}: Treating bugs as allergies: A safe method to survive software
+  failures.
+\newblock In {\em Proceedings of the Twentieth Symposium on Operating Systems
+  Principles}, volume~XX of {\em Operating Systems Review}, Brighton, UK, Oct.
+  2005. ACM.
+
+\bibitem{bmb}
+M.~Rinard, C.~Cadar, D.~Dumitran, D.~M. Roy, and T.~Leu.
+\newblock A dynamic technique for eliminating buffer overflow vulnerabilities
+  (and other memory errors).
+\newblock In {\em Proceedings of the 2004 Annual Computer Security Applications
+  Conference}, Dec. 2004.
+
+\bibitem{failure-oblivious}
+M.~Rinard, C.~Cadar, D.~Dumitran, D.~M. Roy, T.~Leu, and J.~William S.~Beebee.
+\newblock Enhancing server availability and security through failure-oblivious
+  computing.
+\newblock In {\em Sixth Symposium on Operating Systems Design and
+  Implementation}, San Francisco, CA, Dec. 2004. USENIX.
+
+%\bibitem{robertson03}
+%W.~Robertson, C.~Kruegel, D.~Mutz, and F.~Valeur.
+%\newblock Run-time detection of heap-based overflows.
+%\newblock In {\em Proceedings of the 17th Large Installation Systems  Administration Conference}, pages 51--60. USENIX, 2003.
+
+\bibitem{cred}
+O. Ruwase and M.~S. Lam
+\newblock A Practical Dynamic Buffer Overflow Detector.
+\newblock In {\em Proceedings of the 11th Annual Network and Distributed System Security Symposium}, pages 159-169, February 2004.
+
+\bibitem{valgrind}
+J.~Seward and N.~Nethercote.
+\newblock Using {V}algrind to detect undefined value errors with bit-precision.
+\newblock In {\em Proceedings of the USENIX'05 Annual Technical Conference},
+  Anaheim, California, USA, Apr. 2005.
+
+\bibitem{1029913}
+W.~Xu, D.~C. DuVarney, and R.~Sekar.
+\newblock An efficient and backwards-compatible transformation to ensure memory
+  safety of {C} programs.
+\newblock In {\em Proceedings of the 12th ACM SIGSOFT
+  Twelfth International Symposium on Foundations of Software Engineering},
+  pages 117--126, New York, NY, USA, 2004. ACM Press.
+
+\bibitem{940113}
+S.~H. Yong and S.~Horwitz.
+\newblock Protecting {C} programs from attacks via invalid pointer
+  dereferences.
+\newblock In {\em 11th ACM SIGSOFT International Symposium on
+  Foundations of Software Engineering}, pages 307--316, New York, NY, USA,
+  2003. ACM Press.
+
+%\bibitem{youn05}
+%Y.~Younan, W.~Joosen, F.~Piessens, and H.~V. den Eynden.
+%\newblock Security of memory allocators for {C} and {C++}.
+%\newblock Technical Report CW 419, Department of Computer Science, Katholieke
+%  Universiteit Leuven, Belgium, July 2005.
+
+\end{thebibliography}

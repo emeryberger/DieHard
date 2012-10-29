@@ -1,0 +1,6 @@
+bdate+mswinver+main
+pico
+pico
+libpico+libw+shell+toolhelp+llibcew+oldnames+commdlg+winsock+
+..\spell\spell
+mswin.def

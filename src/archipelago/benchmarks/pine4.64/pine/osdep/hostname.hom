@@ -1,0 +1,49 @@
+/*----------------------------------------------------------------------
+       Supplimentary hostname if the system doesn't have gethostname
+
+  Args: hostname -- Buffer to return host name in 
+        size     -- Size of buffer hostname is to be returned in
+
+  Results: Returns the current host's name
+  ----------------------------------------------------------------------*/
+hostname(hostname,size) 
+     char *hostname;
+     int size;
+{
+#ifdef SYSTEMID
+	char    buf[32];
+	FILE    *fp;
+	char    *p;
+
+	if ((fp = fopen("/etc/systemid", "r")) != 0) {
+	  fgets(buf, sizeof(buf) - 1, fp);
+	  fclose(fp);
+	  if ((p = strindex(buf, '\n')) != NULL)
+	    *p = '\0';
+	  (void) strncpy(hostname, buf, size - 1);
+	  hostname[size - 1] = '\0';
+	  return 0;
+	}
+
+#else   /* SYSTEMID */
+
+#ifdef DOUNAME
+	/** This routine compliments of Scott McGregor at the HP
+	    Corporate Computing Center **/
+     
+	int uname();
+	struct utsname name;
+
+	(void) uname(&name);
+	(void) strncpy(hostname,name.nodename,size-1);
+#else
+	(void) strncpy(hostname, HOSTNAME, size-1);
+#endif	/* DOUNAME */
+
+	hostname[size - 1] = '\0';
+	return 0;
+
+#endif  /* XENIX */
+}
+
+

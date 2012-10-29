@@ -1,0 +1,69 @@
+#line 2 "osdep/canacces.os2"
+/*----------------------------------------------------------------------
+       Check if we can access a file in a given way
+
+   Args: file      -- The file to check
+         mode      -- The mode ala the access() system call, see ACCESS_EXISTS
+                      and friends in pine.h.
+
+ Result: returns 0 if the user can access the file according to the mode,
+         -1 if he can't (and errno is set).
+ ----*/
+int
+can_access(file, mode)
+    char *file;
+    int   mode;
+{
+    return(access(file, mode));
+}
+
+
+/*----------------------------------------------------------------------
+       Check if we can access a file in a given way in the given path
+
+   Args: path     -- The path to look for "file" in
+	 file      -- The file to check
+         mode      -- The mode ala the access() system call, see ACCESS_EXISTS
+                      and friends in pine.h.
+
+ Result: returns 0 if the user can access the file according to the mode,
+         -1 if he can't (and errno is set).
+ ----*/
+can_access_in_path(path, file, mode)
+    char *path, *file;
+    int   mode;
+{
+    char tmp[MAXPATH], *path_copy, *p, *t;
+    int  rv = -1;
+
+    if(!path || !*path || file[1] == ':' || *file == '/' || *file == '\\'){
+	rv = access(file, mode);
+    }
+    else{
+	for(p = path_copy = cpystr(path); rv == -1 && p && *p; p = t){
+	    if(t = strindex(p, ';'))
+	      *t++ = '\0';
+
+	    sprintf(tmp, "%s\\%s", p, file);
+	    /* For DOS/OS2 systems we may need to add a .EXE/.COM/.BAT
+	       extension for executables */
+	    if (mode == EXECUTE_ACCESS && strchr(file, '.')==NULL){
+	        int i, l = strlen(tmp);
+#ifdef OS2
+		static char * exts[] = { ".exe", ".com", ".bat" };
+#else
+		static char * exts[] = { ".exe", ".com", ".cmd" };
+#endif
+		for (i = 0; rv == -1 && i < 3; i++) {
+		    strcpy(tmp + l, exts[i]);
+		    rv = access(tmp, mode);
+		}
+	    }
+	    else rv = access(tmp, mode);
+	}
+
+	fs_give((void **)&path_copy);
+    }
+
+    return(rv);
+}

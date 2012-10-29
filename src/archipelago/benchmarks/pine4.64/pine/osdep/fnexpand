@@ -1,0 +1,42 @@
+struct passwd *getpwnam();
+
+/*----------------------------------------------------------------------
+       Expand the ~ in a file ala the csh (as home directory)
+
+   Args: buf --  The filename to expand (nothing happens unless begins with ~)
+         len --  The length of the buffer passed in (expansion is in place)
+
+ Result: Expanded string is returned using same storage as passed in.
+         If expansion fails, NULL is returned
+ ----*/
+char *
+fnexpand(buf, len)
+    char *buf;
+    int len;
+{
+    struct passwd *pw;
+    register char *x,*y;
+    char name[20];
+    
+    if(*buf == '~') {
+        for(x = buf+1, y = name;
+	    *x != '/' && *x != '\0' && y < name + sizeof(name)-1;
+	    *y++ = *x++)
+	  ;
+
+        *y = '\0';
+        if(x == buf + 1) 
+          pw = getpwuid(getuid());
+        else
+          pw = getpwnam(name);
+        if(pw == NULL)
+          return((char *)NULL);
+        if(strlen(pw->pw_dir) + strlen(buf) > len) {
+          return((char *)NULL);
+        }
+        rplstr(buf, x - buf, pw->pw_dir);
+    }
+    return(len ? buf : (char *)NULL);
+}
+
+

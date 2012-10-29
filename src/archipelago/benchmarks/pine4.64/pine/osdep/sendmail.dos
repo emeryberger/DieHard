@@ -1,0 +1,71 @@
+/*----------------------------------------------------------------------
+    Routines used to hand off messages to local agents for sending/posting
+
+ The two exported routines are:
+
+    1) send_handoff()  -- used to pass messages to local transport agent
+    2) post_handoff()  -- used to pass messages to local posting agent
+
+ ----*/
+
+/* ----------------------------------------------------------------------
+   Hand off given message to local transport agent
+
+  Args: envelope -- The envelope for the BCC and debugging
+        header   -- The text of the message header
+        errbuf   -- buffer for reporting errors (assumed non-NULL)
+
+  Nothing to hand off to under DOS.  Return error.
+     
+  ----*/
+char *
+smtp_command(errbuf)
+    char    *errbuf;
+{
+    if(!(ps_global->VAR_SMTP_SERVER && ps_global->VAR_SMTP_SERVER[0]
+	 && ps_global->VAR_SMTP_SERVER[0][0]))
+      strcpy(errbuf,"SMTP-server must be defined!");
+
+    return(NULL);
+}
+
+/*----------------------------------------------------------------------
+   Hand off given message to local posting agent
+
+  Args: envelope -- The envelope for the BCC and debugging
+        header   -- The text of the message header
+        errbuf   -- buffer for reporting errors (assumed non-NULL)
+
+  Nothing to post locally under DOS.  Return error.
+     
+   ----*/
+int
+mta_handoff(header, body, errbuf, len)
+    METAENV *header;
+    BODY    *body;
+    char    *errbuf;
+    size_t   len;
+{
+    return(0);
+}
+
+/*----------------------------------------------------------------------
+   Hand off given message to local posting agent
+
+  Args: envelope -- The envelope for the BCC and debugging
+        header   -- The text of the message header
+        errbuf   -- buffer for reporting errors (assumed non-NULL)
+
+  Nothing to post locally under DOS.  Return error.
+     
+   ----*/
+char *
+post_handoff(header, body, errbuf, len)
+    METAENV *header;
+    BODY    *body;
+    char    *errbuf;
+    size_t   len;
+{
+    sprintf(errbuf, "Can't post, NNTP-server must be defined!");
+    return(errbuf);
+}

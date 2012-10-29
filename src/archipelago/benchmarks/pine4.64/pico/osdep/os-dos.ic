@@ -1,0 +1,11 @@
+;
+; DOS os-dos.ic file for building os-dos.c.
+;
+; Boilerplate header.
+include(header)
+
+include(dos)
+
+include(dosgen)
+
+include(term.dos)

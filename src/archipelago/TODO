@@ -1,0 +1,2 @@
+1. Don't evict full/near-full pages
+2. Move conditional memprotect and memset to separate functions

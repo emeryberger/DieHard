@@ -1,0 +1,168 @@
+/*======================================================================
+    print routines
+   
+    Functions having to do with printing on paper and forking of spoolers
+
+    In general one calls open_printer() to start printing. One of
+    the little print functions to send a line or string, and then
+    call print_end() when complete. This takes care of forking off a spooler
+    and piping the stuff down it. No handles or anything here because there's
+    only one printer open at a time.
+
+ ====*/
+
+
+/* protos for routines called out of the pico library */
+int	  send_printer PROTO((char));			/* Prototypes */
+unsigned  short printer_ready PROTO(());
+char     *p_printer_error PROTO((unsigned short));
+
+
+
+/*----------------------------------------------------------------------
+       Open the printer
+
+  Args: desc --Description of item to print. Should have on tailing blank.
+
+This does most of the work of popen so we can save the standard output of the
+command we execute and send it back to the user.
+  ----*/
+int
+open_printer(desc)
+     char *desc;
+{
+    char           prompt[100];
+    unsigned short status;
+
+    if(status = printer_ready()){		/* 0 means things are OK */
+        q_status_message1(SM_ORDER | SM_DING, 3, 5,
+			  "Error opening printer: %s",
+			  p_printer_error(status));
+        return(-1);
+    }
+
+    sprintf(prompt, "Print %sto desktop printer", desc == NULL ? "" : desc);
+    if(want_to(prompt, 'y', 'n', NO_HELP, WT_NORM) != 'y') {
+	q_status_message(SM_ORDER, 0, 2, "Print cancelled");
+	return(-1);
+    }
+
+    q_status_message(SM_ORDER, 0, 9, "Printing to desktop printer...");
+    display_message('x');
+
+    /* init print control structure */
+    ps_global->print = (PRINT_S *)fs_get(sizeof(PRINT_S));
+    memset(ps_global->print, 0, sizeof(PRINT_S));
+
+    ps_global->print->err = 0;
+    return(0);
+}
+
+
+
+/*----------------------------------------------------------------------
+     Close printer
+  
+  If we're piping to a spooler close down the pipe and wait for the process
+to finish. If we're sending to an attached printer send the escape sequence.
+Also let the user know the result of the print
+ ----*/
+void
+close_printer()
+{
+    print_char(FORMFEED);
+
+    fs_give((void **)&ps_global->print);
+
+    q_status_message(SM_ASYNC, 0, 3, "Print command completed");
+    display_message('x');
+}
+
+
+
+/*----------------------------------------------------------------------
+     Print a single character
+
+  Args: c -- char to print
+  Returns: 1 on success, 0 on ps_global->print->err
+ ----*/
+int
+print_char(c)
+    int c;
+{
+    if(!ps_global->print->err
+       && (ps_global->print->err = send_printer((char) c)))
+      q_status_message1(SM_ORDER, 0, 9, "Print cancelled: %s",
+		       p_printer_error((unsigned short)ps_global->print->err));
+
+    return(!ps_global->print->err);
+}
+
+
+
+/*----------------------------------------------------------------------
+     Send a line of text to the printer
+
+  Args:  line -- Text to print
+
+  ----*/
+void
+print_text(line)
+    char *line;
+{
+    register char *c = line;
+
+    while(*c != '\0' && !ps_global->print->err)
+      print_char(*c++);
+}
+
+
+
+/*----------------------------------------------------------------------
+      printf style formatting with one arg for printer
+
+ Args: line -- The printf control string
+       a1   -- The 1st argument for printf
+ ----*/
+void
+print_text1(line, a1)
+    char *line, *a1;
+{
+    sprintf(tmp_20k_buf, line, a1);
+    print_text(tmp_20k_buf);
+}
+
+
+
+/*----------------------------------------------------------------------
+      printf style formatting with one arg for printer
+
+ Args: line -- The printf control string
+       a1   -- The 1st argument for printf
+       a2   -- The 2nd argument for printf
+ ----*/
+void
+print_text2(line, a1, a2)
+    char *line, *a1, *a2;
+{
+    sprintf(tmp_20k_buf, line, a1, a2);
+    print_text(tmp_20k_buf);
+}
+
+
+
+/*----------------------------------------------------------------------
+      printf style formatting with one arg for printer
+
+ Args: line -- The printf control string
+       a1   -- The 1st argument for printf
+       a2   -- The 2nd argument for printf
+       a3   -- The 3rd argument for printf
+ ----*/
+void
+print_text3(line, a1, a2, a3)
+    char *line, *a1, *a2, *a3;
+{
+    sprintf(tmp_20k_buf, line, a1, a2, a3);
+    print_text(tmp_20k_buf);
+}

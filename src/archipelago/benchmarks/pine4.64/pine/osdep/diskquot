@@ -1,0 +1,78 @@
+#if defined(USE_QUOTAS)
+
+#include <sys/param.h>
+#include <sys/quota.h>
+
+/*----------------------------------------------------------------------
+   Return space left in disk quota on file system which given path is in.
+
+    Args: path - Path name of file or directory on file system of concern
+          over - pointer to flag that is set if the user is over quota
+
+ Returns: If *over = 0, the number of bytes free in disk quota as per
+          the soft limit.
+	  If *over = 1, the number of bytes *over* quota.
+          -1 is returned on an error looking up quota
+           0 is returned if there is no quota
+
+BUG:  If there's more than 2.1Gb free this function will break
+  ----*/
+long
+disk_quota(path, over)
+    char *path;
+    int  *over;
+{
+    static int   no_quota = 0;
+    struct stat  statx;
+    struct dqblk quotax;
+    long         q;
+
+    if(no_quota)
+      return(0L); /* If no quota the first time, then none the second,
+                    Also Ultrix seems to give the wrong answer the second
+                    time */
+
+    dprint(5, (debugfile, "quota_check path: %s\n", path ? path : "?"));
+    if(stat(path, &statx) < 0) {
+        return(-1L);
+    }
+
+    *over = 0;
+    errno = 0;
+
+    dprint(7, (debugfile, "Quota check: UID:%d  stat: %d %x\n", 
+           getuid(), statx.st_dev, statx.st_dev));
+    memset((void *)&quotax, 0, sizeof(struct dqblk));
+    if(quota(Q_GETDLIM, getuid(), statx.st_dev, &quotax) < 0) {
+        dprint(5, (debugfile, "Quota failed : %s\n",
+                   error_description(errno)));
+        if(errno == ESRCH){
+            no_quota = 1;
+            return(0L); /* No limit */
+        } else {
+            return(-1L); /* Some thing went wrong */
+        }
+    }
+
+    dprint(5,(debugfile,"Quota: bsoftlimit:%d  bhardlimit:%d  curblock:%d\n",
+          quotax.dqb_bsoftlimit, quotax.dqb_bhardlimit, quotax.dqb_curblocks));
+
+    /* Some confusion on the type of bsoftlimit. The include file says
+       unsigned, but -1 seems to indicate no quota */
+    if(quotax.dqb_bsoftlimit == 0 || (long)quotax.dqb_bsoftlimit == -1) {
+        no_quota = 1;
+        return(0L);
+    }
+
+    q = (quotax.dqb_bsoftlimit - quotax.dqb_curblocks) * 1024;
+
+    if(q < 0) {
+        q = -q;
+        *over = 1;
+    }
+    dprint(5, (debugfile, "disk_quota returning :%d,  over:%d\n", q, *over));
+    return(q);
+}
+#endif /* USE_QUOTAS */
+
+

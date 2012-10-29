@@ -1,0 +1,21 @@
+Source: pine
+Section: non-free/mail
+Priority: optional
+Maintainer: Pine Team <pine@cac.washington.edu>
+Standards-Version: 3.6.1.0
+Build-Depends: libncurses-dev | libncurses5-dev, libldap-dev | libldap2-dev, libssl-dev, libpam-dev | libpam0g-dev
+
+Package: pine
+Architecture: any
+Depends: ${shlibs:Depends}, mime-support
+Suggests: exim | mail-transport-agent, spell
+Provides: mail-reader
+Description: An e-mail reader with IMAP, POP3, and NNTP support.
+ Pine (R) -- a Program for Internet News & Email -- is a tool for reading,
+ sending, and managing electronic messages. Pine was developed by Computing
+ & Communications at the University of Washington.  Though originally
+ designed for inexperienced email users, Pine has evolved to support many
+ advanced features, and an ever-growing number of configuration and
+ personal-preference options.
+ .
+ Homepage: http://www.washington.edu/pine

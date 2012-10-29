@@ -1,0 +1,5100 @@
+<!--chtml include "//imap/incs/top.inc"-->
+
+<H1 ALIGN="center">IMAP Toolkit Frequently Asked Questions</H1>
+<H2>
+Table of Contents
+</H2>
+<UL>
+<LI>
+<A HREF="#general">
+1. General/Software Feature Questions
+</A>
+<UL>
+<LI>
+<A HREF="#1.1">
+1.1
+Can I set up a POP or IMAP server on UNIX/Linux/OSF/etc.?
+</A>
+<LI>
+<A HREF="#1.2">
+1.2
+I am currently using qpopper as my POP3 server on UNIX.  Do I need
+to replace it with ipop3d in order to run imapd?
+</A>
+<LI>
+<A HREF="#1.3">
+1.3
+Can I set up a POP or IMAP server on Windows XP, 2000, NT, Me, 98,
+or 95?
+</A>
+<LI>
+<A HREF="#1.4">
+1.4
+Can I set up a POP or IMAP server on Windows 3.1 or DOS?
+</A>
+<LI>
+<A HREF="#1.5">
+1.5
+Can I set up a POP or IMAP server on Macintosh?
+</A>
+<LI>
+<A HREF="#1.6">
+1.6
+Can I set up a POP or IMAP server on VAX/VMS?
+</A>
+<LI>
+<A HREF="#1.7">
+1.7
+Can I set up a POP or IMAP server on TOPS-20?
+</A>
+<LI>
+<A HREF="#1.8">
+1.8
+Are hierarchical mailboxes supported?
+</A>
+<LI>
+<A HREF="#1.9">
+1.9
+Are "dual-use" mailboxes supported?
+</A>
+<LI>
+<A HREF="#1.10">
+1.10
+Can I have a mailbox that has both messages and sub-mailboxes?
+</A>
+<LI>
+<A HREF="#1.11">
+1.11
+What is the difference between "mailbox" and "folder"?
+</A>
+<LI>
+<A HREF="#1.12">
+1.12
+What is the status of internationalization?
+</A>
+<LI>
+<A HREF="#1.13">
+1.13
+Can I use SSL?
+</A>
+<LI>
+<A HREF="#1.14">
+1.14
+Can I use TLS and the STARTTLS facility?
+</A>
+<LI>
+<A HREF="#1.15">
+1.15
+Can I use CRAM-MD5 authentication?
+</A>
+<LI>
+<A HREF="#1.16">
+1.16
+Can I use APOP authentication?
+</A>
+<LI>
+<A HREF="#1.17">
+1.17
+Can I use Kerberos V5?
+</A>
+<LI>
+<A HREF="#1.18">
+1.18
+Can I use PAM for plaintext passwords?
+</A>
+<LI>
+<A HREF="#1.19">
+1.19
+Can I use Kerberos 5 for plaintext passwords?
+</A>
+<LI>
+<A HREF="#1.20">
+1.20
+Can I use AFS for plaintext passwords?
+</A>
+<LI>
+<A HREF="#1.21">
+1.21
+Can I use DCE for plaintext passwords?
+</A>
+<LI>
+<A HREF="#1.22">
+1.22
+Can I use the CRAM-MD5 database for plaintext passwords?
+</A>
+<LI>
+<A HREF="#1.23">
+1.23
+Can I disable plaintext passwords?
+</A>
+<LI>
+<A HREF="#1.24">
+1.24
+Can I disable plaintext passwords on unencrypted sessions, but allow them
+on encrypted sessions?
+</A>
+<LI>
+<A HREF="#1.25">
+1.25
+Can I use virtual hosts?
+</A>
+<LI>
+<A HREF="#1.26">
+1.26
+Can I use RPOP authentication?
+</A>
+<LI>
+<A HREF="#1.27">
+1.27
+Can I use Kerberos V4?
+</A>
+<LI>
+<A HREF="#1.28">
+1.28
+Is there support for S/Key or OTP?
+</A>
+<LI>
+<A HREF="#1.29">
+1.29
+Is there support for NTLM or SPA?
+</A>
+<LI>
+<A HREF="#1.30">
+1.30
+Is there support for mh?
+</A>
+<LI>
+<A HREF="#1.31">
+1.31
+Is there support for qmail and the maildir format?
+</A>
+<LI>
+<A HREF="#1.32">
+1.32
+Is there support for the Cyrus mailbox format?
+</A>
+<LI>
+<A HREF="#1.33">
+1.33
+Is this software Y2K compliant?
+</A>
+</UL>
+<LI>
+<A HREF="#requirements">
+2. What Do I Need to Build This Software?
+</A>
+<UL>
+<LI>
+<A HREF="#2.1">
+2.1
+What do I need to build this software with SSL on UNIX?
+</A>
+<LI>
+<A HREF="#2.2">
+2.2
+What do I need to build this software with Kerberos V on UNIX?
+</A>
+<LI>
+<A HREF="#2.3">
+2.3
+What do I need to use a C++ compiler with this software to build my own
+application?
+</A>
+<LI>
+<A HREF="#2.4">
+2.4
+What do I need to build this software on Windows?
+</A>
+<LI>
+<A HREF="#2.5">
+2.5
+What do I need to build this software on DOS?
+</A>
+<LI>
+<A HREF="#2.6">
+2.6
+Can't I use Borland C to build this software on the PC?
+</A>
+<LI>
+<A HREF="#2.7">
+2.7
+What do I need to build this software on the Mac?
+</A>
+<LI>
+<A HREF="#2.8">
+2.8
+What do I need to build this software on VMS?
+</A>
+<LI>
+<A HREF="#2.9">
+2.9
+What do I need to build this software on TOPS-20?
+</A>
+<LI>
+<A HREF="#2.10">
+2.10
+What do I need to build this software on Amiga or OS/2?
+</A>
+<LI>
+<A HREF="#2.11">
+2.11
+What do I need to build this software on Windows CE?
+</A>
+</UL>
+<LI>
+<A HREF="#build">
+3. Build and Configuration Questions
+</A>
+<UL>
+<LI>
+<A HREF="#3.1">
+3.1
+How do I configure the IMAP and POP servers on UNIX?
+</A>
+<LI>
+<A HREF="#3.2">
+3.2
+I built and installed the servers according to the BUILD instructions.
+It can't be that easy.  Don't I need to write a config file?
+</A>
+<LI>
+<A HREF="#3.3">
+3.3
+How do I make the IMAP and POP servers look for INBOX at some place
+other than the mail spool directory?
+</A>
+<LI>
+<A HREF="#3.4">
+3.4
+How do I make the IMAP server look for secondary folders at some place
+other than the user's home directory?
+</A>
+<LI>
+<A HREF="#3.5">
+3.5
+How do I configure SSL?
+</A>
+<LI>
+<A HREF="#3.6">
+3.6
+How do I configure TLS and the STARTTLS facility?
+</A>
+<LI>
+<A HREF="#3.7">
+3.7
+How do I build/install OpenSSL and obtain/create certificates for use with SSL?
+</A>
+<LI>
+<A HREF="#3.8">
+3.8
+How do I configure CRAM-MD5 authentication?
+</A>
+<LI>
+<A HREF="#3.9">
+3.9
+How do I configure APOP authentication?
+</A>
+<LI>
+<A HREF="#3.10">
+3.10
+How do I configure Kerberos V5?
+</A>
+<LI>
+<A HREF="#3.11">
+3.11
+How do I configure PAM for plaintext passwords?
+</A>
+<LI>
+<A HREF="#3.12">
+3.12
+It looks like all I have to do to make the server use Kerberos is to
+build with PAM on my Linux system, and set it up in PAM for Kerberos
+passwords.  Right?
+</A>
+<LI>
+<A HREF="#3.13">
+3.13
+How do I configure Kerberos 5 for plaintext passwords?
+</A>
+<LI>
+<A HREF="#3.14">
+3.14
+How do I configure AFS for plaintext passwords?
+</A>
+<LI>
+<A HREF="#3.15">
+3.15
+How do I configure DCE for plaintext passwords?
+</A>
+<LI>
+<A HREF="#3.16">
+3.16
+How do I configure the CRAM-MD5 database for plaintext passwords?
+</A>
+<LI>
+<A HREF="#3.17">
+3.17
+How do I disable plaintext passwords?
+</A>
+<LI>
+<A HREF="#3.18">
+3.18
+How do I disable plaintext passwords on unencrypted sessions, but
+allow them in SSL or TLS sessions?
+</A>
+<LI>
+<A HREF="#3.19">
+3.19
+How do I configure virtual hosts?
+</A>
+<LI>
+<A HREF="#3.20">
+3.20
+Why do I get compiler warning messages such as:
+<UL>
+<LI>
+passing arg 3 of `scandir' from incompatible pointer type
+<LI>
+Pointers are not assignment-compatible.
+<LI>
+Argument #4 is not the correct type.
+</UL>
+during the build?
+</A>
+<LI>
+<A HREF="#3.21">
+3.21
+Why do I get compiler warning messages such as
+<UL>
+<LI>
+Operation between types "void(*)(int)" and "void*" is not allowed.
+<LI>
+Function argument assignment between types "void*" and "void(*)(int)" is not allowed.
+<LI>
+Pointers are not assignment-compatible.
+<LI>
+Argument #5 is not the correct type.
+</UL>
+during the build?
+</A>
+<LI>
+<A HREF="#3.22">
+3.22
+Why do I get linker warning messages such as:
+<UL>
+<LI>
+mtest.c:515: the `gets' function is dangerous and should not be used.
+</UL>
+during the build?  Isn't this a security bug?
+</A>
+<LI>
+<A HREF="#3.23">
+3.23
+Why do I get linker warning messages such as:
+<UL>
+<LI>
+auth_ssl.c:92: the `tmpnam' function is dangerous and should not be used.
+</UL>
+during the build?  Isn't this a security bug?
+</A>
+<LI>
+<A HREF="#3.24">
+3.24
+OK, suppose I see a warning message about a function being "dangerous and
+should not be used" for something other than this gets() or tmpnam() call?
+</A>
+</UL>
+<LI>
+<A HREF="#operation">
+4. Operational Questions
+</A>
+<UL>
+<LI>
+<A HREF="#4.1">
+4.1
+How can I enable anonymous IMAP logins?
+</A>
+<LI>
+<A HREF="#4.2">
+4.2
+How do I set up an alert message that each IMAP user will see?
+</A>
+<LI>
+<A HREF="#4.3">
+4.3
+How does the c-client library choose which of its several mechanisms to
+use to establish an IMAP connection to the server?  I noticed that it can
+connect on port 143, port 993, via rsh, and via ssh.
+</A>
+<LI>
+<A HREF="#4.4">
+4.4
+I am using a TLS-capable IMAP server, so I don't need to use /ssl to get
+encryption.  However, I want to be certain that my session is TLS
+encrypted before I send my password.  How to I do this?
+</A>
+<LI>
+<A HREF="#4.5">
+4.5
+How do I use one of the alternative formats described in the formats.txt
+document?  In particular, I hear that mbx format will give me better
+performance and allow shared access.
+</A>
+<LI>
+<A HREF="#4.6">
+4.6
+How do I set up shared mailboxes?
+</A>
+<LI>
+<A HREF="#4.7">
+4.7
+How can I make the server syslogs go to someplace other than the mail
+syslog?
+</A>
+</UL>
+<LI>
+<A HREF="#security">
+5. Security Questions
+</A>
+<UL>
+<LI>
+<A HREF="#5.1">
+5.1
+I see that the IMAP server allows access to arbitary files on the system,
+including /etc/passwd!  How do I disable this?
+</A>
+<LI>
+<A HREF="#5.2">
+5.2
+I've heard that IMAP servers are insecure.  Is this true?
+</A>
+<LI>
+<A HREF="#5.3">
+5.3
+How do I know that I have the most secure version of the server?
+</A>
+<LI>
+<A HREF="#5.4">
+5.4
+I see all these strcpy() and sprintf() calls, those are unsafe, aren't
+they?
+</A>
+<LI>
+<A HREF="#5.5">
+5.5
+Those /tmp lock files are protected 666, is that really right?
+</A>
+</UL>
+<LI>
+<A HREF="#strange">
+6.
+<I>Why Did You Do This Strange Thing?</I>
+Questions
+</A>
+<UL>
+<LI>
+<A HREF="#6.1">
+6.1
+Why don't you use GNU autoconfig / automake / autoblurdybloop?
+</A>
+<LI>
+<A HREF="#6.2">
+6.2
+Why do you insist upon a build with -g?  Doesn't it waste disk and
+memory space?
+</A>
+<LI>
+<A HREF="#6.3">
+6.3
+Why don't you make c-client a shared library?
+</A>
+<LI>
+<A HREF="#6.4">
+6.4
+Why don't you use iconv() for internationalization support?
+</A>
+<LI>
+<A HREF="#6.5">
+6.5
+Why is the IMAP server connected to the home directory by default?
+</A>
+<LI>
+<A HREF="#6.6">
+6.6
+I have a Windows system.  Why isn't the server plug and play for me?
+</A>
+<LI>
+<A HREF="#6.7">
+6.7
+I looked at the UNIX SSL code and saw that you have the SSL data payload
+size set to 8192 bytes.  SSL allows 16K; why aren't you using the full
+size?
+</A>
+<LI>
+<A HREF="#6.8">
+6.8
+Why is an mh format INBOX called #mhinbox instead of just INBOX?
+</A>
+<LI>
+<A HREF="#6.9">
+6.9
+Why don't you support the maildir format?
+</A>
+<LI>
+<A HREF="#6.10">
+6.10
+Why don't you support the Cyrus format?
+</A>
+<LI>
+<A HREF="#6.11">
+6.11
+Why is it creating extra forks on my SVR4 system?
+</A>
+<LI>
+<A HREF="#6.12">
+6.12
+Why are you so fussy about the date/time format in the internal "From "
+line in traditional UNIX mailbox files?  My other mail program just
+considers every line that starts with "From " to be the start of the
+message.
+</A>
+<LI>
+<A HREF="#6.13">
+6.13
+Why is traditional UNIX format the default format?
+</A>
+<LI>
+<A HREF="#6.14">
+6.14
+Why do you write this "DON'T DELETE THIS MESSAGE -- FOLDER INTERNAL DATA"
+message at the start of traditional UNIX and MMDF format mailboxes?
+</A>
+<LI>
+<A HREF="#6.15">
+6.15
+Why don't you stash the mailbox metadata in the first real message of the
+mailbox instead of writing this fake FOLDER INTERNAL DATA message?
+</A>
+<LI>
+<A HREF="#6.16">
+6.16
+Why aren't "dual-use" mailboxes the default?
+</A>
+<LI>
+<A HREF="#6.17">
+6.17
+Why do you use ucbcc to build on Solaris?
+</A>
+<LI>
+<A HREF="#6.18">
+6.18
+Why should I care about some old system with BSD libraries?  cc is
+the right thing on my Solaris system!
+</A>
+<LI>
+<A HREF="#6.19">
+6.19
+Why do you insist upon writing .lock files in the spool directory?
+</A>
+<LI>
+<A HREF="#6.20">
+6.20
+Why should I care about compatibility with the past?
+</A>
+</UL>
+<LI>
+<A HREF="#problems">
+7. Problems and Annoyances
+</A>
+<UL>
+<LI>
+<A HREF="#7.1">
+7.1
+Help!  My INBOX is empty!  What happened to my messages?
+</A>
+<LI>
+<A HREF="#7.2">
+7.2
+Help!  All my messages in a non-INBOX mailbox have been concatenated into
+one message which claims to be from me and has a subject of the file name
+of the mailbox!  What's going on?
+</A>
+<LI>
+<A HREF="#7.3">
+7.3
+Why do I get the message:
+<UL>
+<LI>
+CREATE failed: Can't create mailbox node xxxxxxxxx: File exists
+</UL>
+and how do I fix it?
+</A>
+<LI>
+<A HREF="#7.4">
+7.4
+Why can't I log in to the server?  The user name and password are right!
+</A>
+<LI>
+<A HREF="#7.5">
+7.5
+Help!  My load average is soaring and I see hundreds of POP and IMAP
+servers, many logged in as the same user!
+</A>
+<LI>
+<A HREF="#7.6">
+7.6
+Why does mail disappear even though I set "keep mail on server"?
+</A>
+<LI>
+<A HREF="#7.7">
+7.7
+Why do I get the message
+<UL>
+<LI>
+Moved ##### bytes of new mail to /home/user/mbox from /var/spool/mail/user
+</UL>
+and why did this happen?
+</A>
+<LI>
+<A HREF="#7.8">
+7.8
+Why isn't it showing the local host name as a fully-qualified domain name?
+</A>
+<LI>
+<A HREF="#7.9">
+7.9
+Why is the local host name in the From/Sender/Message-ID headers of
+outgoing mail not coming out as a fully-qualified domain name?
+</A>
+<LI>
+<A HREF="#7.10">
+7.10
+What does the message:
+<UL>
+<LI>
+Mailbox vulnerable - directory /var/spool/mail must have 1777 protection
+</UL>
+mean?  How can I fix this?
+</A>
+<LI>
+<A HREF="#7.11">
+7.11
+What does the message:
+<UL>
+<LI>
+Mailbox is open by another process, access is readonly
+</UL>
+mean?  How do I fix this?
+</A>
+<LI>
+<A HREF="#7.12">
+7.12
+What does the message:
+<UL>
+<LI>
+Can't get write access to mailbox, access is readonly
+</UL>
+mean?
+</A>
+<LI>
+<A HREF="#7.13">
+7.13
+I set my POP3 client to "delete messages from server" but they never get
+deleted.  What is wrong?
+</A>
+<LI>
+<A HREF="#7.14">
+7.14
+What do messages such as:
+<UL>
+<LI>
+Message ... UID ... already has UID ...
+<LI>
+Message ... UID ... less than ...
+<LI>
+Message ... UID ... greater than last ...
+<LI>
+Invalid UID ... in message ..., rebuilding UIDs
+</UL>
+mean?
+</A>
+<LI>
+<A HREF="#7.15">
+7.15
+What do the error messages:
+<UL>
+<LI>
+Unable to read internal header at ...
+<LI>
+Unable to find CRLF at ...
+<LI>
+Unable to parse internal header at ...
+<LI>
+Unable to parse message date at ...
+<LI>
+Unable to parse message flags at ...
+<LI>
+Unable to parse message UID at ...
+<LI>
+Unable to parse message size at ...
+<LI>
+Last message (at ... ) runs past end of file ...
+</UL>
+mean?  I am using mbx format.
+</A>
+<LI>
+<A HREF="#7.16">
+7.16
+What do the syslog messages:
+<UL>
+<LI>
+imap/tcp server failing (looping)
+<LI>
+pop3/tcp server failing (looping)
+</UL>
+mean?  When it happens, the listed service shuts down.  How can I fix this?
+</A>
+<LI>
+<A HREF="#7.17">
+7.17
+What does the syslog message:
+<UL>
+<LI>
+Mailbox lock file /tmp/.600.1df3 open failure: Permission denied
+</UL>
+mean?
+</A>
+<LI>
+<A HREF="#7.18">
+7.18
+What do the syslog messages:
+<UL>
+<LI>
+Command stream end of file, while reading line user=... host=...
+<LI>
+Command stream end of file, while reading char user=... host=...
+<LI>
+Command stream end of file, while writing text user=... host=...
+</UL>
+mean?
+</A>
+<LI>
+<A HREF="#7.19">
+7.19
+Why did my POP or IMAP session suddenly disconnect?  The syslog has the
+message:
+<UL>
+<LI>
+Killed (lost mailbox lock) user=... host=...
+</UL>
+</A>
+<LI>
+<A HREF="#7.20">
+7.20
+Why does my IMAP client show all the files on the system, recursively
+from the UNIX root directory?
+</A>
+<LI>
+<A HREF="#7.21">
+7.21
+Why does my IMAP client show all of my files, recursively from my UNIX home 
+directory? 
+</A>
+<LI>
+<A HREF="#7.22">
+7.22
+Why does my IMAP client show that I have mailboxes named "#mhinbox", "#mh",
+"#shared", "#ftp", "#news", and "#public"?
+</A>
+<LI>
+<A HREF="#7.23">
+7.23
+Why does my IMAP client show all my files in my home directory?
+</A>
+<LI>
+<A HREF="#7.24">
+7.24
+Why is there a long delay before I get connected to the IMAP or POP server,
+no matter what client I use?
+</A>
+<LI>
+<A HREF="#7.25">
+7.25
+Why is there a long delay in Pine or any other c-client based
+application call before I get connected to the IMAP server?  The hang
+seems to be in the c-client mail_open() call.  I don't have this
+problem with any other IMAP client.  There is no delay connecting to a
+POP3 or NNTP server with mail_open().
+</A>
+<LI>
+<A HREF="#7.26">
+7.26
+Why does a message sometimes get split into two or more messages on my
+SUN system?
+</A>
+<LI>
+<A HREF="#7.27">
+7.27
+Why did my POP or IMAP session suddenly disconnect?  The syslog has the
+message:
+<UL>
+<LI>
+Autologout user=&lt...my user name...&gt host=&lt...my imap server...&gt
+</UL>
+</A>
+<LI>
+<A HREF="#7.28">
+7.28
+What does the UNIX error message:
+<UL>
+<LI>
+TLS/SSL failure: myserver: SSL negotiation failed
+</UL>
+mean?
+</A>
+<LI>
+<A HREF="#7.29">
+7.29
+What does the PC error message:
+<UL>
+<LI>
+TLS/SSL failure: myserver: Unexpected TCP input disconnect
+</UL>
+mean?
+</A>
+<LI>
+<A HREF="#7.30">
+7.30
+What does the error message:
+<UL>
+<LI>
+TLS/SSL failure: myserver: Server name does not match certificate
+</UL>
+mean?
+</A>
+<LI>
+<A HREF="#7.31">
+7.31
+What does the UNIX error message:
+<UL>
+<LI>
+TLS/SSL failure: myserver: self-signed certificate
+</UL>
+mean?
+</A>
+<LI>
+<A HREF="#7.32">
+7.32
+What does the PC error message
+<UL>
+<LI>
+ TLS/SSL failure: myserver: Self-signed certificate or untrusted authority
+</UL>
+mean?
+</A>
+<LI>
+<A HREF="#7.33">
+7.33
+What does the UNIX error message:
+<UL>
+<LI>
+TLS/SSL failure: myserver: unable to get local issuer certificate
+</UL>
+mean?
+</A>
+<LI>
+<A HREF="#7.34">
+7.34
+Why does reading certain messages hang when using Netscape?  It works
+fine with Pine!
+</A>
+<LI>
+<A HREF="#7.35">
+7.35
+Why does Netscape say that there's a problem with the IMAP server and that
+I should "Contact your mail server administrator."?
+</A>
+<LI>
+<A HREF="#7.36">
+7.36
+Why is one user creating huge numbers of IMAP or POP server sessions?
+</A>
+<LI>
+<A HREF="#7.37">
+7.37
+Why don't I get any new mail notifications from Outlook Express or Outlook
+after a while?
+</A>
+<LI>
+<A HREF="#7.38">
+7.38
+Why don't I get any new mail notifications from Entourage?
+</A>
+<LI>
+<A HREF="#7.39">
+7.39
+Why doesn't Entourage work at all?
+</A>
+<LI>
+<A HREF="#7.40">
+7.40
+Why doesn't Netscape Notify (NSNOTIFY.EXE) work at all?
+</A>
+<LI>
+<A HREF="#7.41">
+7.41
+Why can't I connect via SSL to Eudora?  It says the connection has been
+broken, and in the server syslogs I see "Command stream end of file".
+</A>
+<LI>
+<A HREF="#7.42">
+7.42
+Sheesh.  Aren't there <I>any</I> good IMAP clients out there?
+</A>
+<LI>
+<A HREF="#7.43">
+7.43
+But wait!  PC Pine (or other PC program build with c-client) crashes with
+the message
+<UL>
+<LI>
+incomplete SecBuffer exceeds maximum buffer size
+</UL>
+when I use SSL connections.  This is a bug in c-client, right?
+</A>
+<LI>
+<A HREF="#7.44">
+7.44
+My qpopper users keep on getting the DON'T DELETE THIS MESSAGE -- FOLDER
+INTERNAL DATA if they also use Pine or IMAP.  How can I fix this?
+</A>
+<LI>
+<A HREF="#7.45">
+7.45
+Help!  I installed the servers but I can't connect to them from my client!
+</A>
+<LI>
+<A HREF="#7.46">
+7.46
+Why do I get the message
+<UL>
+<LI>
+ Can not authenticate to SMTP server: 421 SMTP connection went away!
+</UL>
+and why did this happen?  There was also something about
+<UL>
+<LI>
+ SECURITY PROBLEM: insecure server advertised AUTH=PLAIN
+</UL>
+</A>
+<LI>
+<A HREF="#7.47">
+7.47
+Why do I get the message
+<UL>
+<LI>
+ SMTP Authentication cancelled
+</UL>
+and why did this happen?  There was also something about
+<UL>
+<LI>
+ SECURITY PROBLEM: insecure server advertised AUTH=PLAIN
+</UL>
+</A>
+<LI>
+<A HREF="#7.48">
+7.48
+Why do I get the message
+<UL>
+<LI>
+ Invalid base64 string
+</UL>
+when I try to authenticate to a Cyrus server?
+</A>
+</UL>
+<LI>
+<A HREF="#license">
+8. Licensing Questions
+</A>
+<UL>
+<LI>
+<A HREF="#8.1">
+8.1
+Why does the UW choose to make the IMAP toolkit available under this 
+Free-Fork license?
+</A>
+<LI>
+<A HREF="#8.2">
+8.2
+I want to redistribute a modified version of the IMAP toolkit.  How can I 
+do this?
+</A>
+<LI>
+<A HREF="#8.3">
+8.3
+Can I redistribute an unmodified version of the IMAP toolkit in a 
+proprietary application?
+</A>
+<LI>
+<A HREF="#8.4">
+8.4
+Is the Free-Fork license compatible with GPL?
+</A>
+</UL>
+<LI>
+<A HREF="#additional">
+9. Where to Go For Additional Information
+</A>
+<UL>
+<LI>
+<A HREF="#9.1">
+9.1
+Where can I go to ask questions?
+</A>
+<LI>
+<A HREF="#9.2">
+9.2
+I have some ideas for enhancements to IMAP.  Where should I go?
+</A>
+<LI>
+<A HREF="#9.3">
+9.3
+Where can I read more about IMAP and other email protocols?
+</A>
+<LI>
+<A HREF="#9.4">
+9.4
+Where can I find out more about setting up and administering an IMAP
+server?
+</A>
+</UL>
+</UL>
+<HR>
+<H2>
+<A NAME="general">
+1. General/Software Feature Questions
+</A>
+</H2>
+<HR>
+<A NAME="1.1">
+<B>
+1.1
+Can I set up a POP or IMAP server on UNIX/Linux/OSF/etc.?
+</B>
+</A>
+<DL><DD>
+Yes.  Refer to the UNIX specific notes in files CONFIG and BUILD.
+</DL>
+<A HREF="#top">
+Back to top
+</A>
+<HR>
+<A NAME="1.2">
+<B>
+1.2
+I am currently using qpopper as my POP3 server on UNIX.  Do I need
+to replace it with ipop3d in order to run imapd?
+</B>
+</A>
+<DL><DD>
+Not necessarily.
+<P>
+Although ipop3d interoperates with imapd better than qpopper, imapd
+and qpopper will work together.  The few qpopper/imapd
+interoperability issues mostly affect users who use both IMAP and POP3
+clients; those users would probably be better served if their POP3
+server is ipop3d.
+<P>
+If you are happy with qpopper and just want to add imapd, you should
+do that, and defer a decision on changing qpopper to ipop3d.  That
+way, you can get comfortable with imapd's performance, without
+changing anything for your qpopper users.
+<P>
+Many sites have subsequently decided to change from qpopper to ipop3d
+in order to get better POP3/IMAP interoperability.  If you need to do
+this, you'll know.  There also seems to be a way to make qpopper work
+better with imapd; see the answer to the
+<A HREF="#7.44">
+My qpopper users keep on getting the DON'T DELETE THIS
+MESSAGE -- FOLDER INTERNAL DATA if they also use Pine or IMAP.  How can I
+fix this?
+</A> question.
+</DL>
+<A HREF="#top">
+Back to top
+</A>
+<HR>
+<A NAME="1.3">
+<B>
+1.3
+Can I set up a POP or IMAP server on Windows XP, 2000, NT, Me, 98,
+or 95?
+</B>
+</A>
+<DL><DD>
+Yes.  Refer to the NT specific notes in files CONFIG and BUILD.  Also,
+you *must* set up CRAM-MD5 authentication, as described in md5.txt.
+<P>
+There is no file access control on Windows 9x or Me, so you probably will
+have to do modifications to env_unix.c to prevent people from hacking
+others' mail.
+<P>
+Note, however, that the server is not plug and play the way it is for
+UNIX.
+</DL>
+<A HREF="#top">
+Back to top
+</A>
+<HR>
+<A NAME="1.4">
+<B>
+1.4
+Can I set up a POP or IMAP server on Windows 3.1 or DOS?
+</B>
+</A>
+<BR>
+<A NAME="1.5">
+<B>
+1.5
+Can I set up a POP or IMAP server on Macintosh?
+</B>
+</A>
+<BR>
+<A NAME="1.6">
+<B>
+1.6
+Can I set up a POP or IMAP server on VAX/VMS?
+</B>
+</A>
+<DL><DD>
+Yes, it's just a small matter of programming.
+</DL>
+<A HREF="#top">
+Back to top
+</A>
+<HR>
+<A NAME="1.7">
+<B>
+1.7
+Can I set up a POP or IMAP server on TOPS-20?
+</B>
+</A>
+<DL><DD>
+You have a TOPS-20 system?  Cool.
+<P>
+If IMAP2 (RFC 1176) is good enough for you, you can use MAPSER which
+is about the ultimate gonzo pure TOPS-20 extended addressing assembly
+language program.  Unfortunately, IMAP2 is barely good enough for Pine
+these days, and most other IMAP clients won't work with IMAP2 at all.
+Maybe someone will hack MAPSER to do IMAP4rev1 some day.
+<P>
+We don't know if anyone wrote a POP3 server for TOPS-20.  There definitely
+was a POP2 server once upon a time.
+<P>
+Or you can port the POP and IMAP server from this IMAP toolkit to it.  All
+that you need for a first stab is to port the MTX driver.  That'll
+probably be just a couple of hours of hacking.
+</DL>
+<A HREF="#top">
+Back to top
+</A>
+<HR>
+<A NAME="1.8">
+<B>
+1.8
+Are hierarchical mailboxes supported?
+</B>
+</A>
+<BR>
+<A NAME="1.9">
+<B>
+1.9
+Are "dual-use" mailboxes supported?
+</B>
+</A>
+<BR>
+<A NAME="1.10">
+<B>
+1.10
+Can I have a mailbox that has both messages and sub-mailboxes?
+</B>
+</A>
+<DL><DD>
+Yes.  However, there is one important caveat.
+<P>
+Some mailbox formats, including the default which is the traditional UNIX
+mailbox format, are stored as a single file containing all the messages.
+UNIX does not permit a name in the filesystem to be both a file and a
+directory; consequently you can not have a sub-mailbox within a mailbox
+that is in one of these formats.
+<P>
+This is not a limitation of the software; this is a limitation of UNIX.
+For example, there are mailbox formats in which the name is a directory
+and each message is a file within that directory; these formats support
+sub-mailboxes within such mailboxes.  However, for technical reasons, the
+"flat file" formats are generally preferred since they perform better.
+Read imap-2004/docs/formats.txt for more information on this topic.
+<P>
+It is always permissible to create a directory that is not a mailbox, and
+have sub-mailboxes under it.  The easiest way to create a directory is to
+create a new mailbox inside a directory that doesn't already exist.  For
+example, if you create "Mail/testbox" on UNIX, the directory "Mail/" will
+automatically be created and then the mailbox "testbox" will be created as
+a sub-mailbox of "Mail/".
+<P>
+It is also possible to create the name "Mail/" directly.  Check the
+documentation for your client software to see how to do this with that
+software.
+<P>
+Of course, on Windows systems you would use "\" instead of "/".
+</DL>
+<A HREF="#top">
+Back to top
+</A>
+<HR>
+<A NAME="1.11">
+<B>
+1.11
+What is the difference between "mailbox" and "folder"?
+</B>
+</A>
+<DL><DD>
+The term "mailbox" is IMAP-speak for what a lot of software calls a "folder"
+or a "mail folder".  However, "folder" is often used in other contexts to
+refer to a directory, for example, in the graphic user interface on both
+Windows and Macintosh.
+<P>
+A "mailbox" is specifically defined as a named object that contains
+messages.  It is not required to be capable of containing other types of
+objects including other mailboxes; although some mailbox formats will
+permit this.
+<P>
+In IMAP-speak, a mailbox which can not contain other mailboxes is called a
+"no-inferiors mailbox".  Similarly, a directory which can not contain
+messages is not a mailbox and is called a "no-select name".
+</DL>
+<A HREF="#top">
+Back to top
+</A>
+<HR>
+<A NAME="1.12">
+<B>
+1.12
+What is the status of internationalization?
+</B>
+</A>
+<DL><DD>
+The IMAP toolkit is partially internationalized and multilingualized.
+<P>
+Searching is supported in the following charsets:
+US-ASCII, UTF-8, ISO-8859-1, ISO-8859-2, ISO-8859-3, ISO-8859-4,
+ISO-8859-5, ISO-8859-6, ISO-8859-7, ISO-8859-8, ISO-8859-9, ISO-8859-10,
+ISO-8859-11, ISO-8859-13, ISO-8859-14, ISO-8859-15, ISO-8859-16,
+KOI8-R, KOI8-U (alias KOI8-RU), TIS-620, VISCII,
+ISO-2022-JP, ISO-2022-KR, ISO-2022-CN, ISO-2022-JP-1, ISO-2022-JP-2,
+GB2312 (alias CN-GB), CN-GB-12345, BIG5 (alias CN-BIG5),
+EUC-JP, EUC-KR, Shift_JIS, Shift-JIS, KS_C_5601-1987, KS_C_5601-1992,
+WINDOWS_874, WINDOWS-1250, WINDOWS-1251, WINDOWS-1252, WINDOWS-1253,
+WINDOWS-1254, WINDOWS-1255, WINDOWS-1256, WINDOWS-1257, WINDOWS-1258.
+<P>
+All ISO-2022-?? charsets are treated identically, and support ASCII,
+JIS Roman, hankaku katakana, ISO-8859-[1 - 10], TIS, GB 2312, JIS X 0208,
+JIS X 0212, KSC 5601, and planes 1 and 2 of CNS 11643.
+<P>
+EUC-JP includes support for JIS X 0212 and hankaku katakana.
+<P>
+c-client library support also exists to convert text in any of the above
+charsets into Unicode, including headers with MIME encoded-words.
+<P>
+There is no support for localization (e.g. non-English error messages)
+at the present time, but such support is planned.
+</DL>
+<A HREF="#top">
+Back to top
+</A>
+<HR>
+<A NAME="1.13">
+<B>
+1.13
+Can I use SSL?
+</B>
+</A>
+<DL><DD>
+Yes.  See the answer to the
+<A HREF="#3.5">
+How do I configure SSL?
+</A>
+question.
+</DL>
+<A HREF="#top">
+Back to top
+</A>
+<HR>
+<A NAME="1.14">
+<B>
+1.14
+Can I use TLS and the STARTTLS facility?
+</B>
+</A>
+<DL><DD>
+Yes.  See the answer to the
+<A HREF="#3.6">
+How do I configure TLS and the STARTTLS facility?
+</A>
+question.
+</DL>
+<A HREF="#top">
+Back to top
+</A>
+<HR>
+<A NAME="1.15">
+<B>
+1.15
+Can I use CRAM-MD5 authentication?
+</B>
+</A>
+<DL><DD>
+Yes.  See the answer to the
+<A HREF="#3.8">
+How do I configure CRAM-MD5 authentication?
+</A>
+question.
+</DL>
+<A HREF="#top">
+Back to top
+</A>
+<HR>
+<A NAME="1.16">
+<B>
+1.16
+Can I use APOP authentication?
+</B>
+</A>
+<DL><DD>
+Yes.  See the
+<A HREF="#3.9">
+How do I configure APOP authentication?
+</A>
+question.
+<P>
+Note that there is no client support for APOP authentication.
+</DL>
+<A HREF="#top">
+Back to top
+</A>
+<HR>
+<A NAME="1.17">
+<B>
+1.17
+Can I use Kerberos V5?
+</B>
+</A>
+<DL><DD>
+Yes.  See the answer to the
+<A HREF="#3.10">
+How do I configure Kerberos V5?
+</A>
+question.
+</DL>
+<A HREF="#top">
+Back to top
+</A>
+<HR>
+<A NAME="1.18">
+<B>
+1.18
+Can I use PAM for plaintext passwords?
+</B>
+</A>
+<DL><DD>
+Yes.  See the answer to the
+<A HREF="#3.11">
+How do I configure PAM for plaintext passwords?
+</A>
+question.
+</DL>
+<A HREF="#top">
+Back to top
+</A>
+<HR>
+<A NAME="1.19">
+<B>
+1.19
+Can I use Kerberos 5 for plaintext passwords?
+</B>
+</A>
+<DL><DD>
+Yes.  See the answer to the
+<A HREF="#3.13">
+How do I configure Kerberos 5 for plaintext passwords?
+</A>
+question.
+</DL>
+<A HREF="#top">
+Back to top
+</A>
+<HR>
+<A NAME="1.20">
+<B>
+1.20
+Can I use AFS for plaintext passwords?
+</B>
+</A>
+<DL><DD>
+Yes.  See the answer to the
+<A HREF="#3.14">
+How do I configure AFS for plaintext passwords?
+</A>
+question.
+</DL>
+<A HREF="#top">
+Back to top
+</A>
+<HR>
+<A NAME="1.21">
+<B>
+1.21
+Can I use DCE for plaintext passwords?
+</B>
+</A>
+<DL><DD>
+Yes.  See the answer to the
+<A HREF="#3.15">
+How do I configure DCE for plaintext passwords?
+</A>
+question.
+</DL>
+<A HREF="#top">
+Back to top
+</A>
+<HR>
+<A NAME="1.22">
+<B>
+1.22
+Can I use the CRAM-MD5 database for plaintext passwords?
+</B>
+</A>
+<DL><DD>
+Yes.  See the answer to the
+<A HREF="#3.16">
+How do I configure the CRAM-MD5 database for plaintext passwords?
+</A>
+question.
+</DL>
+<A HREF="#top">
+Back to top
+</A>
+<HR>
+<A NAME="1.23">
+<B>
+1.23
+Can I disable plaintext passwords?
+</B>
+</A>
+<DL><DD>
+Yes.  See the answer to the
+<A HREF="#3.17">
+How do I disable plaintext passwords?
+</A>
+question.
+</DL>
+<A HREF="#top">
+Back to top
+</A>
+<HR>
+<A NAME="1.24">
+<B>
+1.24
+Can I disable plaintext passwords on unencrypted sessions, but allow them
+on encrypted sessions?
+</B>
+</A>
+<DL><DD>
+Yes.  See the answer to the
+<A HREF="#3.18">
+How do I disable plaintext passwords on unencrypted sessions, but
+allow them in SSL or TLS sessions?
+</A>
+question.
+</DL>
+<A HREF="#top">
+Back to top
+</A>
+<HR>
+<A NAME="1.25">
+<B>
+1.25
+Can I use virtual hosts?
+</B>
+</A>
+<DL><DD>
+Yes.  See the answer to the
+<A HREF="#3.19">
+How do I configure virtual hosts?
+</A>
+question.
+</DL>
+<A HREF="#top">
+Back to top
+</A>
+<HR>
+<A NAME="1.26">
+<B>
+1.26
+Can I use RPOP authentication?
+</B>
+</A>
+<DL><DD>
+There is no support for RPOP authentication.
+</DL>
+<A HREF="#top">
+Back to top
+</A>
+<HR>
+<A NAME="1.27">
+<B>
+1.27
+Can I use Kerberos V4?
+</B>
+</A>
+<DL><DD>
+Kerberos V4 is not supported.  Kerberos V4 client-only contributed code
+is available in
+<PRE>
+<A HREF="ftp://ftp.cac.washington.edu/mail/kerberos4-patches.tar.Z">ftp://ftp.cac.washington.edu/mail/kerberos4-patches.tar.Z
+</A>
+</PRE>
+This is a patchkit which must be applied to the IMAP toolkit according
+to the instructions in the patchkit's README.  We can not promise that
+this code works.
+</DL>
+<A HREF="#top">
+Back to top
+</A>
+<HR>
+<A NAME="1.28">
+<B>
+1.28
+Is there support for S/Key or OTP?
+</B>
+</A>
+<DL><DD>
+There is currently no support for S/Key or OTP.  There may be an OTP SASL
+authenticator available from third parties.
+</DL>
+<A HREF="#top">
+Back to top
+</A>
+<HR>
+<A NAME="1.29">
+<B>
+1.29
+Is there support for NTLM or SPA?
+</B>
+</A>
+<DL><DD>
+There is currently no support for NTLM or SPA, nor are there any plans
+to add such support.  In general, I avoid vendor-specific mechanisms.
+I also believe that these mechanisms are being deprecated by their
+vendor.
+<P>
+There may be an NTLM SASL authenticator available from third parties.
+</DL>
+<A HREF="#top">
+Back to top
+</A>
+<HR>
+<A NAME="1.30">
+<B>
+1.30
+Is there support for mh?
+</B>
+</A>
+<DL><DD>
+Yes, but only as a legacy format.  Your mh format INBOX is accessed by
+the name "#mhinbox", and all other mh format mailboxes are accessed by
+prefixing "#mh/" to the name, e.g. "#mh/foo".  The mh support uses the
+"Path:" entry in your .mh_profile file to identify the root directory
+of your mh format mailboxes.
+<P>
+Non-legacy use of mh format is not encouraged.  There is no support for
+permanent flags or unique identifiers; furthermore there are known
+severe performance problems with the mh format.
+</DL>
+<A HREF="#top">
+Back to top
+</A>
+<HR>
+<A NAME="1.31">
+<B>
+1.31
+Is there support for qmail and the maildir format?
+</B>
+</A>
+<DL><DD>
+There is no support for qmail or the maildir format in our distribution,
+nor are there any plans to add such support.  Maildir support may be
+available from third parties.
+</DL>
+<A HREF="#top">
+Back to top
+</A>
+<HR>
+<A NAME="1.32">
+<B>
+1.32
+Is there support for the Cyrus mailbox format?
+</B>
+</A>
+<DL><DD>
+No.
+</DL>
+<A HREF="#top">
+Back to top
+</A>
+<HR>
+<A NAME="1.33">
+<B>
+1.33
+Is this software Y2K compliant?
+</B>
+</A>
+<DL><DD>
+Please read the files Y2K and calendar.txt.
+</DL>
+<A HREF="#top">
+Back to top
+</A>
+<H2>
+<HR>
+<BR>
+<A NAME="requirements">
+2. What Do I Need to Build This Software?
+</A>
+</H2>
+<HR>
+<A NAME="2.1">
+<B>
+2.1
+What do I need to build this software with SSL on UNIX?
+</B>
+</A>
+<DL><DD>
+You need to build and install OpenSSL first.
+</DL>
+<A HREF="#top">
+Back to top
+</A>
+<HR>
+<A NAME="2.2">
+<B>
+2.2
+What do I need to build this software with Kerberos V on UNIX?
+</B>
+</A>
+<DL><DD>
+You need to build and install MIT Kerberos first.
+</DL>
+<A HREF="#top">
+Back to top
+</A>
+<HR>
+<A NAME="2.3">
+<B>
+2.3
+What do I need to use a C++ compiler with this software to build my own
+application?
+</B>
+</A>
+<DL><DD>
+If you are building an application using the c-client library, use the
+new c-client.h file instead of including the other include files.  It 
+seems that c-client.h should define away all the troublesome names 
+that conflict with C++.
+<P>
+If you use gcc, you may need to use -fno-operator-names as well.
+</DL>
+<A HREF="#top">
+Back to top
+</A>
+<HR>
+<A NAME="2.4">
+<B>
+2.4
+What do I need to build this software on Windows?
+</B>
+</A>
+<DL><DD>
+You need Microsoft Visual C++ 6.0, Visual C++ .NET, or Visual C# .NET
+(which you can buy from any computer store), along with the Microsoft
+Platform SDK (which you can download from Microsoft's web site).
+<P>
+You do not need to install the entire Platform SDK; it suffices to install
+just the Core SDK and the Internet Development SDK.
+</DL>
+<A HREF="#top">
+Back to top
+</A>
+<HR>
+<A NAME="2.5">
+<B>
+2.5
+What do I need to build this software on DOS?
+</B>
+</A>
+<DL><DD>
+It's been several years since we last attempted to do this.  At
+the time, we used Microsoft C.
+</DL>
+<A HREF="#top">
+Back to top
+</A>
+<HR>
+<A NAME="2.6">
+<B>
+2.6
+Can't I use Borland C to build this software on the PC?
+</B>
+</A>
+<DL><DD>
+Probably not.  If you know otherwise, please let us know.
+</DL>
+<A HREF="#top">
+Back to top
+</A>
+<HR>
+<A NAME="2.7">
+<B>
+2.7
+What do I need to build this software on the Mac?
+</B>
+</A>
+<DL><DD>
+It has been several years since we last attempted to do this.
+At the time, we used Symantec THINK C; but today you'll need a C
+compiler which allows segments to be more than 32K.
+</DL>
+<A HREF="#top">
+Back to top
+</A>
+<HR>
+<A NAME="2.8">
+<B>
+2.8
+What do I need to build this software on VMS?
+</B>
+</A>
+<DL><DD>
+You need the VMS C compiler, and either the Multinet or Netlib TCP.
+</DL>
+<A HREF="#top">
+Back to top
+</A>
+<HR>
+<A NAME="2.9">
+<B>
+2.9
+What do I need to build this software on TOPS-20?
+</B>
+</A>
+<DL><DD>
+You need the TOPS-20 KCC compiler.
+</DL>
+<A HREF="#top">
+Back to top
+</A>
+<HR>
+<A NAME="2.10">
+<B>
+2.10
+What do I need to build this software on Amiga or OS/2?
+</B>
+</A>
+<DL><DD>
+We don't know. 
+</DL>
+<A HREF="#top">
+Back to top
+</A>
+<HR>
+<A NAME="2.11">
+<B>
+2.11
+What do I need to build this software on Windows CE?
+</B>
+</A>
+<DL><DD>
+This port is incomplete.  Someone needs to finish it.
+</DL>
+<A HREF="#top">
+Back to top
+</A>
+<H2>
+<HR>
+<BR>
+<A NAME="build">
+3. Build and Configuration Questions
+</A>
+</H2>
+<HR>
+<A NAME="3.1">
+<B>
+3.1
+How do I configure the IMAP and POP servers on UNIX?
+</B>
+</A>
+<BR>
+<A NAME="3.2">
+<B>
+3.2
+I built and installed the servers according to the BUILD instructions.
+It can't be that easy.  Don't I need to write a config file?
+</B>
+</A>
+<DL><DD>
+For ordinary "vanilla" UNIX systems, this software is plug and play; just
+build it, install it, and you're done.  If you have a modified system,
+then you may want to do additional work; most of this is to a single
+source code file (env_unix.c on UNIX systems).  Read the file CONFIG
+for more details.
+<P>
+Yes, it's that easy.  There are some additional options, such as SSL
+or Kerberos, which require additional steps to build.  See the
+relevant questions below.
+</DL>
+<A HREF="#top">
+Back to top
+</A>
+<HR>
+<A NAME="3.3">
+<B>
+3.3
+How do I make the IMAP and POP servers look for INBOX at some place
+other than the mail spool directory?
+</B>
+</A>
+<BR>
+<A NAME="3.4">
+<B>
+3.4
+How do I make the IMAP server look for secondary folders at some place
+other than the user's home directory?
+</B>
+</A>
+<DL><DD>
+Please read the file CONFIG for discussion of this and other issues.
+</DL>
+<A HREF="#top">
+Back to top
+</A>
+<HR>
+<A NAME="3.5">
+<B>
+3.5
+How do I configure SSL?
+</B>
+</A>
+<BR>
+<A NAME="3.6">
+<B>
+3.6
+How do I configure TLS and the STARTTLS facility?
+</B>
+</A>
+<DL><DD>
+imap-2004 supports SSL and TLS client functionality on UNIX and 32-bit
+Windows for IMAP, POP3, SMTP, and NNTP; and SSL and TLS server
+functionality on UNIX for IMAP and POP3.
+<P>
+UNIX SSL build requires that a third-party software package, OpenSSL, be
+installed on the system first.  Read imap-2004/docs/SSLBUILD for more
+information.
+<P>
+SSL is supported via undocumented Microsoft interfaces in Windows 9x
+and NT4; and via standard interfaces in Windows 2000, Windows Millenium,
+and Windows XP.
+</DL>
+<A HREF="#top">
+Back to top
+</A>
+<HR>
+<A NAME="3.7">
+<B>
+3.7
+How do I build/install OpenSSL and obtain/create certificates for use with SSL?
+</B>
+</A>
+<DL><DD>
+If you need help in doing this, try the contacts mentioned in the OpenSSL
+README.  We do not offer support for OpenSSL or certificates.
+</DL>
+<A HREF="#top">
+Back to top
+</A>
+<HR>
+<A NAME="3.8">
+<B>
+3.8
+How do I configure CRAM-MD5 authentication?
+</B>
+</A>
+<BR>
+<A NAME="3.9">
+<B>
+3.9
+How do I configure APOP authentication?
+</B>
+</A>
+<DL><DD>
+CRAM-MD5 authentication is enabled in the IMAP and POP3 client code on
+all platforms.  Read md5.txt to learn how to set up CRAM-MD5 and APOP
+authentication on UNIX and NT servers.
+<P>
+There is no support for APOP client authentication.
+</DL>
+<A HREF="#top">
+Back to top
+</A>
+<HR>
+<A NAME="3.10">
+<B>
+3.10
+How do I configure Kerberos V5?
+</B>
+</A>
+<DL><DD>
+imap-2004 supports client and server functionality on UNIX and 32-bit
+Windows.
+<P>
+Kerberos V5 is supported by default in Windows 2000 builds:
+<PRE>
+ nmake -f makefile.w2k
+</PRE>
+<P>
+Other builds require that a third-party Kerberos package, e.g. MIT
+Kerberos, be installed on the system first.
+<P>
+To build with Kerberos V5 on UNIX, include EXTRAAUTHENTICATORS=gss in the
+make command line, e.g.
+<PRE>
+ make lnp EXTRAAUTHENTICATORS=gss
+</PRE>
+<P>
+To build with Kerberos V5 on Windows 9x, Windows Millenium, and NT4, use
+the "makefile.ntk" file instead of "makefile.nt":
+<PRE>
+ nmake -f makefile.ntk
+</PRE>
+</DL>
+<A HREF="#top">
+Back to top
+</A>
+<HR>
+<A NAME="3.11">
+<B>
+3.11
+How do I configure PAM for plaintext passwords?
+</B>
+</A>
+<DL><DD>
+On Linux systems, use the lnp port, e.g.
+<PRE>
+ make lnp
+</PRE>
+On Solaris systems and other systems with defective PAM implementations,
+build with PASSWDTYPE=pmb, e.g.
+<PRE>
+ make sol PASSWDTYPE=pmb
+</PRE>
+On all other systems, build with PASSWDTYPE=pam, e.g
+<PRE>
+ make foo PASSWDTYPE=pam
+</PRE>
+If you build with PASSWDTYPE=pam and authentication does not work, try
+rebuilding (after a "make clean") with PASSWDTYPE=pmb.
+</DL>
+<A HREF="#top">
+Back to top
+</A>
+<HR>
+<A NAME="3.12">
+<B>
+3.12
+It looks like all I have to do to make the server use Kerberos is to
+build with PAM on my Linux system, and set it up in PAM for Kerberos
+passwords.  Right?
+</B>
+</A>
+<DL><DD>
+Yes and no.
+<P>
+Doing this will make plaintext password authentication use the Kerberos
+password instead of the /etc/passwd password.
+<P>
+However, this will NOT give you Kerberos-secure authentication.  See
+the answer to the
+<A HREF="#3.10">
+How do I configure Kerberos V5?
+</A>
+question for how to build with Kerberos-secure authentication.
+</DL>
+<A HREF="#top">
+Back to top
+</A>
+<HR>
+<A NAME="3.13">
+<B>
+3.13
+How do I configure Kerberos 5 for plaintext passwords?
+</B>
+</A>
+<DL><DD>
+Build with PASSWDTYPE=gss, e.g.
+<PRE>
+ make sol PASSWDTYPE=gss
+</PRE>
+However, this will NOT give you Kerberos-secure authentication.  See
+the answer to the
+<A HREF="#3.10">
+How do I configure Kerberos V5?
+</A>
+question for how to build with Kerberos-secure authentication.
+</DL>
+<A HREF="#top">
+Back to top
+</A>
+<HR>
+<A NAME="3.14">
+<B>
+3.14
+How do I configure AFS for plaintext passwords?
+</B>
+</A>
+<DL><DD>
+Build with PASSWDTYPE=afs, e.g
+<PRE>
+ make sol PASSWDTYPE=afs
+</PRE>
+</DL>
+<A HREF="#top">
+Back to top
+</A>
+<HR>
+<A NAME="3.15">
+<B>
+3.15
+How do I configure DCE for plaintext passwords?
+</B>
+</A>
+<DL><DD>
+Build with PASSWDTYPE=dce, e.g
+<PRE>
+ make sol PASSWDTYPE=dce
+</PRE>
+</DL>
+<A HREF="#top">
+Back to top
+</A>
+<HR>
+<A NAME="3.16">
+<B>
+3.16
+How do I configure the CRAM-MD5 database for plaintext passwords?
+</B>
+</A>
+<DL><DD>
+The CRAM-MD5 password database is automatically used for plaintext
+password if it exists.
+<P>
+Note that this is NOT CRAM-MD5-secure authentication.  You probably want to
+consider disabling plaintext passwords for non-SSL/TLS sessions.  See the
+next two questions.
+</DL>
+<A HREF="#top">
+Back to top
+</A>
+<HR>
+<A NAME="3.17">
+<B>
+3.17
+How do I disable plaintext passwords?
+</B>
+</A>
+<DL><DD>
+Server-level plaintext passwords can be disabled by setting
+PASSWDTYPE=nul, e.g.
+<PRE>
+ make lnx EXTRAAUTHENTICATORS=gss PASSWDTYPE=nul
+</PRE>
+Note that you must have a CRAM-MD5 database installed or specify at least
+one EXTRAAUTHENTICATOR, otherwise it will not be possible to log in to
+the server.
+<P>
+When plaintext passwords are disabled, the IMAP server will advertise
+the LOGINDISABLED capability and the POP3 server will not advertise
+the USER capability.
+</DL>
+<A HREF="#top">
+Back to top
+</A>
+<HR>
+<A NAME="3.18">
+<B>
+3.18
+How do I disable plaintext passwords on unencrypted sessions, but
+allow them in SSL or TLS sessions?
+</B>
+</A>
+<DL><P>
+Do not set PASSWDTYPE=nul or SSLTYPE=unix.  Set SSLTYPE=nopwd instead, e.g.
+<PRE>
+ make lnx SSLTYPE=nopwd
+</PRE>
+<P>
+When plaintext passwords are disabled, the IMAP server will advertise
+the LOGINDISABLED capability and the POP3 server will not advertise
+the USER capability.
+<P>
+Plaintext passwords will always be enabled in SSL sessions; the IMAP server
+will not advertise the LOGINDISABLED capability and the POP3 server will
+advertise the USER capability.
+<P>
+If the client does a successful start-TLS in a non-SSL session, plaintext
+passwords will be enabled, and a new CAPABILITY or CAPA command (which is
+required after start-TLS) will show the effect as in SSL sessions.
+</DL>
+<A HREF="#top">
+Back to top
+</A>
+<HR>
+<A NAME="3.19">
+<B>
+3.19
+How do I configure virtual hosts?
+</B>
+</A>
+<DL><DD>
+This is automatic, but with certain restrictions.
+<P>
+The most important one is that each virtual host must have its own IP
+address; otherwise the server has no way of knowing which virtual
+host is desired.
+<P>
+As distributed, the software uses a global password file; hence user
+"fred" on one virtual host is "fred" on all virtual hosts.  You may
+want to modify the checkpw() routine to implement some other policy
+(e.g. separate password files).
+<P>
+Note that the security model assumes that all users have their own
+unique UNIX UID number.  So if you use separate password files you
+should make certain that the UID numbers do not overlap between
+different files.
+<P>
+More advanced virtual host support may be available as patches from
+third parties.
+</DL>
+<A HREF="#top">
+Back to top
+</A>
+<HR>
+<A NAME="3.20">
+<B>3.20
+Why do I get compiler warning messages such as:
+</B>
+<PRE>
+ passing arg 3 of `scandir' from incompatible pointer type
+ Pointers are not assignment-compatible.
+ Argument #4 is not the correct type.
+</PRE>
+<B>
+during the build?
+</B>
+</A>
+<DL><DD>
+You can safely ignore these messages.
+<P>
+Over the years, the prototype for scandir() has changed, and thus is
+variant across different UNIX platforms.  In particular, the definitions
+of the third argument (type select_t) and fourth argument (type compar_t)
+have changed over the years, the issue being whether or not the arguments
+to the functions pointed to by these function pointers are of type const
+or not.
+<P>
+The way that c-client calls scandir() will tend to generate these compiler
+warnings on newer systems such as Linux; however, it will still build.
+The problem with fixing the call is that then it won't build on older
+systems.
+</DL>
+<A HREF="#top">
+Back to top
+</A>
+<HR>
+<A NAME="3.21">
+<B>
+3.21
+Why do I get compiler warning messages such as
+</B>
+<PRE>
+ Operation between types "void(*)(int)" and "void*" is not allowed.
+ Function argument assignment between types "void*" and "void(*)(int)" is not allowed.
+ Pointers are not assignment-compatible.
+ Argument #5 is not the correct type.
+</PRE>
+<B>
+during the build?
+</B>
+</A>
+<DL><DD>
+You can safely ignore these messages.
+<P>
+All known systems have no problem with casting a function pointer to/from
+a void* pointer, certain C compilers issue a compiler diagnostic because
+this facility is listed as a "Common extension" by the C standard:
+<PRE>
+ K.5.7  Function pointer casts
+  [#1] A pointer to an object or to void may be cast to a pointer
+       to a function, allowing data to be invoked as a function (6.3.4).
+  [#2] A pointer to a function may be cast to a pointer to an
+       object or to void, allowing a function to be inspected or
+       modified (for example, by a debugger) (6.3.4).
+</PRE>
+It may be just a "common extension", but this facility is relied upon
+heavily by c-client.
+</DL>
+<A HREF="#top">
+Back to top
+</A>
+<HR>
+<A NAME="3.22">
+<B>3.22
+Why do I get linker warning messages such as:
+</B>
+<PRE>
+mtest.c:515: the `gets' function is dangerous and should not be used.
+</PRE>
+<B>
+during the build?  Isn't this a security bug?
+</B>
+</A>
+<DL><DD>
+You can safely ignore this message.
+<P>
+Certain linkers, most notably on Linux, give this warning message.  It
+is indeed true that the traditional gets() function is not a safe one.
+<P>
+However, the mtest program is only a demonstration program, a model of
+a very basic application program using c-client.  It is not something
+that you would install, much less run in any security-sensitive context.
+<P>
+mtest has numerous other shortcuts that you wouldn't want to do in a real
+application program.
+<P>
+The only "security bug" with mtest would be if it was run by some script
+in a security-sensitive context, but mtest isn't particularly useful for
+such purposes.  If you wanted to write a script to automate some email
+task using c-client, you'd be better off using imapd instead of mtest.
+<P>
+mtest only has two legitimate uses.  It's a useful testbed for me when
+debugging new versions of c-client, and it's useful as a model for
+someone writing a simple c-client application to see how the various
+calls work.
+<P>
+By the way, if you need a more advanced example of c-client programming
+than mtest (and you probably will), I recommend that you look at the
+source code for imapd and Pine.
+</DL>
+<A HREF="#top">
+Back to top
+</A>
+<HR>
+<A NAME="3.23">
+<B>
+3.23
+Why do I get linker warning messages such as:
+</B>
+<PRE>
+ auth_ssl.c:92: the `tmpnam' function is dangerous and should not be used.
+</PRE>
+<B>
+during the build?  Isn't this a security bug?
+</B>
+</A>
+<DL><DD>
+You can safely ignore this message.
+<P>
+Certain linkers, most notably on Linux, give this warning message, based
+upon two known issues with tmpnam():
+<DL>
+<DD>
+there can be a buffer overflow if an inadequate buffer is allocated.
+<DD>
+there can be a timing race caused by certain incautious usage of the
+return value.
+</DL>
+<P>
+Neither of these issues applies in the particular use that is made of
+tmpnam().  More importantly, the tmpnam() call is never executed on
+Linux systems.
+</DL>
+<A HREF="#top">
+Back to top
+</A>
+<HR>
+<A NAME="3.24">
+<B>
+3.24
+OK, suppose I see a warning message about a function being "dangerous and
+should not be used" for something other than this gets() or tmpnam() call?
+</B>
+</A>
+<DL><DD>
+Please forward the details for investigation.
+</DL>
+<A HREF="#top">
+Back to top
+</A>
+<H2>
+<HR>
+<BR>
+<A NAME="operation">
+4. Operational Questions
+</A>
+</H2>
+<HR>
+<A NAME="4.1">
+<B>
+4.1
+How can I enable anonymous IMAP logins?
+</B>
+</A>
+<DL><DD>
+Create the file /etc/anonymous.newsgroups.  At the present time, this
+file should be empty.  This will permit IMAP logins as anonymous as
+well as the ANONYMOUS SASL authenticator.  Anonymous users have access
+to mailboxes in the #news., #ftp/, and #public/ namespaces only.
+</DL>
+<A HREF="#top">
+Back to top
+</A>
+<HR>
+<A NAME="4.2">
+<B>
+4.2
+How do I set up an alert message that each IMAP user will see?
+</B>
+</A>
+<DL><DD>
+Create the file /etc/imapd.alert with the text of the message.  This
+text should be kept to one line if possible.  Note that this will
+cause an alert to every IMAP user every time they initiate an IMAP
+session, so it should only be used for critical messages.
+</DL>
+<A HREF="#top">
+Back to top
+</A>
+<HR>
+<A NAME="4.3">
+<B>
+4.3
+How does the c-client library choose which of its several mechanisms to
+use to establish an IMAP connection to the server?  I noticed that it can
+connect on port 143, port 993, via rsh, and via ssh.</B>
+</A>
+<DL><DD>
+c-client chooses how to establish an IMAP connection via the following
+rules:
+<UL>
+<LI>
+If /ssl is specified, use an SSL connection.  Fail otherwise.
+<LI>
+Else if client is a UNIX system and "ssh server exec /etc/rimapd"
+works, use that
+<LI>
+Else if /tryssl is specified and an SSL connection works, use that.
+<LI>
+Else if client is a UNIX system and "rsh server exec /etc/rimapd"
+works, use that.
+<LI>
+Else use a non-SSL connection.
+</UL>
+</DL>
+<A HREF="#top">
+Back to top
+</A>
+<HR>
+<A NAME="4.4">
+<B>
+4.4
+I am using a TLS-capable IMAP server, so I don't need to use /ssl to get
+encryption.  However, I want to be certain that my session is TLS
+encrypted before I send my password.  How to I do this?
+</B>
+</A>
+<DL><DD>
+Use the /tls option in the mailbox name.  This will cause an error message
+and the connection to fail if the server does not negotiate STARTTLS.
+</DL>
+<A HREF="#top">
+Back to top
+</A>
+<HR>
+<A NAME="4.5">
+<B>
+4.5
+How do I use one of the alternative formats described in the formats.txt
+document?  In particular, I hear that mbx format will give me better
+performance and allow shared access.</B>
+</A>
+<DL><DD>
+The rumors about mbx format being preferred are true.  It is faster than
+the traditional UNIX mailbox format and permits shared access.
+<P>
+However, and this is <I>very important</I>, note that using an
+alternative mailbox format is an advanced facility, and only expert
+users should undertake it.  If you don't understand any of the
+following notes, you may not be enough of an expert yet, and are
+probably better off not going this route until you are more
+comfortable with your understanding.
+<P>
+Some of the formats, including mbx, are only supported by the software based
+on the c-client library, and are not recognized by other mailbox programs.
+The "vi" editor will corrupt any mbx format mailbox that it encounters.
+<P>
+Another problem is that the certain formats, including mbx, use
+advanced file access and locking techniques that do <I>not</I> work
+reliably with NFS.  NFS is not a real filesystem.  Use IMAP instead of
+NFS for distributed access.
+<P>
+Each of the following steps are in escalating order of involvement.  The
+further you go down this list, the more deeply committed you become:
+<UL>
+<LI>
+The simplest way to create a mbx-format mailbox is to prefer the name
+with "#driver.mbx/" when creating a mailbox through c-client.  For
+example, if you create "#driver.mbx/foo", the mailbox "foo" will be
+created in mbx format.  Only use "#driver.mbx/" when creating the
+mailbox.  At all other times, just use the name ("foo" in this
+example); the software will automatically select the driver for mbx
+whenever that mailbox is accessed without you doing anything else.
+<LI>
+You can use the "mailutil copy" command to copy an existing mailbox
+to a new mailbox in mbx format.  Read the man page provided with the
+mailutil program for details.
+<LI>
+If you create an mbx-format INBOX, by creating "#driver.mbx/INBOX"
+(note that "INBOX" must be all uppercase), then subsequent access to
+INBOX by any c-client based application will use the mbx-format INBOX.
+Any mail delivered to the traditional format mailbox in the spool
+directory (e.g. /var/spool/mail/$USER) will automatically be copied
+into the mbx-format INBOX and the spool directory copy removed.
+<LI>
+You can cause any newly-created mailboxes to be in mbx-format by
+default by changing the definition of CREATEPROTO=unixproto to be
+CREATEPROTO=mbxproto in src/osdep/unix/Makefile, then rebuilding the
+IMAP toolkit (do a "make clean" first).  Do not change EMPTYPROTO,
+since mbx format mailboxes are never a zero-byte file.  If you use
+Pine or the imap-utils, you should probably also rebuild them with the
+new IMAP toolkit too.
+<LI>
+You can deliver directly to the mbx-format INBOX by use of the tmail
+or dmail programs.  tmail is for direct invocation from sendmail (or
+whatever MTA program you use); dmail is for calls from procmail.  Both
+of these programs have man pages which must be read carefully before
+making this change.
+</UL>
+<P>
+Most other servers (e.g. Cyrus) require use of a non-standard format.
+A full-fledged format conversion is not significantly different from
+what you have to do with other servers.  The difference, which makes
+format conversion procedures somewhat more complicated with this
+server, is that there is no "all or nothing" requirement with this
+server.  There are many points in between.  A format conversion can be
+anything from a single mailbox or single user, to systemwide.
+<P>
+This is good in that you can decide how far to go, or do the steps
+incrementally as you become more comfortable with the result.  On the
+other hand, there's no "One True Way" which can be boiled down to a simple
+set of pedagogical instructions.
+<P>
+A number of sites have done full-fledged format conversions, and are
+reportedly quite happy with the results.  Feel free to ask in the
+comp.mail.imap newsgroup or the c-client mailing list for advice or help.
+</DL>
+<A HREF="#top">
+Back to top
+</A>
+<HR>
+<A NAME="4.6">
+<B>
+4.6
+How do I set up shared mailboxes?
+</B>
+</A>
+<DL><DD>
+At the simplest level, a shared mailbox is one which has UNIX file and
+directory protections which permit multiple users to access it.  What
+this means is that your existing skills and tools to create and manage
+shared files on your UNIX system apply to shared mailboxes; e.g.
+<PRE>
+ chmod 666 mailbox
+</PRE>
+<P>
+You may want to consider the use of a mailbox format which permits multiple
+simultaneous read/write sessions, such as the mbx format.  The traditional
+UNIX format only allows only read/write session to a mailbox at a time.
+<P>
+An additional convenience item are three system directories, which can
+be set up for shared namespaces.  These are: #ftp, #shared, and #public,
+and are defined by creating the associated UNIX users and home directories
+as described below.
+<P>
+#ftp/ refers to the anonymous ftp filesystem exported by the ftp server,
+and is equivalent to the home directory for UNIX user "ftp".  For example,
+#ftp/foo/bar refers to the file /foo/bar in the anonymous FTP filesystem,
+or ~ftp/foo/bar for normal users.  Anonymous FTP files are available to
+anonymous IMAP logins.  By default, newly-created files in #ftp/ are
+protected 644.
+<P>
+#public/ refers to an IMAP toolkit convention called "public" files, and
+is equivalent to the home directory for UNIX user "imappublic".  For
+example, #public/foo/bar refers to the file ~imappublic/foo/bar.  Public
+files are available to anonymous IMAP logins.  By default, newly-created
+files in #public are created with protection 0666.
+<P>
+#shared/ refers to an IMAP toolkit convention called "shared" files, and
+is equivalent to the home directory for UNIX user "imapshared".  For
+example, #shared/foo/bar refers to the file ~imapshared/foo/bar.  Shared
+files are <I>not</I> available to anonymous IMAP logins.  By default,
+newly-created files in #shared are created with protection 0660.
+</DL>
+<A HREF="#top">
+Back to top
+</A>
+<HR>
+<A NAME="4.7">
+<B>
+4.7
+How can I make the server syslogs go to someplace other than the mail
+syslog?
+</B>
+</A>
+<DL><DD>
+The openlog() call that sets the syslog facility is in
+<B>src/osdep/unix/env_unix.c</B> in routine <B>server_init()</B>.  You
+need to edit this file to change the syslog facility from LOG_MAIL to
+the facility you want, then rebuild.  You also need to set up your
+/etc/syslog.conf properly.
+<P>
+Refer to the man pages for syslog and syslogd for more information on what
+the available syslog facilities are and how to configure syslogs.  If you
+still don't understand what to do, find a UNIX system expert.
+</DL>
+<A HREF="#top">
+Back to top
+</A>
+<H2>
+<HR>
+<BR>
+<A NAME="security">
+5. Security Questions
+</A>
+</H2>
+<HR>
+<A NAME="5.1">
+<B>
+5.1
+I see that the IMAP server allows access to arbitary files on the system,
+including /etc/passwd!  How do I disable this?
+</B>
+</A>
+<DL><DD>
+You should not worry about this if your IMAP users are allowed shell
+access.  The IMAP server does not permit any access that the user can
+not have via the shell.
+<P>
+If, and only if, you deny your IMAP users shell access, you may want to
+consider one of three choices.  Note that these choices reduce IMAP
+functionality, and may have undesirable side effects.  Each of these
+choices involves an edit to file <B>
+src/osdep/unix/env_unix.c</B>
+<P>
+The first (and recommended) choice is to set <B>
+restrictBox</B> as described
+in file CONFIG.  This will disable access to the filesystem root, to
+other users' home directory, and to superior directory.
+<P>
+The second (and strongly NOT recommended) choice is to set <B>
+closedBox</B>
+as described in file CONFIG.  This puts each IMAP session into a
+so-called "chroot jail", and thus setting this option is <I>extremely</I>
+dangerous; it can make your system much less secure and open to root
+compromise attacks.  So do not use this option unless you are
+<I>absolutely certain</I> that you understand all the issues of a
+"chroot jail."
+<P>
+The third choice is to rewrite routine <B>
+mailboxfile()</B> to
+implement whatever mapping from mailbox name to filesystem name (and
+restrictions) that you wish.  This is the most general choice.  As a
+guide, you can see at the start of routine <B>
+mailboxfile()</B> what
+the <B>
+restrictBox</B> choice does.
+</DL>
+<A HREF="#top">
+Back to top
+</A>
+<HR>
+<A NAME="5.2">
+<B>
+5.2
+I've heard that IMAP servers are insecure.  Is this true?
+</B>
+</A>
+<DL><DD>
+There are no known security problems in this version of the IMAP
+toolkit, including the IMAP and POP servers.  The IMAP and POP
+servers limit what can be done while not logged in, and as part of
+the login process discard all privileges except those of the user.
+<P>
+As with other software packages, there have been buffer overflow
+vulnerabilities in past versions.  All known problems of this nature
+are fixed in this version.
+<P>
+There is every reason to believe that the bad guys are engaged in an
+ongoing effort to find vulnerabilities in the IMAP toolkit.  We look
+for such problems, and when one is found we fix it.
+<P>
+It's unfortunate that any vulnerabilities existed in past versions, and
+we're doing my best to keep the IMAP toolkit free of vulnerabilities.
+No new vulnerabilities have been discovered in quite a while, but efforts 
+will not be relaxed.
+<P>
+Beware of vendors who claim that their implementations can not have
+vulnerabilities.
+</DL>
+<A HREF="#top">
+Back to top
+</A>
+<HR>
+<A NAME="5.3">
+<B>
+5.3
+How do I know that I have the most secure version of the server?
+</B>
+</A>
+<DL><DD>
+The best way is to keep your server software up to date.  The bad guys
+are always looking for ways to crack software, and when they find one,
+let all their friends know.
+<P>
+Oldtimers used to refer to a concept of <I>software rot</I>: if your software
+hasn't been updated in a while, it would "rot" -- tend to acquire problems
+that it didn't have when it was new.
+<P>
+The latest release version of the IMAP toolkit is always available at
+<A HREF="ftp://ftp.cac.washington.edu/mail/imap.tar.Z">
+ftp://ftp.cac.washington.edu/mail/imap.tar.Z
+</A>
+</DL>
+<A HREF="#top">
+Back to top
+</A>
+<HR>
+<A NAME="5.4">
+<B>
+5.4
+I see all these strcpy() and sprintf() calls, those are unsafe, aren't
+they?
+</B>
+</A>
+<DL><DD>
+Yes and no.
+<P>
+It can be unsafe to do these calls if you do not know that the string
+being written will fit in the buffer.  However, they are perfectly safe
+if you do know that.
+<P>
+Beware of programmers who advocate doing a brute-force change of all
+instances of
+<PRE>
+ strcpy (s,t);
+</PRE>
+to
+<PRE>
+ strncpy (s,t,n)[n] = '\0';
+</PRE>
+and similar measures in the name of "fixing all possible buffer
+overflows."
+<P>
+There are examples in which a security bug was introduced
+because of this type of "fix", due to the programmer using the wrong
+value for n.  In one case, the programmer thought that n was larger
+than it actually was, causing a NUL to be written out of the buffer;
+in another, n was too small, and a security credential was truncated.
+<P>
+What is particularly ironic was that in both cases, the original strcpy()
+was safe, because the size of the source string was known to be safe.
+<P>
+With all this in mind, the software has been inspected, and it is believed
+that all places where buffer overflows can happen have been fixed.  The
+strcpy()s that are still are in the code occur after a size check was
+done in some other way.
+<P>
+Note that the common C idiom of
+<PRE>
+ *s++ = c;
+</PRE>
+is just as vulnerable to buffer overflows.  You can't cure buffer
+overflows by outlawing certain functions, nor is it desirable to do
+so; sometimes operations like strcpy() translate into fast machine
+instructions for better performance.
+<P>
+Nothing replaces careful study of code.  That's how the bad guys find bugs.
+Security is not accomplished by means of brute-force shortcuts.
+</DL>
+<A HREF="#top">
+Back to top
+</A>
+<HR>
+<A NAME="5.5">
+<B>
+5.5
+Those /tmp lock files are protected 666, is that really right?
+</B>
+</A>
+<DL><DD>
+Yes.  Shared mailboxes won't work otherwise.  Also, you get into
+accidental denial of service problems with old lock files left lying
+around; this happens fairly frequently.
+<P>
+The deliberate mischief that can be caused by fiddling with the
+lock files is small-scale; harassment level at most.  There are
+many -- and much more effective -- other ways of harassing another
+user on UNIX.  It's usually not difficult to determine the culprit.
+<P>
+Before worrying about deliberate mischief, worry first about things
+happening by accident!
+</DL>
+<A HREF="#top">
+Back to top
+</A>
+<H2>
+<HR>
+<BR>
+<A NAME="strange">
+6.
+<I>Why Did You Do This Strange Thing?</I>
+Questions
+</A>
+</H2>
+<HR>
+<A NAME="6.1">
+<B>
+6.1
+Why don't you use GNU autoconfig / automake / autoblurdybloop?
+</B>
+</A>
+<DL><DD>
+Autoconfig et al are not available on all the platforms where the IMAP
+toolkit is supported; and do not work correctly on some of the platforms
+where they do exist.  Furthermore, these programs add another layer of
+complexity to an already complex process.
+<P>
+Coaxing software that uses autoconfig to build properly on platforms which
+were not specifically considered by that software wastes an inordinate
+amount of time.  When (not if) autoconfig fails to do the right thing, the
+result is an inpenetrable morass to untangle in order to find the problem
+and fix it.
+<P>
+The concept behind autoconfig is good, but the execution is flawed.  It
+rarely does the right thing on a platform that wasn't specifically
+considered.  Human life is too short to debug autoconfig problems,
+especially since the current mechanism is so much easier.
+<P>
+If an autoconfig mechanism were used, it wouldn't be the GNU one, due
+to the viral nature of the GNU license.
+</DL>
+<A HREF="#top">
+Back to top
+</A>
+<HR>
+<A NAME="6.2">
+<B>
+6.2
+Why do you insist upon a build with -g?  Doesn't it waste disk and
+memory space?
+</B>
+</A>
+<DL><DD>
+From time to time a submitted port has snuck in without -g.  This
+has <I>always</I> ended up causing problems.  There are only two valid
+excuses for not using -g in a port:
+<UL>
+<LI>
+The compiler does not support -g
+<LI>
+An alternate form of -g is needed with optimization, e.g. -g3.
+</UL>
+<P>
+There will be no new ports added without -g (or a suitable alternative)
+being set.
+<P>
+-g has not been arbitrarily added to the ports which do not currently have
+it because we don't know if doing so would break the build.  However, any
+support issues with one of those port <I>will</I> lead to the correct -g
+setting being determined and permanently added.
+<P>
+Processors are fast enough (and disk space is cheap enough) that -g
+should be automatic in all compilers with no way of turning it off, and
+/bin/strip should be a symlink to /bin/true.  Human life is too short to
+deal with binaries built without -g.  Such binaries should be a bad
+memory of the days of KIPS processors and disks that costs several
+dollars per kilobyte.
+</DL>
+<A HREF="#top">
+Back to top
+</A>
+<HR>
+<A NAME="6.3">
+<B>
+6.3
+Why don't you make c-client a shared library?
+</B>
+</A>
+<DL><DD>
+All too often, shared libraries create far more problems than they solve.
+<P>
+Remember that you only gain the benefit of a shared library when there
+are multiple applications which use that shared library.  Even without
+shared libraries, on most modern operating systems (and many ancient ones
+too!) applications will share their text segments between across multiple
+processes running the same application.  This means that if your system
+only runs one application (e.g. imapd) that uses the c-client library,
+then you gain no benefit from making c-client a shared library even if
+it has 100 imapd processes.  You will, however suffer added complexity.
+<P>
+If you have a server system that just runs imapd and ipop3d, then making
+c-client a shared library will save just one copy of c-client no matter
+how many IMAP/POP3 processes are running.
+<P>
+The problem with shared libraries is that you have to keep around a copy
+of the library every time something changes in the library that would
+affect the interface the library presents to the application.  So, you
+end up having many copies of the same shared library.
+<P>
+If you don't keep multiple copies of the shared library, then one of two
+things happens.  If there was proper versioning, then you'll get a message
+such as "cannot open shared object file" or "minor versions don't match"
+and the application won't run.  Otherwise, the application will run, but
+will fail in mysterious ways.
+<P>
+Several sites and third-party distributors have modified the c-client
+makefile in order to make c-client be a shared library.  <I>When</I>
+(not <I>if</I>) a c-client based application fails in mysterious ways
+because of a library compatibility problem, the result is a bug
+report.  A lot of time and effort ends up getting wasted investigating
+such bug reports.
+<P>
+Memory is so cheap these days that it's not worth it.  Human life is too
+short to deal with shared library compatibility problems.
+</DL>
+<A HREF="#top">
+Back to top
+</A>
+<HR>
+<A NAME="6.4">
+<B>
+6.4
+Why don't you use iconv() for internationalization support?
+</B>
+</A>
+<DL><DD>
+iconv() is not ubiquitous enough.
+</DL>
+<A HREF="#top">
+Back to top
+</A>
+<HR>
+<A NAME="6.5">
+<B>
+6.5
+Why is the IMAP server connected to the home directory by default?
+</B>
+</A>
+<DL><DD>
+The IMAP server has no way of knowing what you might call "mail" as
+opposed to "some other file"; in fact, you can use IMAP to access any
+file.
+<P>
+The IMAP server also doesn't know whether your preferred subdirectory
+for mailbox files is "mail/", ".mail/", "Mail/", "Mailboxes/", or any
+of a zillion other possibilities.  If one such name were chosen, it
+would undoubtably anger the partisans of all the other names.
+<P>
+It is possible to modify the software so that the default connected
+directory is someplace else.  Please read the file CONFIG for
+discussion of this and other issues.
+</DL>
+<A HREF="#top">
+Back to top
+</A>
+<HR>
+<A NAME="6.6">
+<B>
+6.6
+I have a Windows system.  Why isn't the server plug and play for me?
+</B>
+</A>
+<DL><DD>
+There is no standard for how mail is stored on Windows; nor a single
+standard SMTP server.  The closest to either would be the SMTP server
+in Microsoft's IIS.
+<P>
+So there's no default by which to make
+assumptions.  As the software is set up, it assumes that the each user
+has an Windows login account and private home directory, and that mail
+is stored on that home directory as files in one of the popular UNIX
+formats.  It also assumes that there is some tool equivalent to inetd
+on UNIX that does the TCP/IP listening and server startup.
+<P>
+Basically, unless you're an email software hacker, you probably want
+to look elsewhere if you want IMAP/POP servers for Windows.
+</DL>
+<A HREF="#top">
+Back to top
+</A>
+<HR>
+<A NAME="6.7">
+<B>
+6.7
+I looked at the UNIX SSL code and saw that you have the SSL data payload
+size set to 8192 bytes.  SSL allows 16K; why aren't you using the full
+size?
+</B>
+</A>
+<DL><DD>
+This is to avoid an interoperability problem with:
+<UL>
+<LI>
+PC IMAP clients that use Microsoft's SChannel.DLL (SSPI) for SSL support
+<LI>
+Microsoft Exchange server (which also uses SChannel).
+</UL>
+<P>
+SChannel has a bug that makes it think that the maximum SSL data
+payload size is 16379 bytes -- 5 bytes too small.  Thus, c-client has
+to make sure that it never transmits full sized SSL packets.
+<P>
+The reason for using 8K (as opposed to, say, 16379 bytes, or 15K, or...) is
+that it corresponds with the TCP buffer size that the software uses
+elsewhere for input; there's a slight performance benefit to having the
+two sizes correspond or at least be a multiple of each other.  Also, it
+keeps the size as a power of two, which might be significant on some
+platforms.
+<P>
+There wasn't a significant difference that we could measure between 8K and
+15K.
+<P>
+Microsoft has developed a hotfix for this bug.  Look up MSKB article
+number 300562.  Contrary to the article text which implies that this
+is a Pine issue, this bug also affects Microsoft Exchange server with
+<I>any</I> client that transmits full-sized SSL payloads.
+</DL>
+<A HREF="#top">
+Back to top
+</A>
+<HR>
+<A NAME="6.8">
+<B>
+6.8
+Why is an mh format INBOX called #mhinbox instead of just INBOX?
+</B>
+</A>
+<DL><DD>
+It's a long story.  In brief, the mh format driver is less functional
+than any of the other drivers.  It turned out that there were some
+users (including high-level administrators) who tried mh years ago and
+no longer use it, but still had an mh profile left behind.
+<P>
+When the mh driver used INBOX, it would see the mh profile, and
+proceed to move the user's INBOX into the mh format INBOX.  This
+caused considerable confusion as some things stopped working.
+</DL>
+<A HREF="#top">
+Back to top
+</A>
+<HR>
+<A NAME="6.9">
+<B>
+6.9
+Why don't you support the maildir format?
+</B>
+</A>
+<DL><DD>
+It is technically difficult to support maildir in IMAP while maintaining
+acceptable performance, robustness, following the requirements of the IMAP
+protocol specification, and following the requirements of maildir.
+<P>
+No one has succeeded in accomplishing all four together.  The various
+maildir drivers offered as patches all have these problems.  The problem
+is exacerbated because this implementation supports multiple formats;
+consequently this implementation can't make any performance shortcuts by
+assuming that all the world is maildir.
+<P>
+We can't do a better job than the maildir fan community
+has done with their maildir drivers.  Similarly, if the maildir fan
+community provides the maildir driver, they take on the responsibility for
+answering maildir-specific support questions.  This is as it should be, and
+that is why maildir support is left to the maildir fan community.
+</DL>
+<A HREF="#top">
+Back to top
+</A>
+<HR>
+<A NAME="6.10">
+<B>
+6.10
+Why don't you support the Cyrus format?
+</B>
+</A>
+<DL><DD>
+There's no point to doing so.  An implementation which supports multiple
+formats will never do as well as one which is optimized to support one
+single format.
+<P>
+If you want to use Cyrus mailbox format, you should use the Cyrus
+server, which is the native implementation of that format and is
+specifically optimized for that format.  That's also why Cyrus doesn't
+implement any other format.
+</DL>
+<A HREF="#top">
+Back to top
+</A>
+<HR>
+<A NAME="6.11">
+<B>
+6.11
+Why is it creating extra forks on my SVR4 system?
+</B>
+</A>
+<DL><DD>
+This is because your system only has fcntl() style locking and not flock()
+style locking.  fcntl() locking has a design flaw that causes a close()
+to release any locks made by that process on the file opened on that
+file descriptor, even if the lock was made on a different file descriptor.
+<P>
+This design flaw causes unexpected loss of lock, and consequent mailbox
+corruption.  The workaround is to do certain "dangerous operations" in
+another fork, thus avoiding doing a close() in the vulnerable fork.
+<P>
+The best way to solve this problem is to upgrade your SVR4 (Solaris, AIX,
+HP-UX, SGI) or OSF/1 system to a more advanced operating system, such as
+Linux or BSD.  These more advanced operating systems have fcntl() locking
+for compatibility with SVR4, but also have flock() locking.
+<P>
+Beware of certain SVR4 systems, such as AIX, which have an "flock()"
+function in their C library that is just a jacket that does an fcntl()
+lock.  This is not a true flock(), and has the same design flaw as fcntl().
+</DL>
+<A HREF="#top">
+Back to top
+</A>
+<HR>
+<A NAME="6.12">
+<B>
+6.12
+Why are you so fussy about the date/time format in the internal "From "
+line in traditional UNIX mailbox files?  My other mail program just
+considers every line that starts with "From " to be the start of the
+message.
+</B>
+</A>
+<DL><DD>
+You just answered your own question.  If any line that starts with "From "
+is treated as the start of a message, then every message text line which
+starts with "From " has to be quoted (typically by prefixing a "&gt"
+character).  People complain about this -- "why did a &gt get stuck in my
+message?"
+<P>
+
+So, good mail reading software only considers a line to be a "From " line
+if it follows the actual specification for a "From " line.  This means,
+among other things, that the day of week is fixed-format: "May 14", but
+"May&nbsp;&nbsp;7" (note the extra space) as opposed to "May 7".  ctime()  
+format for the date is the most common, although POSIX also allows a
+numeric timezone after the year.  For compatibility with ancient software,
+the seconds are optional, the timezone may appear before the year, the old
+3-letter timezones are also permitted, and "remote from xxx" may appear
+after the whole thing.
+
+<P>
+Unfortunately, some software written by novices use other formats.  The
+most common error is to have a variable-width day of month, perhaps in
+the erroneous belief that RFC 2822 (or RFC 822) defines the format of the
+date/time in the "From " line (it doesn't; no RFC describes internal
+formats).  I've seen a few other goofs, such as a single-digit second,
+but these are less common.
+<P>
+If you are writing your own software that writes mailbox files, and you
+really aren't all that savvy with all the ins and outs and ancient history,
+you should seriously consider using the c-client library (e.g. routine
+mail_append()) instead of doing the file writes yourself.  If you must do
+it yourself, use ctime(), as in:
+<PRE>
+ fprintf (mbx,"From %s@%h %s",user,host,ctime (time (0)));
+</PRE>
+rather than try to figure out a good format yourself.  ctime() is the most
+traditional format and nobody will flame you for using it.
+</DL>
+<A HREF="#top">
+Back to top
+</A>
+<HR>
+<A NAME="6.13">
+<B>
+6.13
+Why is traditional UNIX format the default format?
+</B>
+</A>
+<DL><DD>
+Compatibility with the past 30 or so years of UNIX history.  This server is
+the only one that completely interoperates with legacy UNIX mail tools.
+</DL>
+<A HREF="#top">
+Back to top
+</A>
+<HR>
+<A NAME="6.14">
+<B>
+6.14
+Why do you write this "DON'T DELETE THIS MESSAGE -- FOLDER INTERNAL DATA"
+message at the start of traditional UNIX and MMDF format mailboxes?
+</B>
+</A>
+<DL><DD>
+This pseudo-message serves two purposes.
+<P>
+First, it establishes the mailbox format even when the mailbox has no
+messages.  Otherwise, a mailbox with no messages is a zero-byte file,
+which could be one of several formats.
+<P>
+Second, it holds mailbox metadata used by IMAP: the UID validity, the last
+assigned UID, and mailbox keywords.  Without this metadata, which must be
+preserved even when the mailbox has no messages, the traditional UNIX
+format wouldn't be able to support the full capabilities of IMAP.
+</DL>
+<A HREF="#top">
+Back to top
+</A>
+<HR>
+<A NAME="6.15">
+<B>
+6.15
+Why don't you stash the mailbox metadata in the first real message of the
+mailbox instead of writing this fake FOLDER INTERNAL DATA message?
+</B>
+</A>
+<DL><DD>
+In fact, that is what is done if the mailbox is non-empty and does not
+already have a FOLDER INTERNAL DATA message.
+<P>
+One problem with doing that is that if some external program removes the
+first message, the metadata is lost and must be recreated, thus losing any
+prior UID or keyword list status that IMAP clients may depend upon.
+<P>
+Another problem is that this doesn't help if the last message is deleted.
+This will result in an empty mailbox, and the necessity to create a FOLDER
+INTERNAL DATA message.
+</DL>
+<A HREF="#top">
+Back to top
+</A>
+<HR>
+<A NAME="6.16">
+<B>
+6.16
+Why aren't "dual-use" mailboxes the default?
+</B>
+</A>
+<DL><DD>
+Compatibility with the past 30 or so years of UNIX history, not to mention
+compatibility with user expectations when using shell tools.
+</DL>
+<A HREF="#top">
+Back to top
+</A>
+<HR>
+<A NAME="6.17">
+<B>
+6.17
+Why do you use ucbcc to build on Solaris?
+</B>
+</A>
+<DL><DD>
+It is a long, long story about why cc is set to ucbcc.  You need
+to invoke the C compiler so that it links with the SVR4 libraries and not
+the BSD libraries, otherwise readdir() will return the wrong information.
+<P>
+Of all the names in the most common path, ucbcc is the only name to be found
+(on /usr/ccs/bin) that points to a suitable compiler.  cc is likely to be
+/usr/ucb/cc which is absolutely not the compiler that you want.  The real
+SVR4 cc is probably something like /opt/SUNWspro/bin/cc which is rarely in
+anyone's path by default.
+<P>
+ucbcc is probably a link to acc, e.g. /opt/SUNWspro/SC4.0/bin/acc, and is
+the UCB C compiler using the SVR4 libraries.
+<P>
+If ucbcc isn't on your system, then punt on the SUN C compiler and use gcc
+instead (the gso port instead of the sol port).
+<P>
+If, in spite of all the above warnings, you choose to change "ucbcc" to
+"cc", you will probably find that the -O2 needs to be changed to -O.  If
+you don't get any error messages with -O2, that's a pretty good indicator
+that you goofed and are running the compiler that will link with the BSD
+libraries.
+<P>
+To recap:
+<UL>
+<LI>
+The sol port is designed to be built using the UCB compiler using the
+SVR4 libraries.  This compiler is "ucbcc", which is lunk to acc.  You
+use -O2 as one of the CFLAGS.
+<LI>
+If you build the sol port with the UCB compiler using the BSD libraries,
+you will get no error messages but you will get bad binaries (the most
+obvious symptom is dropping the first two characters return filenames
+from the imapd LIST command.  This compiler also uses -O2, and is very
+often what the user gets from "cc".  <B>
+BEWARE</B>
+<LI>
+If you build the sol port with the real SVR4 compiler, which is often
+hidden away or unavailable on many systems, then you will get errors
+from -O2 and you need to change that to -O.  But you will get a good
+binary.  However, you should try it with -O2 first, to make sure that
+you got this compiler and not the UCB compiler using BSD libraries.
+</UL>
+</DL>
+<A HREF="#top">
+Back to top
+</A>
+<HR>
+<A NAME="6.18">
+<B>
+6.18
+Why should I care about some old system with BSD libraries?  cc is
+the right thing on my Solaris system!
+</B>
+</A>
+<DL><DD>
+Because there still are sites that use such systems.  On those systems, the
+assumption that "cc" does the right thing will lead to corrupt binaries
+with no error message or other warning that anything is amiss.
+<P>
+Too many sites have fallen victim to this problem.
+</DL>
+<A HREF="#top">
+Back to top
+</A>
+<HR>
+<A NAME="6.19">
+<B>
+6.19
+Why do you insist upon writing .lock files in the spool directory?
+</B>
+</A>
+<DL><DD>
+Compatibility with the past 30 years of UNIX software which deals with the
+spool directory, especially software which delivers mail.  Otherwise, it
+is possible to lose mail.
+</DL>
+<A HREF="#top">
+Back to top
+</A>
+<HR>
+<A NAME="6.20">
+<B>
+6.20
+Why should I care about compatibility with the past?
+</B>
+</A>
+<DL><DD>
+This is one of those questions in which the answer never convinces those
+who ask it.  Somehow, everybody who ever asks this question ends up
+answering it for themselves as they get older, with the very answer that
+they rejected years earlier.
+</DL>
+<A HREF="#top">
+Back to top
+</A>
+<H2>
+<HR>
+<BR>
+<A NAME="problems">
+7. Problems and Annoyances
+</A>
+</H2>
+<HR>
+<A NAME="7.1">
+<B>
+7.1
+Help!  My INBOX is empty!  What happened to my messages?
+</B>
+</A>
+<DL><DD>
+If you are seeing "0 messages" when you open INBOX and you know you have
+messages there (and perhaps have looked at your mail spool file and see
+that messages are there), then probably there is something wrong with the
+very first line of your mail spool file.  Make sure that the first five
+bytes of the file are "From ", followed by an email address and a
+date/time in ctime() format, e.g.:
+<PRE>
+ From fred@foo.bar Mon May  7 20:54:30 2001
+</PRE>
+</DL>
+<A HREF="#top">
+Back to top
+</A>
+<HR>
+<A NAME="7.2">
+<B>
+7.2
+Help!  All my messages in a non-INBOX mailbox have been concatenated into
+one message which claims to be from me and has a subject of the file name
+of the mailbox!  What's going on?
+</B>
+</A>
+<DL><DD>
+Something wrong with the very first line of the mailbox.  Make sure that
+the first five bytes of the file are "From ", followed by an email address
+and a date/time in ctime() format, e.g.:
+<PRE>
+ From fred@foo.bar Mon May  7 20:54:30 2001
+</PRE>
+</DL>
+<A HREF="#top">
+Back to top
+</A>
+<HR>
+<A NAME="7.3">
+<B>
+7.3
+Why do I get the message:
+</B>
+<TT>
+ CREATE failed: Can't create mailbox node xxxxxxxxx: File exists
+</TT>
+<B>
+and how do I fix it?
+</B>
+</A>
+<DL><DD>
+See the answer to the
+<A HREF="#1.8">
+Are hierarchical mailboxes supported?
+</A>
+question.
+</DL>
+<A HREF="#top">
+Back to top
+</A>
+<HR>
+<A NAME="7.4">
+<B>
+7.4
+Why can't I log in to the server?  The user name and password are right!
+</B>
+</A>
+<DL><DD>
+There are a myriad number of possible answers to this question.  The only
+way to say for sure what is wrong is run the server under a debugger
+such as gdb while root (yes, you must be root) with a breakpoint at
+routines checkpw() and loginpw(), then single-step until you see which
+test rejected you.  The server isn't going to give any error messages
+other than "login failed" in the name of not giving out any unnecessary
+information to unauthorized individuals.
+<P>
+Here are some of the more common reasons why login may fail:
+<UL>
+<LI>
+You didn't really give the correct user name and/or password.
+<LI>
+Your client doesn't send the LOGIN command correctly; for example,
+IMAP2 clients won't send a password containing a "*" correctly to
+an IMAP4 server.
+<LI>
+If you have set up a CRAM-MD5 database, remember that the password
+used is the one in the CRAM-MD5 database, and furthermore that there
+must also be an entry in /etc/passwd (but the /etc/passwd password
+is not used).
+<LI>
+If you are using PAM, have you created a service file for the server
+in /etc/pam.d?
+<LI>
+If you are using shadow passwords, have you used an appropriate port
+when building?  In particular, note that "lnx" is for Linux systems
+without shadow passwords; you probably want "slx" or "lnp" instead.
+<LI>
+If your system has account or password expirations, check to see
+that the expiration date hasn't passed.
+<LI>
+You can't log in as root or any other UID 0 user.  This is for your
+own safety, not to mention the fact that the servers use UID 0 as
+meaning "not logged in".
+</UL>
+</DL>
+<A HREF="#top">
+Back to top
+</A>
+<HR>
+<A NAME="7.5">
+<B>
+7.5
+Help!  My load average is soaring and I see hundreds of POP and IMAP
+servers, many logged in as the same user!
+</B>
+</A>
+<DL><DD>
+Certain inferior losing GUI mail reading programs have a "synchronize
+all mailboxes at startup" (IMAP) or "check for new mail every second"
+(POP) feature which causes a rapid and unchecked spawning of servers.
+<P>
+This is not a problem in the server; the client is really asking for
+all those server sessions.  Unfortunately, there isn't much that the
+POP and IMAP servers can do about it; they don't spawned themselves.
+<P>
+Some sites have added code to record the number of server sessions
+spawned per user per hour, and disable login for a user who has
+exceeded a predetermined rate.  This doesn't stop the servers from
+being spawned; it just means that a server session will commit suicide
+a bit faster.
+<P>
+Another possibility is to detect excessive server spawning activity at
+the level where the server is spawned, which would be inetd or possibly
+tcpd.  The problem here is that this is a hard time to quantify.  50
+sessions in a minute from a multi-user timesharing system may be
+perfectly alright, whereas 10 sessions a minute from a PC may be too
+much.
+<P>
+The real solution is to fix the client configuration, by disabling those
+evil features.  Also tell the vendors of those clients how you feel about
+distributing denial-of-service attack tools in the guise of mail reading
+programs.
+</DL>
+<A HREF="#top">
+Back to top
+</A>
+<HR>
+<A NAME="7.6">
+<B>
+7.6
+Why does mail disappear even though I set "keep mail on server"?
+</B>
+</A>
+<BR>
+<A NAME="7.7">
+<B>
+7.7
+Why do I get the message
+</B>
+<TT>
+ Moved ##### bytes of new mail to /home/user/mbox from /var/spool/mail/user
+</TT>
+<B>
+and why did this happen?
+</B>
+</A>
+<DL><DD>
+This is probably caused by the mbox driver.  If the file "mbox" exists on
+the user's home directory and is in UNIX mailbox format, then when INBOX
+is opened this file will be selected as INBOX instead of the mail spool
+file.  Messages will be automatically transferred from the mail spool file
+into the mbox file.
+<P>
+To disable this behavior, delete "mbox" from the EXTRADRIVERS list in the
+top-level Makefile and rebuild.  Note that if you do this, users won't
+be able to access the messages that have already been moved to mbox
+unless they open mbox instead of INBOX.
+</DL>
+<A HREF="#top">
+Back to top
+</A>
+<HR>
+<A NAME="7.8">
+<B>
+7.8
+Why isn't it showing the local host name as a fully-qualified domain name?
+</B>
+</A>
+<BR>
+<A NAME="7.9">
+<B>
+7.9
+Why is the local host name in the From/Sender/Message-ID headers of
+outgoing mail not coming out as a fully-qualified domain name?
+</B>
+</A>
+<DL><DD>
+Your UNIX system is misconfigured.  The entry for your system in
+/etc/hosts must have the fully-qualified domain name first, e.g.
+<PRE>
+ 105.69.1.234	bombastic.blurdybloop.com bombastic
+</PRE>
+<P>
+A common mistake of novice system administrators is to have the
+short name first, e.g.
+<PRE>
+ 105.69.1.234	bombastic bombastic.blurdybloop.com
+</PRE>
+<P>or to omit the fully qualified domain name entirely, e.g.
+<PRE>
+ 105.69.1.234	bombastic
+</PRE>
+<P>The result of this is that when the IMAP toolkit does a 
+gethostbyname()
+call to get the fully-qualified domain name, it would get "bombastic"
+instead of "bombastic.blurdybloop.com".
+<P>
+On some systems, a configuration file (typically named /etc/svc.conf,
+/etc/netsvc.conf, or /etc/nsswitch.conf) can be used to configure the
+system to use the domain name system (DNS) instead of /etc/hosts, so
+it doesn't matter if /etc/hosts is misconfigured.
+<P>
+Check the man pages for gethostbyname, hosts, svc, and/or netsvc for
+more information.
+<P>
+Unfortunately, certain vendors, most notably SUN, have failed to
+make this clear in their documentation.  Most of SUN's documentation
+assumes a corporate network that is not connected to the Internet.
+<P>
+net.folklore once (late 1980s) held that the proper procedure was to
+append the results of getdomainname() to the name returned by
+gethostname(), and some versions of sendmail configuration files were
+distributed that did this.  This was incorrect; the string returned
+from getdomainname() is the Yellow Pages (a.k.a NIS) domain name,
+which is a completely different (albeit unfortunately named) entity
+from an Internet domain.  These were often fortuitously the same
+string, except when they weren't.  Frequently, this would result in
+host names with spuriously doubled domain names, e.g.
+<PRE>
+ bombastic.blurdybloop.com.blurdybloop.com
+</PRE>
+<P>
+This practice has been thoroughly discredited for many years, but
+folklore dies hard.
+</DL>
+<A HREF="#top">
+Back to top
+</A>
+<HR>
+<A NAME="7.10">
+<B>
+7.10
+What does the message:
+</B>
+<TT>
+ Mailbox vulnerable - directory /var/spool/mail must have 1777 protection
+</TT>
+<B>
+mean?  How can I fix this?
+</B>
+</A>
+<DL><DD>
+In order to update a mailbox in the default UNIX format, it is necessary
+to create a lock file to prevent the mailer from delivering mail while
+an update is in progress.  Some systems use a directory protection of
+775, requiring that all mail handling programs be setgid mail; or of
+755, requiring that all mail handling programs be setuid root.
+<P>
+The IMAP toolkit does not run with any special privileges, and I plan
+to keep it that way.  It is antithetical to the concept of a toolkit
+if users can't write their own programs to use it.  Also, I've had
+enough bad experiences with security bugs while running privileged;
+the IMAP and POP servers have to be root when not logged in, in order
+to be able to log themselves in.  I don't want to go any deeper down
+that slippery slope.
+<P>
+Directory protection 1777 is secure enough on most well-managed systems.
+If you can't trust your users with a 1777 mail spool (petty harassment
+is about the limit of the abuse exposure), then you have much worse
+problems then that.
+<P>
+If you absolutely insist upon requiring privileges to create a lock file,
+external file locking can be done via a setgid mail program named
+/etc/mlock (this is defined by LOCKPGM in the c-client Makefile).  If
+the toolkit is unable to create a &lt...mailbox...&gt.lock file in the
+directory by itself, it will try to call mlock to do it.  I do not recommend
+doing this for performance reasons.
+<P>
+A sample mlock program is included as part of imap-2004.  We have tried
+to make this sample program secure, but it has not been thoroughly
+audited.
+</DL>
+<A HREF="#top">
+Back to top
+</A>
+<HR>
+<A NAME="7.11">
+<B>
+7.11
+What does the message:
+</B>
+<TT>
+ Mailbox is open by another process, access is readonly
+</TT>
+<B>
+mean?  How do I fix this?
+</B>
+</A>
+<DL><DD>
+A problem occurred in applying a lock to a /tmp lock file.  Either some
+other program has the mailbox open and won't relenquish it, or
+something is wrong with the protection of /tmp or the lock.
+<P>
+Make sure that the /tmp directory is protected 1777.  Some security
+scripts incorrectly set the protection of the /tmp directory to 775,
+which disables /tmp for all non-privileged programs.
+</DL>
+<A HREF="#top">
+Back to top
+</A>
+<HR>
+<A NAME="7.12">
+<B>
+7.12
+What does the message:
+</B>
+<TT>
+ Can't get write access to mailbox, access is readonly
+</TT>
+<B>
+mean?
+</B>
+</A>
+<DL><DD>
+The mailbox file is write-protected against you.
+</DL>
+<A HREF="#top">
+Back to top
+</A>
+<HR>
+<A NAME="7.13">
+<B>
+7.13
+I set my POP3 client to "delete messages from server" but they never get
+deleted.  What is wrong?
+</B>
+</A>
+<DL><DD>
+Make sure that your mailbox is not read-only: that the mailbox is owned
+by you and write enabled (protection 0600), and that the /tmp directory
+is longer world-writeable.  /tmp must be world-writeable because lots of
+applications use it for scratch space.  To fix this, do
+<PRE>
+ chmod 1777 /tmp
+</PRE>
+as root.
+<P>
+Make sure that your POP3 client issues a QUIT command when it finishes.
+The POP3 protocol specifies that deletions are discarded unless a proper
+QUIT is done.
+<P>
+Make sure that you are not opening multiple POP3 sessions to the same
+mailbox.  It is a requirement of the POP3 protocol than only one POP3
+session be in effect to a mailbox at a time, however some, poorly-written
+POP3 clients violate this.  Also, some background "check for new mail"
+tasks also cause a violation.  See the answer to the
+<A HREF="#7.19">What does the syslog message:
+Killed (lost mailbox lock) user=... host=... mean?</A>
+question for more details.
+</DL>
+<A HREF="#top">
+Back to top
+</A>
+<HR>
+<A NAME="7.14">
+<B>
+7.14
+What do messages such as:
+</B>
+<PRE>
+ Message ... UID ... already has UID ...
+ Message ... UID ... less than ...
+ Message ... UID ... greater than last ...
+ Invalid UID ... in message ..., rebuilding UIDs
+</PRE>
+<B>
+mean?
+</B>
+</A>
+<DL><DD>
+Something happened to corrupt the unique identifier regime in the mailbox.
+In traditional UNIX-format mailboxes, this can happen if the user deleted
+the "DO NOT DELETE" internal message.
+<P>
+This problem is relatively harmless; a new valid unique identifier regime
+will be created.  The main effect is that any references to the old UIDs
+will no longer be useful.
+<P>
+So, unless it is a chronic problem or you feel like debugging, you can
+safely ignore these messages.
+</DL>
+<A HREF="#top">
+Back to top
+</A>
+<HR>
+<A NAME="7.15">
+<B>
+7.15
+What do the error messages:
+</B>
+<PRE>
+ Unable to read internal header at ...
+ Unable to find CRLF at ...
+ Unable to parse internal header at ...
+ Unable to parse message date at ...
+ Unable to parse message flags at ...
+ Unable to parse message UID at ...
+ Unable to parse message size at ...
+ Last message (at ... ) runs past end of file ...
+</PRE>
+<B>
+mean?  I am using mbx format.
+</B>
+</A>
+<DL><DD>
+The mbx-format mailbox is corrupted and needs to be repaired.
+<P>
+You should make an effort to find out why the corruption happened.  Was
+there an obvious system problem (crash or disk failure)?  Did the user
+accidentally access the file via NFS?  Mailboxes don't get corrupted by
+themselves; something caused the problem.
+<P>
+Some people have developed automated scripts, but if you're comfortable
+using emacs it's pretty easy to fix it manually.  Do <I>not</I> use
+vi or any other editor unless you are certain that editor can handle binary!!!
+<P>
+If you are not comfortable with emacs, or if the file is too large to read
+with emacs, see the "step-by-step" technique later on for another way of
+doing it.
+<P>
+After the word "at" in the error message is the byte position it got to
+when it got unhappy with the file, e.g. if you see:
+<PRE>
+ Unable to parse internal header at 43921: ne bombastic blurdybloop
+</PRE>
+The problem occurs at the 43,931 byte in the file.  That's the point you
+need to fix.  c-client is expecting an internal header at that byte number,
+looking something like:
+<PRE>
+ 6-Jan-1998 17:42:24 -0800,1045;000000100001-00000001
+</PRE>
+The format of this internal line is:
+<PRE>
+ dd-mmm-yyyy hh:mm:ss +zzzz,ssss;ffffffffFFFF-UUUUUUUU
+</PRE>
+The only thing that is variable is the "ssss" field, it can be as many
+digits as needed.  All other fields (inluding the "dd") are fixed
+width.  So, the easiest thing to do is to look forward in the file for
+the next internal header, and delete everything from the error point
+to that internal header.
+<P>
+Here's what to do if you want to be smarter and do a little bit more
+work.  Generally, you're in the middle of a message, and there's
+nothing wrong with that message.  The problem happened in the
+*previous* message.  So, search back to the previous internal header.
+Now, remember that "ssss" field?  That's the size of that message.
+<P>
+Mark where you are in the file, move the cursor to the line after the
+internal header, and skip that many bytes ("ssss") forward.  If you're
+at the point of the error in the file, then that message is corrupt.
+If you're at a different point, then perhaps the previous message is
+corrupt and has a too long size count that "ate" into this message.
+<P>
+Basically, what you need to do is make sure that all those size counts are
+right, and that moving "ssss" bytes from the line after the internal header
+will land you at another internal header.
+<P>
+Usually, once you know what you're looking at, it's pretty easy to work out
+the corruption, and the best remedial action.  Repair scripts
+will make the problem go away but may not always do the smartest/best
+salvage of the user's data.  Manual repair is more flexible and usually 
+preferable.
+<P>
+Here is a step-by-step technique for fixing corrupt mbx files that's a bit
+cruder than the procedure outlined above, but works for any size file.
+<P>
+In this example, suppose that the corrupt file is INBOX, the error
+message is
+<PRE>
+ Unable to find CRLF at 132551754
+</PRE>
+and the size of the INBOX file is 132867870 bytes.
+<P>
+The first step is to split the mailbox file at the point of the error:
+<UL>
+<LI>
+Rename the INBOX file to some other name, such as INBOX.bad.
+<LI>
+Copy the first 132,551,754 bytes of INBOX.bad to another file, such as
+INBOX.new.
+<LI>
+Extract the trailing 316,116 bytes (132867870-132551754) of INBOX.bad
+into another file, such as INBOX.tail.
+<LI>
+You no longer need INBOX.bad.  Delete it.
+</UL>
+In other words, use the number from the "Unable to find CRLF at" as the
+point to split INBOX into two new files, INBOX.new and INBOX.tail.
+<P>
+Now, remove the erroneous data:
+<UL>
+<LI>
+Verify that you can open INBOX.new in IMAP or Pine.
+<LI>
+The last message of INBOX.new is probably corrupted.  Copy it to
+another file, such as badmsg.1, then delete and expunge that last
+message from INBOX.new
+<LI>
+Locate the first occurance of text in INBOX.tail which looks like an
+internal header, as described above.
+<LI>
+Remove all the text which occurs
+prior to that point, and place it into another file, such as badmsg.2.
+Note that in the case of a single digit date, there is a leading space
+which must not be removed (e.g. " 6-Nov-2001" not "6-Nov-2001").
+</UL>
+<P>
+Reassemble the mailbox:
+<UL>
+<LI>
+Append INBOX.tail to INBOX.new.
+<LI>
+You no longer need INBOX.tail.  Delete it.
+<LI>
+Verify that you can open INBOX.new in IMAP or Pine.
+</UL>
+<P>
+Reinstall INBOX.new as INBOX:
+<UL>
+<LI>
+Check to see if you have received any new messages while repairing INBOX.
+<LI>
+If you haven't received any new messages while repairing INBOX, just
+rename INBOX.new to INBOX.
+<LI>
+If you have received new messages, be sure to copy the new messages
+from INBOX to INBOX.new before doing the rename.
+</UL>
+<P>
+You now have a working INBOX, as well as two files with corrupted data
+(badmsg.1 and badmsg.2).  There may be some useful data in the two
+badmsg files that you might want to try salvaging; otherwise you can
+delete the two badmsg files.
+</DL>
+<A HREF="#top">
+Back to top
+</A>
+<HR>
+<A NAME="7.16">
+<B>
+7.16
+What do the syslog messages:
+</B>
+<PRE>
+ imap/tcp server failing (looping)
+ pop3/tcp server failing (looping)
+</PRE>
+<B>
+mean?  When it happens, the listed service shuts down.  How can I fix this?
+</B>
+</A>
+<DL><DD>
+The error message "server failing (looping), service terminated" is not
+from either the IMAP or POP servers.  Instead, it comes from inetd, the
+daemon which listens for TCP connections to a number of servers,
+including the IMAP and POP servers.
+<P>
+inetd has a limit of 40 new server sessions per minute for any
+particular service.  If more than 40 sessions are initiated in a
+minute, inetd will issue the "failing (looping), service terminated"
+message and shut down the service for 10 minutes.  inetd does this to
+prevent system resource consumption by a client which is spawning
+infinite numbers of servers.  It should be noted that this is a
+denial of service; however for some systems the alternative is a
+crash which would be a worse denial of service!
+<P>
+For larger server systems, the limit of 40 is much too low.  The limit was
+established many years ago when a system typically only ran a few dozen
+servers.
+<P>
+On some versions of inetd, such as the one distributed with most
+versions of Linux, you can modify the <B>/etc/inetd.conf</B> file to
+have a larger number of servers by appending a period followed by a
+number after the <B>nowait</B> word for the server entry.  For example, if
+your existing /etc/inetd.conf line reads:
+<PRE>
+ imap    stream  tcp     nowait  root    /usr/etc/imapd imapd
+</PRE>
+try changing it to be:
+<PRE>
+ imap    stream  tcp     nowait.100  root    /usr/etc/imapd imapd
+</PRE>
+Another example (using TCP wrappers):
+<PRE>
+ imap    stream  tcp     nowait  root    /usr/sbin/tcpd  imapd
+</PRE>
+try changing it to be:
+<PRE>
+ imap    stream  tcp     nowait.100  root    /usr/sbin/tcpd  imapd
+</PRE>
+to increase the limit to 100 sessions/minute.
+<P>
+Before making this change, please read the information in "man inetd" to
+determine whether or not your inetd has this feature.  If it does not, and
+you make this change, the likely outcome is that you will disable IMAP
+service entirely.
+<P>
+Another way to fix this problem is to edit the inetd.c source code
+(provided by your UNIX system vendor) to set higher limits, rebuild
+inetd, install the new binary, and reboot your system.  This should
+only be done by a UNIX system expert.  In the inetd.c source code, the
+limits <B>TOOMANY</B> (normally 40) is the maximum number of new
+server sessions permitted per minute, and <B>RETRYTIME</B> (normally
+600) is the number of seconds inetd will shut down the server after it
+exceeds TOOMANY.
+</DL>
+<A HREF="#top">
+Back to top
+</A>
+<HR>
+<A NAME="7.17">
+<B>
+7.17
+What does the syslog message:
+</B>
+<TT>
+ Mailbox lock file /tmp/.600.1df3 open failure: Permission denied
+</TT>
+<B>
+mean?
+</B>
+</A>
+<DL><DD>
+This usually means that some "helpful" security script person has
+protected /tmp so that it is no longer world-writeable.  /tmp must be
+world-writeable because lots of applications use it for scratch space.
+To fix this, do
+<PRE>
+ chmod 1777 /tmp
+</PRE>
+as root.
+<P>
+If that isn't the answer, check the protection of the named file.  If
+it is something other than 666, then either someone is hacking or
+some "helpful" person modified the code to have a different default
+lock file protection.
+</DL>
+<A HREF="#top">
+Back to top
+</A>
+<HR>
+<A NAME="7.18">
+<B>
+7.18
+What do the syslog messages:
+</B>
+<PRE>
+ Command stream end of file, while reading line user=... host=...
+ Command stream end of file, while reading char user=... host=...
+ Command stream end of file, while writing text user=... host=...
+</PRE>
+<B>
+mean?
+</B>
+</A>
+<DL><DD>
+This message occurs when the session is disconnected without a proper
+LOGOUT (IMAP) or QUIT (POP) command being received by the server first.
+<P>
+In many cases, this is perfectly normal; many client implementations
+are impolite and do this.  Some programmers think this sort of rudeness
+is "more efficient".
+<P>
+The condition could, however, indicate a client or network connectivity
+problem.  The server has no way of knowing whether there's a problem or
+just a rude client, so it issues this message instead of a Logout.
+<P>
+Certain inferior losing clients disconnect abruptly after a failed login,
+and instead of saying that the login failed, just say that they can't
+access the mailbox.  They then complain to the system manager, who looks
+in the syslog and finds this message.  Not very helpful, eh?  See the
+answer to the
+<A HREF="#7.4">
+Why can't I log in to the server?  The user name and password are
+right!
+</A>
+question.
+<P>
+If the user isn't reporting a problem, you can probably ignore this
+message.
+</DL>
+<A HREF="#top">
+Back to top
+</A>
+<HR>
+<A NAME="7.19">
+<B>
+7.19
+Why did my POP or IMAP session suddenly disconnect?  The syslog has the
+message:
+</B>
+<TT>
+ Killed (lost mailbox lock) user=... host=...
+</TT>
+</A>
+<DL><DD>
+This message only happens when either the traditional UNIX mailbox format
+or MMDF format is in use.  This format only allows one session to have
+the mailbox open read/write at a time.
+<P>
+The servers assume that if a second session attempts to open the mailbox,
+that means that the first session is probably owned by an abandoned client.
+The common scenario here is a user who leaves his client running at the
+office, and then tries to read his mail from home.  Through an internal
+mechanism called <I>kiss of death</I>, the second session requests the first
+session to kill itself.  When the first session receives the "kiss of
+death", it issues the "Killed (lost mailbox lock)" syslog message and
+terminates.  The second session then seizes read/write access, and becomes
+the new "first" session.
+<P>
+Certain poorly-designed clients routinely open multiple sessions to the
+same mailbox; the users of those clients tend to get this message a lot.
+<P>
+Another cause of this message is a background "check for new mail" task
+which does its work by opening a POP session to server every few seconds.
+They do this because POP doesn't have a way to announce new mail.
+<P>
+The solution to both situations is to replace the client with a good
+online IMAP client such as Pine.  Life is too short to waste on POP
+clients and poorly-designed IMAP clients.
+</DL>
+<A HREF="#top">
+Back to top
+</A>
+<HR>
+<A NAME="7.20">
+<B>
+7.20
+Why does my IMAP client show all the files on the system, recursively
+from the UNIX root directory?
+</B>
+</A>
+<BR>
+<A NAME="7.21">
+<B>
+7.21
+Why does my IMAP client show all of my files, recursively from my UNIX
+home directory?
+</B></A>
+<DL><DD>
+A well-written client should only show one level of hierarchy and then
+stop, awaiting explicit user action before going lower.  However, some
+poorly-designed clients will recursively list all files, which may be a
+very long list (especially if you have symbolic links to directories
+that create a loop in the filesystem graph!).
+<P>
+This behavior has also been observed in some third-party c-client
+drivers, including maildir drivers.  Consequently, this problem has
+even been observed in Pine.  It is important to understand that this
+is not a problem in Pine or c-client; it is a problem in the
+third-party driver.  A Pine built without that third-party driver will
+not have this problem.
+<P>
+See also the answer to
+<A HREF="#7.73">
+Why does my IMAP client show all my files in my home directory?
+</A>
+</DL>
+<A HREF="#top">
+Back to top
+</A>
+<HR>
+<A NAME="7.22">
+<B>
+7.22
+Why does my IMAP client show that I have mailboxes named "#mhinbox", "#mh",
+"#shared", "#ftp", "#news", and "#public"?
+</B>
+</A>
+<DL><DD>
+These are IMAP namespace names.  They represent other hierarchies in
+which messages may exist.  These hierarchies may not necessarily exist
+on a server, but the namespace name is still in the namespace list in
+order to mark it as reserved.
+<P>
+A few poorly-designed clients display all namespace names as if they
+were top-level mailboxes in a user's list of mailboxes, whether or
+not they actually exist.  This is a flaw in those clients.
+</DL>
+<A HREF="#top">
+Back to top
+</A>
+<HR>
+<A NAME="7.23">
+<B>
+7.23
+Why does my IMAP client show all my files in my home directory?
+</B>
+</A>
+<DL><DD>
+As distributed, the IMAP server is connected to your home directory by
+default.  It has no way of knowing what you might call "mail" as
+opposed to "some other file"; in fact, you can use IMAP to access any
+file.
+<P>
+Most clients have an option to configure your connected directory on
+the IMAP server.  For example, in Pine you can specify this as the "Path" in your folder-collection, e.g.
+<PRE>
+ Nickname  : Secondary Folders
+ Server    : imap.blurdybloop.com
+ Path      : mail/
+ View      : 
+</PRE>
+In this example, the user is connected to the "mail" subdirectory of
+his home directory.
+<P>
+Other servers call this the "folder prefix" or similar term.
+<P>
+It is possible to modify the IMAP server so that all users are
+automatically connected to some other directory, e.g. a subdirectory
+of the user's home directory.  Read the file CONFIG for more details.
+</DL>
+<A HREF="#top">
+Back to top
+</A>
+<HR>
+<A NAME="7.24">
+<B>
+7.24
+Why is there a long delay before I get connected to the IMAP or POP server,
+no matter what client I use?
+</B>
+</A>
+<DL><DD>
+There are two common occurances of this problem:
+<UL>
+<LI>
+You are running a system (e.g. certain versions of Linux) which
+by default attempts to connect to an "IDENT" protocol (port 113)
+server on your client.  However, a firewall or NAT box is blocking
+connections to that port, so the connection attempt times out.
+<P>
+The IDENT protocol is a well-known bad idea that does not deliver
+any real security but causes incredible problems.  The idea is that
+this will give the server a record of the user name, or at least
+what some program listening on port 113 says is the user name.  So,
+if somebody coming from port nnnnn on a system does something bad,
+IDENT may give you the userid of the bad guy.
+<P>
+The problem is, IDENT is only meaningful on a timesharing system which
+has an administrator who is privileged and users who are not.  It is
+of no value on a personal system which has no separate concept of
+"system administrator" vs. "unprivileged user".
+<P>
+On either type of system, security-minded people either turn IDENT off
+or replace it with an IDENT server that lies.  Among other things,
+IDENT gives spammers the ability to harvest email addresses from
+anyone who connects to a web page.
+<P>
+This problem has been showing up quite frequently on systems which use
+xinetd instead of inetd.  Look for files named /etc/xinetd.conf,
+/etc/xinetd.d/imapd, /etc/inetd.d/ipop2d, and /etc/xinetd.d/ipop3d.
+In those files, look for lines containing "USERID", e.g.
+<PRE>
+ log_on_success	+= USERID
+</PRE>
+Hunt down such lines, and delete them ruthlessly from all files in
+which they occur.  Don't be shy about it.
+<P>
+<LI>
+The DNS is taking a long time to do a reverse DNS (PTR record)
+lookup of the IP address of your client.  This is a problem in your
+DNS, which either you or you ISP need to resolve.  Ideally, the DNS
+should return the client's name; but if it can't it should at least
+return an error quickly.
+</UL>
+<P>
+As you may have noticed, neither of these are actual problems in the IMAP
+or POP servers; they are configuration issues with either your system or
+your network infrastructure.  If this is all new to you, run (don't walk)
+to the nearest technical bookstore and get yourself a good pedagogical
+text on system administration for the type of system you are running.
+</DL>
+<A HREF="#top">
+Back to top
+</A>
+<HR>
+<A NAME="7.25">
+<B>
+7.25
+Why is there a long delay in Pine or any other c-client based
+application call before I get connected to the IMAP server?  The hang
+seems to be in the c-client mail_open() call.  I don't have this
+problem with any other IMAP client.  There is no delay connecting to a
+POP3 or NNTP server with mail_open().
+</B>
+</A>
+<DL><DD>
+By default, the c-client library attempts to make a connection through
+rsh (and ssh, if you enable that).  If the command:
+<PRE>
+ rsh imapserver exec /etc/rimapd
+</PRE>
+(or ssh if that is enabled) returns with a "* PREAUTH" response, it
+will use the resulting rsh session as the IMAP session and not require
+an authentication step on the server.
+<P>
+Unfortunately, rsh has a design error that treats "TCP connection
+refused" as "temporary failure, try again"; it expects the "rsh not
+allowed" case to be implemented as a successful connection followed
+by an error message and close the connection.
+<P>
+It must be emphasized that this is a bug in rsh.  It is <I>not</I> a
+bug in the IMAP toolkit.
+<P>
+The use of rsh can be disabled in any the following ways:
+<UL>
+<LI>
+You can disable it for this particular session by either:
+<UL>
+<LI>
+setting an explicit port number in the mailbox name, e.g.
+<PRE>
+ {imapserver.foo.com:143}INBOX
+</PRE>
+<LI>
+using SSL (the /ssl switch)
+</UL>
+<P>
+<LI>
+You can disable rsh globally by setting the rsh timeout value to 0
+with the call:
+<PRE>
+ mail_parameters (NIL,SET_RSHTIMEOUT,0);
+</PRE>
+</UL>
+</DL>
+<A HREF="#top">
+Back to top
+</A>
+<HR>
+<A NAME="7.26">
+<B>
+7.26
+Why does a message sometimes get split into two or more messages on my
+SUN system?
+</B>
+</A>
+<DL><DD>
+This is caused by an interaction of two independent design problems in
+SUN mail software.  The first problem is that the "forward message"
+option in SUN's <I>mail tool</I> program includes the internal "From "
+header line in the text that it forwarded.  This internal header line
+is specific to traditional UNIX mailbox files and is not suitable for
+use in forwarded messages.
+<P>
+The second problem is that the mail delivery agent assumes that mail
+reading programs will not use the traditional UNIX mailbox format but
+instead an incompatible variant that depends upon a
+<I>Content-Length:</I> message header.  Content-Length is widely
+recognized to have been a terrible mistake, and is no longer
+recommended for use in mail (it is used in other facilities that use
+MIME).
+<P>
+One symptom of the problem is that under certain circumstances, a
+message may get broken up into several messages.  I'm also aware of
+security bugs caused by programs that foolishly trust
+"Content-Length:" headers with evil values.
+<P>
+To fix the mailer on your system, edit your sendmail.cf to change the
+<B>Mlocal</B> line to have the <B>-E</B> flag.  A typical entry will lool like:
+<PRE>
+ Mlocal,	P=/usr/lib/mail.local, F=flsSDFMmnPE, S=10, R=20,
+		A=mail.local -d $u
+</PRE>
+
+This fix will also work around the problem with mail tool, because
+it will insert a "&gt" before the internal header line to prevent it
+from being interpreted by mail reading software as an internal header
+line.
+</DL>
+<A HREF="#top">
+Back to top
+</A>
+<HR>
+<A NAME="7.27">
+<B>
+7.27
+Why did my POP or IMAP session suddenly disconnect?  The syslog has the
+message:
+</B>
+<PRE>
+ Autologout user=&lt...my user name...&gt host=&lt...my client system...&gt
+</PRE>
+</A>
+<DL><DD>
+This is a problem in your client.
+<P>
+In the case of IMAP, it failed to communicate with the IMAP server for
+over 30 minutes; in the case of POP, it failed to communicate with the
+POP server for over 10 minutes.
+</DL>
+<A HREF="#top">
+Back to top
+</A>
+<HR>
+<A NAME="7.28">
+<B>
+7.28
+What does the UNIX error message:
+</B>
+<TT>
+TLS/SSL failure: myserver: SSL negotiation failed
+</TT>
+<B>
+mean?
+</B>
+</A>
+<BR>
+<A NAME="7.29">
+<B>
+7.29
+What does the PC error message:
+</B>
+<TT>
+TLS/SSL failure: myserver: Unexpected TCP input disconnect
+</TT>
+<B>
+mean?
+</B>
+</A>
+<DL><DD>
+This usually means that an attempt to negotiate TLS encryption via the
+STARTTLS command failed, because the server advertises STARTTLS
+functionality, but doesn't actually have it (e.g. because no certificates
+are installed).
+<P>
+Use the /notls option in the mailbox name to disable TLS negotiation.
+</DL>
+<A HREF="#top">
+Back to top
+</A>
+<HR>
+<A NAME="7.30">
+<B>
+7.30
+What does the error message:
+</B>
+<TT>
+TLS/SSL failure: myserver: Server name does not match certificate
+</TT>
+<B>
+mean?
+</B>
+</A>
+<DL><DD>
+An SSL or TLS session encryption failed because the server name in the
+server's certificate does not match the name that you gave it.  This
+could indicate that the server is not really the system you think that it
+is, but can be also be called if you gave a nickname for the server or
+name that was not fully-qualified.  You must use the fully-qualified domain
+name for the server in order to validate its certificate
+<P>
+Use the /novalidate-cert option in the mailbox name to disable validation
+of the certificate.
+</DL>
+<A HREF="#top">
+Back to top
+</A>
+<HR>
+<A NAME="7.31">
+<B>
+7.31
+What does the UNIX error message:
+</B>
+<TT>
+TLS/SSL failure: myserver: self-signed certificate
+</TT>
+<B>
+mean?
+</B>
+</A>
+<BR>
+<A NAME="7.32">
+<B>
+7.32
+What does the PC error message:
+</B>
+<TT>
+TLS/SSL failure: myserver: Self-signed certificate or untrusted authority
+</TT>
+<B>
+mean?
+</B>
+</A>
+<DL><DD>
+An SSL or TLS session encryption failed because your server's certificate
+is "self-signed"; that is, it is not signed by any Certificate Authority
+(CA) and thus can not be validated.  A CA-signed certificate costs money,
+and some smaller sites either don't want to pay for it or haven't gotten
+one yet.  The bad part about this is that this means there is no guarantee
+that the server is really the system you think that it is.
+<P>
+Use the /novalidate-cert option in the mailbox name to disable validation
+of the certificate.
+</DL>
+<A HREF="#top">
+Back to top
+</A>
+<HR>
+<A NAME="7.33">
+<B>
+7.33
+What does the UNIX error message:
+</B>
+<TT>
+ TLS/SSL failure: myserver: unable to get local issuer certificate
+</TT>
+<B>
+mean?
+</B>
+</A>
+<DL><DD>
+An SSL or TLS session encryption failed because your system does not have
+the Certificate Authority (CA) certificates installed on OpenSSL's
+certificates directory.  On most systems, this directory is
+/usr/local/ssl/certs).  As a result, it is not possible to validate the
+server's certificate.
+<P>
+If CA certificates are properly installed, you should see factory.pem
+and about a dozen other .pem names such as thawteCb.pem.
+<P>
+As a workaround, you can use the /novalidate-cert option in the mailbox
+name to disable validation of the certificate; however, note that you are
+then vulnerable to various security attacks by bad guys.
+<P>
+The correct fix is to copy all the files from the certs/ directory in the
+OpenSSL distribution to the /usr/local/ssl/certs (or whatever) directory.
+Note that you need to do this after building OpenSSL, because the OpenSSL
+build creates a number of needed symbolic links.   For some bizarre reason,
+the OpenSSL "make install" doesn't do this for you, so you must do it
+manually.
+</DL>
+<A HREF="#top">
+Back to top
+</A>
+<HR>
+<A NAME="7.34">
+<B>
+7.34
+Why does reading certain messages hang when using Netscape?  It works
+fine with Pine!
+</B>
+</A>
+<DL><DD>
+There are two possible causes.
+<P>
+Check the mail syslog.  If you see the message "Killed (lost mailbox
+lock)" for the impacted user(s), read the FAQ entry regarding that message.
+<P>
+Check the affected mailbox to see if there are embedded NUL characters
+in the message.  NULs in message texts are a technical violation of both
+the message format and IMAP specifications.  Most clients don't care, but
+apparently Netscape does.
+<P>
+You can work around this by rebuilding imapd with the <B>NETSCAPE_BRAIN_DAMAGE</B>
+option set (see src/imapd/Makefile); this will cause imapd to convert all
+NULs to 0x80 characters.  A better solution is to enable the feature in
+your MTA to MIME-convert messages with binary content.  See the
+documentation for your MTA for how to do this.
+</DL>
+<A HREF="#top">
+Back to top
+</A>
+<HR>
+<A NAME="7.35">
+<B>
+7.35
+Why does Netscape say that there's a problem with the IMAP server and that
+I should "Contact your mail server administrator."?
+</B>
+</A>
+<DL><DD>
+Certain versions of Netscape do this when you click the Manage Mail button,
+which uses an undocumented feature of Netscape's proprietary IMAP server.
+<P>
+You can work around this by rebuilding imapd with the <B>NETSCAPE_BRAIN_DAMAGE</B>
+option set (see src/imapd/Makefile) to a URL that points either to an
+alternative IMAP client (e.g. Pine) or perhaps to a homebrew mail account
+management page.
+</DL>
+<A HREF="#top">
+Back to top
+</A>
+<HR>
+<A NAME="7.36">
+<B>
+7.36
+Why is one user creating huge numbers of IMAP or POP server sessions?
+</B>
+</A>
+<DL><DD>
+The user is probably using Outlook Express, Eudora, or a similar program. See the
+answer to the <A HREF="#7.5"> Help!  My load average is soaring and I see
+hundreds of POP and IMAP servers, many logged in as the same user! </A> question.
+</DL>
+<A HREF="#top">
+Back to top
+</A>
+<HR>
+<A NAME="7.37">
+<B>
+7.37
+Why don't I get any new mail notifications from Outlook Express or Outlook
+after a while?
+</B>
+</A>
+<DL><DD>
+This is a known bug in Outlook Express.  Microsoft is aware of the
+problem and its cause.  They have informed us that they do not have
+any plans to fix it at the present time.
+<P>
+The problem is also reported in Outlook 2000, but not verified.
+<P>
+Outlook Express uses the IMAP IDLE command to avoid having to "ping" the
+server every few minutes for new mail.  Unfortunately, Outlook Express
+overlooks the part in the IDLE specification which requires that a client
+terminate and restart the IDLE before the IMAP 30 minute inactivity
+autologout timer triggers.
+<P>
+When this happens, Outlook Express displays "Not connected" at the bottom
+of the window.  Since it's no longer connected to the IMAP server, it
+isn't going to notice any new mail.
+<P>
+As soon as the user does anything that would cause an IMAP operation,
+Outlook Express will reconnect and new mail will flow again.  If the user
+does something that causes an IMAP operation at least every 29 minutes,
+the problem won't happen.
+<P>
+Modern versions of imapd attempt to work around the problem by automatically
+reporting fake new mail after 29 minutes.  This causes Outlook Express to
+exit the IDLE state; as soon as this happens imapd revokes the fake new mail.
+As long as this behavior isn't known to cause problems with other clients,
+this workaround will remain in imapd.
+</DL>
+<A HREF="#top">
+Back to top
+</A>
+<HR>
+<A NAME="7.38">
+<B>
+7.38
+Why don't I get any new mail notifications from Entourage?
+</B>
+</A>
+<DL><DD>
+This is a known bug in Entourage.
+<P>
+You built an older version of imapd with the <B>MICROSOFT_BRAIN_DAMAGE</B>
+option set, in order to disable support for the IDLE command.  However,
+Entourage won't get new mail unless IDLE command support exists.
+<P>
+Note: the MICROSOFT_BRAIN_DAMAGE option no longer exists in modern versions,
+as the Outlook Express problem which it attempted to solve has been worked
+around in another way.
+</DL>
+<A HREF="#top">
+Back to top
+</A>
+<HR>
+<A NAME="7.39">
+<B>
+7.39
+Why doesn't Entourage work at all?
+</B>
+</A>
+<DL><DD>
+It's hard to know.  Entourage breaks almost every rule in the book for
+IMAP. It is highly instructive to do a packet trace on Entourage, as an
+example of how <I>not</I> to use IMAP.  It does things like STATUS
+(MESSAGES) on the currently selected mailbox and re-fetching the same
+static data over and over again.
+<P>
+It seems that every time we understand what it is doing wrong in Entourage
+and come up with a workaround, we learn about something else that's
+broken.
+<P>
+Try building imapd with the <B>ENTOURAGE_BRAIN_DAMAGE</B> option set,
+in order to disable the diagnostic that occurs when doing STATUS on
+the currently selected mailbox.
+</DL>
+<A HREF="#top">
+Back to top
+</A>
+<HR>
+<A NAME="7.40">
+<B>
+7.40
+Why doesn't Netscape Notify (NSNOTIFY.EXE) work at all?
+</B>
+</A>
+<DL><DD>
+This is a bug in NSNOTIFY; it doesn't handle unsolicited data from the
+server correctly.
+<P>
+Fortunately, there is no reason to use this program with IMAP; NSNOTIFY is
+a polling program to let you know when new mail has appeared in your
+maildrop.  This is necessary with POP; but since IMAP dynamically
+announces new mail in the session you're better off (and will actually
+cause less load on the server!) keeping your mail reading program's IMAP
+session open and let IMAP do the notifying for you.
+<P>
+Consequently, the recommended fix for the NSNOTIFY problem is to delete
+the NSNOTIFY binary.
+</DL>
+<A HREF="#top">
+Back to top
+</A>
+<HR>
+<A NAME="7.41">
+<B>
+7.41
+Why can't I connect via SSL to Eudora?  It says the connection has been
+broken, and in the server syslogs I see "Command stream end of file".
+</B>
+</A>
+<DL><DD>
+There is a report that you can fix the problem by going into Eudora's
+advanced network configuration menu and increasing the network buffer size
+to 8192.
+</DL>
+<A HREF="#top">
+Back to top
+</A>
+<HR>
+<A NAME="7.42">
+<B>
+7.42
+Sheesh.  Aren't there <I>any</I> good IMAP clients out there?
+</B>
+</A>
+<DL><DD>
+Yes!
+<P>
+Pine is a <I>wonderful</I> client.  It's fast, it uses IMAP well, and
+it generates text mail (life is too short to waste on HTML mail).
+Also, there are some really wonderful things in progress in the Pine
+world.
+<P>
+There are some good GUI clients out there, mostly from smaller vendors.
+Without naming names, look for the vendors who are active in the IMAP
+protocol development community, and their products.
+
+<P>
+Netscape, Eudora, and Outlook <I>can</I> be configured with enough effort
+to be good citizens and work well for users, <I>but</I> they can also be
+badly misconfigured, and often the misconfiguration is the default.
+</DL>
+<A HREF="#top">
+Back to top
+</A>
+<HR>
+<A NAME="7.43">
+<B>
+7.43
+But wait!  PC Pine (or other PC program build with c-client) crashes with
+the message
+</B>
+<TT>
+incomplete SecBuffer exceeds maximum buffer size
+</TT>
+<B>
+when I use SSL connections.  This is a bug in c-client, right?
+</B>
+</A>
+<DL><DD>
+It's a bug in the Microsoft SChannel.DLL, which implements SSL.  
+Microsoft admits it (albeit with an unstatement: "it's not fully RFC
+compliant").  The problem is that SChannel indicates that the maximum SSL
+packet data size is 5 bytes smaller than the actual maximum.  Thus, any
+IMAP server which transmits a maximum sized SSL packet will not work with
+PC Pine or any other program which uses SChannel.
+<P>
+It can take a while for the problem to show up.  The client has to do
+something that causes at least 16K of contiguous data.  Many clients do
+partial fetching, which tends to reduce the number of cases where this can
+happen.  However, <I>all</I> software which uses SChannel to support SSL is
+affected by this bug.
+<P>
+This problem does not affect UNIX code, since OpenSSL is used on UNIX.
+<P>
+This problem most recently showed up with the CommunigatePro IMAP server.
+They have an update which trims down their maximum contiguous data to less
+than 16K, in order to work around the problem.
+<P>
+This problem has also shown up with the Exchange IMAP server with UNIX
+clients (including Pine built with an older version of c-client) which
+sends full-sized 16K SSL packets.  Modern c-client works around the
+problem by trimming down its maximum outgoing SSL packet size to 8K.
+<P>
+Microsoft has developed a hotfix for this bug.  Look up MSKB article number
+300562.  Contrary to the article text which implies that this is a Pine
+issue, this bug also affect Microsoft Exchange server with *any* UNIX based
+client that transmits full-sized SSL payloads.
+</DL>
+<A HREF="#top">
+Back to top
+</A>
+<HR>
+<A NAME="7.44">
+<B>
+7.44
+My qpopper users keep on getting the DON'T DELETE THIS MESSAGE -- FOLDER
+INTERNAL DATA if they also use Pine or IMAP.  How can I fix this?
+</B>
+</A>
+<DL><DD>
+This is an incompatibility between qpopper and the c-client library used
+by Pine, imapd, and ipop[23]d.
+<P>
+Assuming that you want to continue using qpopper, look into qpopper's
+<B>--enable-uw-kludge-flag</B> configuration flag, which is documented as
+"check for and hide UW 'Folder Internal Data' messages".
+<P>
+The other alternative is to switch from qpopper to ipop3d.
+</DL>
+<A HREF="#top">
+Back to top
+</A>
+<HR>
+<A NAME="7.45">
+<B>
+7.45
+Help!  I installed the servers but I can't connect to them from my client!
+</B>
+</A>
+<DL><DD>
+Review the installation instructions carefully.  Make sure that you have
+not skipped any of the steps.  Make sure that you have made the correct
+entries in the configuration files; pay careful attention to the exact
+spelling of the service names and the path names.  Make sure as well
+that you have properly restarted inetd.
+<P>
+If you have a system with Yellow Pages/NIS such as Solaris, have you
+updated the service names there as well as in /etc/services?
+<P>
+If you have a system with TCP wrappers, have you properly updated the
+TCP wrapper files (e.g. /etc/hosts.allow and /etc/hosts.deny) for the
+servers?
+<P>
+If you have a system which uses xinetd instead of inetd, have you made
+sure that you have made the correct corresponding xinetd changes for
+those services?
+<P>
+Try telneting to the server port (143 for IMAP, 110 for POP3).  If you
+get a "refused" error, that probably means that you don't have the
+service set up in inetd.conf.  If the connection opens and then
+closes with no message, the service is set up, but either the path name
+of the server binary in inetd.conf is wrong or your TCP wrappers are
+configured to deny access.
+<P>
+If you don't know how to make the corresponding changes to these files,
+seek the help of a local expert for your system.
+</DL>
+<A HREF="#top">
+Back to top
+</A>
+<HR>
+<A NAME="7.46">
+<B>
+7.46
+Why do I get the message
+</B>
+<TT>
+ Can not authenticate to SMTP server: 421 SMTP connection went away!
+</TT>
+<B>
+and why did this happen?  There was also something about
+</B>
+<TT>
+ SECURITY PROBLEM: insecure server advertised AUTH=PLAIN
+</TT>
+</A>
+<DL><DD>
+Some versions of qmail, including that running on mail.smtp.yahoo.com,
+disconnect the SMTP session if you fail to authenticate prior to
+attempting to transmit mail.  An attempt to authenticate was made, but it
+failed because the server had already disconnected.
+<P>
+To work around this, you need to specify /user=... in the host name
+specification.
+<P>
+The SECURITY PROBLEM came about because the server advertised the AUTH=PLAIN
+SASL authentication mechanism outside of a TLS-encrypted session, in
+violation of RFC 2595.  This message is just a warning, and in fact occurred
+after the server had disconnected.
+</DL>
+<A HREF="#top">
+Back to top
+</A>
+<HR>
+<A NAME="7.47">
+<B>
+7.47
+Why do I get the message
+</B>
+<TT>
+ SMTP Authentication cancelled
+</TT>
+<B>
+and why did this happen?  There was also something about
+</B>
+<TT>
+ SECURITY PROBLEM: insecure server advertised AUTH=PLAIN
+</TT>
+</A>
+<DL><DD>
+This is a bug in the SMTP server.
+<P>
+Some versions of qmail, including that running on mail.smtp.yahoo.com,
+have a bug in their implementation of SASL in their SMTP server, which
+renders it non-compliant with the standard.
+<P>
+If the client does not provide an initial response in the command line for
+an authentication mechanism whose profile does not have an initial
+challenge, qmail issues a bogus response:
+<PRE>
+ 334 ok, go on
+</PRE>
+The problem is the "ok, go on".  This violates RFC 2554's requirement that
+the text part in a 334 response be a BASE64 encoded string; in other words,
+it is a protocol syntax error.
+<P>
+In the case of AUTH=PLAIN, RFC 2222 (pp 4-5) requires that the encoded
+string have no data.  In other words, the appropropiate standards-compliant
+server response is "334" followed by a SPACE and a CRLF.
+<P>
+The SECURITY PROBLEM came about because the server advertised the AUTH=PLAIN
+SASL authentication mechanism outside of a TLS-encrypted session, in
+violation of RFC 2595.  This message is just a warning, and is not related
+the "Authentication cancelled" problem.
+</DL>
+<A HREF="#top">
+Back to top
+</A>
+<HR>
+<A NAME="7.48">
+<B>
+7.48
+Why do I get the message
+</B>
+<TT>
+ Invalid base64 string
+</TT>
+<B>
+when I try to authenticate to a Cyrus server?
+</B>
+</A>
+<DL><DD>
+This slightly misleading message is the way that a Cyrus server indicates
+that an authentication exchange was cancelled.  It is not indicative of a
+bug or protocol violation.
+<P>
+The most common reason that this happens is if the Cyrus server offers
+Kerberos authentication, c-client is built with Kerberos support, but your
+client system is not within the Kerberos realm.  In this case, the client
+code will try to authenticate via Kerberos, fail to get the Kerberos
+credentials, cancel the authentication attempt, and try the next available
+authentication technology.
+</DL>
+<A HREF="#top">
+Back to top
+</A>
+<H2>
+<HR>
+<BR>
+<A NAME="license">
+8. Licensing Questions
+</A>
+</H2>
+<HR>
+<A NAME="8.1">
+<B>
+8.1
+Why does the UW choose to make the IMAP toolkit available under this 
+Free-Fork license?
+</B>
+</A>
+<DL><DD>
+Unlike many other open source licenses, the Free-Fork license is 
+non-viral.
+<P>
+The Free-Fork license allows developers a broad range of rights to the
+IMAP toolkit software, and more options to combine the IMAP toolkit
+software with other open source or private-use software, without requiring
+that the terms of the Free-Fork license be enforced on that other
+software.
+<P>
+The Free-Fork license also allows the IMAP toolkit software to be licensed
+under other conditions (for example, distribution with proprietary
+software where the IMAP code remains under the Free-Fork) if a need
+arises.
+</DL>
+<A HREF="#top">
+Back to top
+</A>
+<HR>
+<A NAME="8.2">
+<B>
+8.2
+I want to redistribute a modified version of the IMAP toolkit.  How can I 
+do this?
+</B>
+</A>
+<DL><DD>
+The Free-Fork license permits redistributions as long as the IMAP toolkit
+and any modifications to the toolkit remains under the Free-Fork license
+as open source.
+<P>
+Send a message to <i>imap-license@cac.washington.edu</i> if your
+application will be proprietary and you need alternative licensing
+arrangements , or if you are unsure whether this blanket permission
+applies in your case.
+</DL>
+<A HREF="#top">
+Back to top
+</A>
+<HR>
+<A NAME="8.3">
+<B>
+8.3
+Can I redistribute an unmodified version of the IMAP toolkit in a 
+proprietary application?
+</B>
+</A>
+<DL><DD>
+Yes.  The terms of the Free-Fork license apply to all unmodified 
+distributions.
+</DL>
+<A HREF="#top">
+Back to top
+</A>
+<HR>
+<A NAME="8.4">
+<B>
+8.4
+Is the Free-Fork license compatible with GPL?
+</B>
+</A>
+<DL><DD>
+Yes.  A Free-Fork licensee has all the rights of a GPL licensee, plus
+additional rights provided under the Free-Fork.
+<P>
+The Free-Fork does not require that software not specifically licensed
+under the Free-Fork use the same terms as the Free-Fork.  For example, if
+you incorporate Free-Fork software in an application that you write, and
+put the application under GPL, that does not cause the Free-Fork software
+to become GPL.  Someone else can copy your application, strip out the GPL
+code so that only the Free-Fork code remains, and by doing so have
+Free-Fork rights.
+<P>
+Additionally, a Free-Fork licensee has the right to negotiate other
+license terms with the UW.
+</DL>
+<A HREF="#top">
+Back to top
+</A>
+<H2>
+<HR>
+<BR>
+<A NAME="additional">
+9. Where to Go For Additional Information
+</A>
+</H2>
+<HR>
+<A NAME="9.1">
+<B>
+9.1
+Where can I go to ask questions?
+</B>
+</A>
+<BR>
+<A NAME="9.2">
+<B>
+9.2
+I have some ideas for enhancements to IMAP.  Where should I go?
+</B>
+</A>
+<DL><DD>
+If you have questions about the IMAP protocol, or want to participate in
+discussions of future directions of the IMAP protocol, the appropriate
+mailing list is imap@u.washington.edu.  You must be a subscriber to post
+to the list; to subscribe, use
+<A HREF="mailto:imap-request@u.washington.edu">
+<TT>
+imap-request@u.washington.edu
+</TT>
+</A>
+<P>
+If you have questions about this software, you can send me email directly
+or use the c-client@u.washington.edu mailing list.  You can subscribe to
+this list via
+<A HREF="mailto:c-client-request@u.washington.edu">
+<TT>
+c-client-request@u.washington.edu
+</TT>
+</A>
+<P>
+As an alternative to either of these, you can use the <B>comp.mail.imap</B>
+newsgroup.
+</DL>
+<A HREF="#top">
+Back to top
+</A>
+<HR>
+<A NAME="9.3">
+<B>
+9.3
+Where can I read more about IMAP and other email protocols?
+</B>
+</A>
+<DL><DD>
+We recommend <I>Internet Email Protocols: A Developer's Guide</I>, by
+Kevin Johnson, published by Addison Wesley, ISBN 0-201-43288-9.
+</DL>
+<A HREF="#top">
+Back to top
+</A>
+<HR>
+<A NAME="9.4">
+<B>
+9.4
+Where can I find out more about setting up and administering an IMAP
+server?
+</B>
+</A>
+<DL><DD>
+We recommend <I>Managing IMAP</I>, by Dianna Mullet & Kevin Mullet, 
+published by O'Reilly, ISBN 0-596-00012-X.
+<P>
+This book also has an excellent comparison of the UW and Cyrus IMAP servers.
+<BR>
+</DL>
+<A HREF="#top">
+Back to top
+</A>
+<P>
+Last Updated: 15 June 2004
+<P>
+<!--chtml include "//imap/incs/bottom.inc"-->

@@ -1,0 +1,34 @@
+.\"                                      Hey, EMACS: -*- nroff -*-
+.TH BFTPD 8 "March 1, 2003"
+.SH NAME
+bftpd \- B FTP Daemon
+.SH SYNOPSIS
+.B bftpd
+.RB [ -c
+.IR confpath |
+.RB -n ]
+.RB [ -d | -D | -i ]
+.SH DESCRIPTION
+\fBbftpd\fP is a very configurable FTP server that uses chroot without
+special setup or directory preparation.
+.SH OPTIONS
+.TP
+.B \-c
+Override the default path of the configuration file (normally /etc/bftpd.conf).
+.BR
+.TP
+.B \-n
+Do not use any configuration file; use the default values for everything instead.
+This is only suitable for very minimalistic configurations.
+.BR
+.TP
+.B \-d
+Start bftpd in daemon mode (without inetd).
+.BR
+.TP
+.B \-D
+Start bftpd in daemon mode without forking so that the daemon can be killed with Ctrl+C.
+.BR
+.TP
+.B \-i
+Start bftpd in inetd mode. This is the default.

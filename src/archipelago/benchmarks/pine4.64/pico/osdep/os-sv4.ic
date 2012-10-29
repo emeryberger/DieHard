@@ -1,0 +1,15 @@
+;
+; Sun Solaris os-sol.ic file for building os-sol.c.
+;
+; Boilerplate header.
+include(header)
+
+include(unix)
+
+include(spell.unx)
+
+include(read.pol)
+
+include(raw.ios)
+
+include(term.inf)

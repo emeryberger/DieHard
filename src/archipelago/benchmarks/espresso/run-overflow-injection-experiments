@@ -1,0 +1,235 @@
+#!/bin/bash
+PRINTF=/usr/bin/printf
+ESPRESSO=./espresso
+INJECTOR=./espresso-injected
+ARGS="-t Input/largest.espresso"
+CHECK_PID="ps hp"
+CORRECT_OUT=correct.out
+TEMP_OUT=/tmp/espresso.tmp
+#compares outputs, disregarding timing differences
+DIFF="/usr/bin/diff -I [%] ${CORRECT_OUT} ${TEMP_OUT}"
+LIBC=
+DIEHARD2=-d2
+DIEHARD1024=-d1024
+SPARSEHEAPS=-s
+NUM_RUNS=100
+RUNS=`seq 1 ${NUM_RUNS}`
+SMALL="-f 0.01 -a 8"
+MED="-f 0.001 -a 4096"
+LARGE="-f 0.0001 -a 8192"
+
+OUT_FILE=espresso_injections_`date +%F_%T`.runs
+
+function run-experiment() {
+
+    ${INJECTOR} $@ -- ${ARGS} > ${TEMP_OUT} &
+
+    PID=$!
+
+    sleep 1
+
+    if [[ -n `${CHECK_PID} ${PID}` ]]
+	then 
+	sleep 5
+    elif [[ -n `${DIFF}` ]]
+	then
+	return 0
+    else
+
+	return 1
+    fi
+
+    if [[ -n `${CHECK_PID} ${PID}` ]]
+	then 
+	sleep 10
+    elif [[ -n `${DIFF}` ]]
+	then
+	return 0
+    else
+	return 1
+    fi
+    
+    if [[ -n `${CHECK_PID} ${PID}` ]]
+	then 
+	sleep 15
+    elif [[ -n `${DIFF}` ]]
+	then
+	return 0
+    else
+	return 1
+    fi
+
+    if [[ -n `${CHECK_PID} ${PID}` ]]
+	then 
+	killall espresso #kill $PID
+	return 0
+    elif [[ -n `${DIFF}` ]]
+	then
+	return 0
+    else
+	return 1
+    fi
+}
+
+#regenerate correct output file
+${ESPRESSO} ${ARGS} > ${CORRECT_OUT}
+
+echo "Successful runs out of ${NUM_RUNS}, with injections: " > ${OUT_FILE}
+echo "" >> ${OUT_FILE}
+echo "----------------------------------------------------------------------------------" >> ${OUT_FILE}
+echo "| Overflow size | Overflow prob. | libc | Archipelago | DieHard-2 | DieHard-1024 |" >> ${OUT_FILE}
+echo "|--------------------------------------------------------------------------------|" >> ${OUT_FILE}
+
+
+libc_count=0
+dh2_count=0
+arch_count=0
+dh1024_count=0
+
+#run small injections experiments
+for i in $RUNS
+  do
+
+  #libc
+  
+#  run-experiment ${LIBC} ${SMALL}
+
+#  if [[ $? == 1 ]] 
+#      then   
+#      libc_count=$((libc_count + 1))
+#  fi
+
+  #archipelago
+  
+#  run-experiment ${SPARSEHEAPS} ${SMALL}
+  
+#  if [[ $? == 1 ]]
+#      then 
+#      arch_count=$((arch_count + 1))
+#  fi
+
+  #diehard1024
+
+#  run-experiment ${DIEHARD1024} ${SMALL}
+ 
+#  if [[ $? == 1 ]]
+#      then 
+#      dh1024_count=$((dh1024_count + 1))
+#  fi
+
+  #diehard2
+
+  run-experiment ${DIEHARD2} ${SMALL}
+ 
+  if [[ $? == 1 ]]
+      then 
+      dh2_count=$((dh2_count + 1))
+  fi
+
+done
+
+$PRINTF "|             8 |           0.01 | %4d | %11d | %9d | %11d |\n" ${libc_count} ${arch_count} ${dh2_count} ${dh1024_count} >> ${OUT_FILE}
+
+libc_count=0
+dh2_count=0
+arch_count=0
+dh1024_count=0
+
+#run medium injections experiments
+
+for i in $RUNS
+  do
+
+  #libc
+  
+#  run-experiment ${LIBC} ${MED}
+
+#  if [[ $? == 1 ]] 
+#      then   
+#      libc_count=$((libc_count + 1))
+#  fi
+
+  #archipelago
+  
+#  run-experiment ${SPARSEHEAPS} ${MED}
+   
+#  if [[ $? == 1 ]]
+#      then 
+#      arch_count=$((arch_count + 1))
+#  fi
+
+  #diehard1024
+
+#  run-experiment ${DIEHARD1024} ${MED}
+ 
+#  if [[ $? == 1 ]]
+#      then 
+#      dh1024_count=$((dh1024_count + 1))
+#  fi
+ 
+  #diehard2
+
+  run-experiment ${DIEHARD2} ${MED}
+ 
+  if [[ $? == 1 ]]
+      then 
+      dh2_count=$((dh_count2 + 1))
+  fi
+
+done
+
+$PRINTF "|          4096 |          0.001 | %4d | %11d | %9d | %11d |\n" ${libc_count} ${arch_count} ${dh2_count} ${dh1024_count} >> ${OUT_FILE}
+ 
+libc_count=0
+dh2_count=0
+arch_count=0
+dh1024_count=0
+
+#run large injections experiments
+
+for i in $RUNS
+  do
+
+  #libc
+  
+#  run-experiment ${LIBC} ${LARGE}
+
+#  if [[ $? == 1 ]] 
+#      then   
+#      libc_count=$((libc_count + 1))
+#  fi
+
+  #archipelago
+  
+#  run-experiment ${SPARSEHEAPS} ${LARGE}
+  
+#  if [[ $? == 1 ]]
+#      then 
+#      arch_count=$((arch_count + 1))
+#  fi
+ 
+  #diehard1024
+
+#  run-experiment ${DIEHARD1024} ${LARGE}
+ 
+#  if [[ $? == 1 ]]
+#      then 
+#      dh1024_count=$((dh1024_count + 1))
+#  fi
+
+  #diehard2
+
+  run-experiment ${DIEHARD2} ${LARGE}
+ 
+  if [[ $? == 1 ]]
+      then 
+      dh2_count=$((dh2_count + 1))
+  fi
+
+done
+
+$PRINTF "|          8192 |         0.0001 | %4d | %11d | %9d | %11d |\n" ${libc_count} ${arch_count} ${dh2_count} ${dh1024_count} >> ${OUT_FILE}
+
+echo "----------------------------------------------------------------------------------" >> ${OUT_FILE}
+echo
+cat ${OUT_FILE}

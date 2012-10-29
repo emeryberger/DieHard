@@ -1,0 +1,15 @@
+;
+; Convergent Tech 3b1 os-3b1.ic file for building os-3b1.c.
+;
+; Boilerplate header.
+include(header)
+
+include(unix)
+
+include(spell.unx)
+
+include(read.sel)
+
+include(raw.io)
+
+include(term.cap)

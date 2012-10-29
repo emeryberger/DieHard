@@ -1,0 +1,86 @@
+.TH pilot 1 "Version 1.1"
+.SH Name
+pilot \- simple file system browser in the style of the Pine Composer
+.SH Syntax
+.B pilot
+[
+.I options
+] [
+.I directory
+]
+.SH Description
+\fIPilot\fR is a simple, display-oriented file system browser based on
+the Pine message system composer.  As with Pine, commands are 
+displayed at the bottom of the screen, and context-sensitive
+help is provided.
+.PP
+\fIPilot\fR displays the current working directory at the top of the
+screen.  The directory's contents are displayed in columns of file name,
+file size pairs.  Names that are directories are indicated by the name
+"(dir)" in place of the file size.  The parent of the current working
+directory is indicated by the file name ".." and size of "(parent dir)".
+File names that are symbolic links to other files are displayed with a
+file size of "--".
+.PP
+Several basic file manipulation commands are provided: Delete, Rename,
+Copy, View, Launch, and Edit.  The "View" and "Edit" commands operate on
+text files only.  By default, the "View" command displays files
+using "pine -F", but will respect the environment variable PAGER if set.
+The "Edit" command simply invokes "pico".  The "Launch" command provides
+a convenient way to either execute the selected file or to run an 
+application on it.
+.PP
+More specific help is available in \fIpilot\fR's online help.
+.SH Options
+.IP \fB-a\fR
+Display all files including those beginning with a period (.).
+.IP \fB-f\fR
+Use function keys for commands.  This option supported only in 
+conjunction with UW Enhanced NCSA telnet.
+.IP \fB-g\fR
+Enable "Show Cursor" mode.  Cause cursor to be positioned
+before the current selection rather than placed at the lower left of the
+display.
+.IP \fB-j\fR
+Enable "Goto" command.  This enables the command to permit explicitly
+telling \fIpilot\fR which directory to visit.
+.IP \fB-m\fR
+Enable mouse functionality.  This only works when \fIpilot\fR is run from
+within an X Window System "xterm" window.
+.IP \fB-n\fIn\fB\fR
+The \-n\fIn\fR option enables new mail notification.  The \fIn\fR 
+argument is optional, and specifies how often, in seconds, your 
+mailbox is checked for new mail.  For example, \-n60 causes \fIpilot\fR 
+to check for new mail once every minute.  The default interval is 180 
+seconds, while the minimum allowed is 30. (Note: no space between "n" and 
+the number) 
+.IP \fB-o\ \fIdir\fB\fR
+Sets operating directory.  Only files within the specified directory are
+accessible and browsing is limited to the specified directory subtree.
+.IP \fB-v\fR
+Enable single vertical column display.
+.IP \fB-x\fR
+Disable keymenu at the bottom of the screen.
+.IP \fB-z\fR
+Enable ^Z suspension of \fIpilot\fR.
+.IP \fB-q\fR
+Termcap or terminfo definition for input escape sequences are used in
+preference to sequences defined by default.  This option is only available
+if \fIpilot\fR was compiled with the TERMCAP_WINS define turned on.
+.IP \fB-setlocale_ctype\fR
+Do setlocale(LC_CTYPE) if available. Default is to not do this setlocale.
+.IP \fB-no_setlocale_collate\fR
+Do not do setlocale(LC_COLLATE). Default is to do this setlocale.
+.fi
+.SH Authors
+Michael Seibel <mikes@cac.washington.edu>
+.br
+Copyright 1994-2005 by the University of Washington.
+.SH "See Also"
+pine(1)
+.br
+Source distribution (part of the Pine Message System):
+.br
+   ftp://ftp.cac.washington.edu/mail/pine.tar.Z
+
+$Date: 2005-01-14 12:44:47 -0800 (Fri, 14 Jan 2005) $

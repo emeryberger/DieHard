@@ -1,0 +1,553 @@
+Updated: 15 September 2005
+
+imap-2004g is a maintenance release, and consists solely of a bugfix to
+quoted string handling in the mailbox name parsing routine.
+
+
+Updated: 15 August 2005
+
+imap-2004f is a maintenance release, and consists solely of a bugfix to
+the TCP code.
+
+Also included is a new version of the UNIX SSL/TLS routines that allows the
+SSL/TLS certificate validation client code to validate alternative names in
+server certificates.  This code has not been thoroughly regression-tested but
+is believed to work.  To use this new code instead of the old support:
+	cd imap-2004f/src/osdep/unix
+	mv ssl_unix.c ssl_unix.old
+	mv ssl_unix.new ssl_unix.c
+Then rebuild.
+
+
+Updated: 21 June 2005
+
+imap-2004e is a maintenance release, consisting entirely of bugfixes.
+
+There are no user-visible functional enhancements in this version.
+
+
+Updated: 20 April 2005
+
+imap-2004d is a maintenance release, released concurrently with Pine
+4.63, and consists primarily of bugfixes
+
+There is now a workaround for RedHat breaking flock().  However, since
+RedHat has said that they don't support flock(), there is no guarantee
+that they won't break it in the future.  So you may want to consider some
+other Linux distribution or BSD instead.  See:
+	https://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=123415
+for the gruesome details.
+
+There are no user-visible functional enhancements in this version.
+
+
+Updated: 18 January 2005
+
+imap-2004c is a maintenance release, released concurrently with Pine
+4.62, including fixes to quoted-printable encoding and CRAM-MD5
+authentication.
+
+NNTP proxy in imapd now supports the LIST and LSUB commands.
+
+There are no other user-visible functional enhancements in this version.
+
+
+Updated: 29 November 2004
+
+imap-2004b is a maintenance release, consisting primarily of bugfixes.
+Programs written for imap-2004a will build with this version without
+modifification.
+
+There are new ports for Solaris with Blastwave Community Open Source
+Software (gcs) and Mandrake Linux (lmd).
+
+SET_SNARFINTERVAL now controls how frequently local drivers will move new
+mail from the mail spool as well as from a maildrop.  Maildrops are still
+tied to a minimum interval of 1 minute, but there is now no minimum for the
+spool file.
+
+Character set conversions now map non-breaking space to space if the
+destination character set doesn't have nbsp.  JIS Roman yen sign is now
+mapped to Unicode yen sign.
+
+There are no user-visible functional enhancements in this version.
+
+
+Updated: 8 July 2004
+
+imap-2004a is a maintenance release, consisting primarily of critical
+bugfixes.  Programs written for imap-2004 will build with this version
+without modification.
+
+imapd now has a supported NNTP proxy capability.  If the file /etc/imapd.nntp
+exists, the contents of that file are used as the host name of an NNTP
+server which will be used whenever a #news. name is used.  For example, if
+/etc/imapd.nntp contains nntp.example.com, and the IMAP client SELECTs or
+EXAMINEs the name #news.comp.mail.imap, what will actually be opened in
+imapd is {nntp.example.com/nntp}comp.mail.imap
+
+The OSF/1 port (Digital UNIX, Tru64) now uses flocksim instead of flcksafe.
+Some cretin decided to delete the winning flock() call and make flock() use
+the losing fcntl() call instead.
+
+The unix[nt] and mmdf drivers now prevent mail_append() from writing Status:,
+X-Status:, X-UID, X-IMAP[base]:, and X-Keywords: header lines to a
+traditional UNIX or MMDF format mailbox.  If any such lines are in the
+text supplied to mail_append(), they will be quoted by prefixing with
+"X-Original-" (e.g. Status: will become X-Original-Status:).
+
+There are no user-visible functional enhancements in this version.
+
+
+Updated: 10 May 2004
+
+imap-2004 is a major release.  Programs written for imap-2002e should
+build with this version with minor modification.  imap-2003 was not
+released except as development snapshots.
+
+mailutil has three new commands: delete, rename, and prune.
+
+IPv6 support now exists for UNIX and W2K.  It is the default in W2K builds.
+On UNIX, add "IP=6" to the make command line.  Windows IPv6 support is
+only for W2K builds.
+
+The NNTP driver now supports NNTP SASL and TLS.
+
+The ldb (Debian) and lrh (RedHat) ports now look for mlock on
+/usr/sbin/mlock instead of /etc/mlock.
+
+imapd now supports the LITERAL+ and SASL-IR initial-response extensions.
+
+The IMAP driver has some additional checks to reduce the amount of network
+traffic, including executing "silly searches" (searches of sequence numbers
+only) locally.
+
+The IMAP, POP, SMTP, and NNTP drivers now have diagnostic code to provide
+better information about servers which violate SASL's empty challenge
+requirements (e.g. with the PLAIN mechanism).
+
+There is a new mail_fetch_overview_sequence() function which is like
+mail_fetch_overview() but takes a sequence number string as an argument.
+There should have been a flags argument and FT_UID bit as in all the other
+mail_fetch_???() functions but compatibility with the past... :-(
+
+The overview_t callback (from mail_fetch_overview()) now has a fourth
+argument which contains the message sequence number (as opposed to the UID
+which is in the second argument).  It turned out that some applications were
+calling mail_msgno() (which can be moderately expensive) to get the sequence
+number, and c-client already knew it.
+
+Many declarations which are completely internal to a driver have been removed
+from the driver .h file, and in those cases where there are no external
+declarations left the .h file has been eliminated entirely.  As part of this,
+the mbox driver routines are now incorporated with the unix driver routines
+as opposed to being a separate file.  The mbox driver still needs to be lunk
+in order to get the mbox functionality.
+
+
+Updated: 27 August 2003
+
+imap-2002e is a minor release, released concurrently with Pine 4.58, and
+contains primarily bugfixes.  Programs written for imap-2002d will build
+with this version without modification.
+
+The NNTP client code now tries to perform better with legacy NNTP servers
+which do not comply with the current NNTP protocol specification draft, most
+notably Netscape Collabra.
+
+Delivery notifications now work reliably with SMTP servers that support it.
+
+The following changes are primarily of concern to developers and power users:
+
+There is a "limited advertise" option in env_unix.c which, if set, will only
+advertise the user's own namespace and the #shared/ namespace.
+
+It is now possible to build the IMAP toolkit with a separate SSL KEY file
+from the certificate file (SSLKEYS vs. SSLCERTS).
+
+A new BODY structure element, sparep, is available for the main program to
+use as a pointer for its own purposes; as well as a SET_FREEBODYSPAREP
+function, similar to SET_FREEENVELOPESPAREP, SET_FREEELTSPAREP, etc.
+
+
+Updated: 28 May 2003
+
+imap-2002d is a minor release, released concurrently with Pine 4.56, and
+contains primarily bugfixes.  Programs written for imap-2002 should build
+with this version without modification, with one exception.  That exception
+is the ngbogus envelope flag, which stopped being used in imap-2002c and is
+now gone for good.
+
+The NNTP newsgroup listing code now tries to use wildmats on the NNTP server,
+which should result in better performance especially on slow lines.  It is
+also once again permitted to log in on NNTP servers when /loser is set.
+
+imapd now supports the UNSELECT command.
+
+A new envelope flag, imapenvonly, indicates that the envelope in a
+MESSAGE/RFC822 BODY structure only has the IMAP envelope components and
+not the additional components from c-client: Newsgroups, Followup-To,
+and References.
+
+
+Updated: 7 April 2003
+
+imap-2002c is a minor release, released concurrently with Pine 4.55, and
+contains primarily bugfixes.  Programs written for imap-2002 will build
+with this version without modification.
+
+The POP3 driver will, with new servers that support CAPA, use the LIST
+command to get the elt->rfc822_size and the TOP command to get the message
+header, instead of fetching the entire message.  Note that it is a bad idea
+to do this with old servers, since they may misimplement LIST and TOP.  The
+result is a substantial performance improvement.
+
+Subject extraction for comparisons in SORT and THREAD are now done in full
+compliance with the rules laid out in the specification.  This only makes
+a difference if "re:" was part of a MIME quoted-word.
+
+The new experimental #move namespace allows download-and-delete from a source
+mailbox to a destination mailbox.  Immediately following #move is a delimiter
+character which must not appear in the source mailbox name, then the source
+mailbox name, then the delimiter again, then the destination mailbox name.
+For example:
+	#move+{pop3.foo.com/pop3}+INBOX
+will download messages from "pop3.foo.com" into your local INBOX.
+
+The NNTP driver now uses the LIST EXTENSIONS command as described in the
+current NNTP protocol specification draft, and will prefer to use OVER over
+XOVER, HDR over XHDR, etc.
+
+The SET_NNTPRANGE function of mail_parameters() can be used to limit the
+number of articles recognized by the NNTP driver, resulting in a substantial
+performance improvement with NNTP servers that may have hundreds of thousands
+of old articles in the spool.  If set non-zero, then only the last n article
+numbers will be considered.  If you are on a slow link, you may want to set
+this to 1000 or less.
+
+Besides the normally tested UNIX and 32-bit Microsoft platforms, this release
+has also been tested and will once build under TOPS-20 and VAX/VMS.  I also
+fixed a bug which would keep it from building on 16-bit DOS, but I don't know
+if it will build on that platform or not since I no longer have a system with
+the old DOS C compiler.  It has not been tested on Macintosh (note however
+that Mac OS X is a type of UNIX and should build), Amiga, or OS/2, and probably
+no longer builds on those platforms.
+
+
+Updated: 7 January 2003
+
+imap-2002b is a maintenace release, released concurrently with Pine 4.52,
+and contains only bugfixes.  Programs written for imap-2002 will build with
+this version without modification.
+
+Drivers which do not announce new mail are now indicated by the DR_NONEWMAIL
+driver flag.  Driver which do not announce new mail when read-only are now
+indicated by the DR_NONEWMAILRONLY flag.
+
+There are no user-visible functional enhancements in this version.
+
+
+Updated: 10 December 2002
+
+imap-2002a is a maintenance release, consisting entirely of critical
+bugfixes.  Programs written for imap-2002 will build with this version
+without modification.
+
+There are no functional enhancements in this version.
+
+
+Updated: 28 October 2002
+
+imap-2002 is a major release.  Programs written for imap-2001 will probably
+build with this version without modification, with one exception.  That
+exception is if the program uses [GS]ET_DISABLEAUTOMATICSHAREDNAMESPACES,
+which has been renamed to [GS]ET_DISABLEAUTOSHAREDNS in order to placate
+some compilers which don't like very long names.
+
+SSLTYPE=nopwd is now the default, in accordance with current IESG security
+requirements.  In order to build the IMAP toolkit without SSL/TLS you must
+now use SSLTYPE=none.  At initial build time, you will be told if the SSLTYPE
+setting is in compliance with IESG security requirements, and if it is not
+you will be asked to confirm to continue the build.
+
+ORDEREDSUBJECT threading has been changed in accordance with draft 12 of the
+IMAP threading specification.  Previously, each non-root message in an
+ORDEREDSUBJECT thread has been a child of the message immediately preceeding
+it in the thread.  Draft 12 changes this so that the second message in the
+thread is the child of the first (root) message, and all subsequent messages
+are siblings of the first message.  This is significant in MUAs which display
+the thread structure graphically; the new definition is much saner than the
+old one since it does not nest endlessly due to parent/child relationships
+that may not exist.  This also impacts imapd, since imapd's THREAD command
+will return a thread structure.
+
+RFC 1730 server support, which was disabled in imap-2001, is now fully
+removed from imapd.  imapd still supports IMAP2bis, specifically the FIND
+command, since there are still a few IMAP2 clients out there.
+
+The IMAP client routines in the c-client library continue to support recognize
+RFC 1730 servers, but do not implement the deprecated features of RFC 1730.
+
+The Frequently Asked Questions file is now in HTML format, although a text
+version (generated from the HTML version with Lynx) is also provided.
+
+A new program, mailutil, is now bundled with the IMAP toolkit.  mailutil
+replaces the old chkmail, imapcopy, imapmove, imapxfer, mbxcopy, mbxcreat,
+and mbxcvt programs that were distributed in the imap-utils.  In addition,
+the tmail, dmail, and mlock programs from the imap-utils are now also
+bundled with the IMAP toolkit.
+
+In addition to the usual bugfixes, the following c-client functionalities
+are new in imap-2002:
+
+The SET_DISABLE822TZTEXT parameter allows a client to suppress generation of
+the "human friendly" time zone text in RFC822 dates.  This placates netnews
+and some broken SMTP servers which think that long timezone names from Windows
+are an attempt at a buffer overflow attack.
+
+The restrictBox option in env_unix.c sets "restricted box" functionality,
+which disables access to the root (leading "/"), access to other user's
+directories (leading "~"), and access to superior directories via "..".
+
+Content-Location is now supported by the "location" member of the BODY
+structure.  Note that there is a bug in the IMAP client code in older
+versions of the c-client library that causes it to handle BODYSTRUCTURE
+extension data improperly if that data is a literal.  The new functionality
+for Content-Location may trigger this bug.  The fix is either to upgrade
+the IMAP client program to the imap-2002 version of c-client or to remove
+the Content-Location support from imapd.
+
+There are now 8 spare bits for application use in both the elts and the
+mail streams.
+
+mail_search() now returns a value (previously it was void).  If mail_search()
+returns NIL, then the supplied charset was invalid or the IMAP server
+returned NO (probably because the supplied charset was invalid).
+
+New utf8_charset() routine to look up a charset and return c-client's
+database about that charset if found.  Among other things, this will give
+you the scripts supported by that charset and its Unicode conversion table.
+
+New FT_NOLOOKAHEAD flag for mail_fetch_structure() disables fetching of
+any envelopes other than the one specified.  Otherwise, it will try to do
+anticipatory fetching (up to IMAPLOOKAHEAD).
+
+New GET_FETCHLOOKAHEAD allows better control of mail_fetch_structure()
+lookahead.  Instead of looking IMAPLOOKAHEAD messages forward from the
+specified message, it will use a supplied SEARCHSET to generate message
+sequences and ranges.  It will stop at IMAPLOOKAHEAD messages or at the
+completion of a range which exceeds IMAPLOOKAHEAD.  The search set only
+applies to the next mail_fetch_structure() on that stream, and is cleared
+once it is used.  Call with
+  SEARCHSET **set = (SEARCHSET **)
+    mail_parameters (stream,GET_FETCHLOOKAHEAD,(void *) stream);
+  *set = pointer to desired search set
+
+New mail_shortdate() routine returns an date in the format expected by
+SEARCHPGMs.
+
+
+Updated: 2 November 2001
+
+imap-2001a is a maintenance release, consisting primarily of bugfixes
+including some critical bugfixes to crash and denial of service problems.
+Programs written for imap-2001 will build with this version without
+modification.
+
+The following new facilities have also been added:
+
+The new /norsh switch in mailbox names provides a more intuitive way of
+disabling rsh-IMAP than the existing :143 or setting the rsh-timeout to 0.
+
+Passwords are no longer returned in mm_dlog() callbacks unless the
+application sets the SET_DEBUGSENSITIVE parameter.
+
+The SET_NETFSSTATBUG parameter allows an application to force the
+traditional UNIX mailbox driver to close and reopen the mailbox at ping
+time.  This is EXTREMELY inefficient, and should only be used to access
+files stored on AFS and old NFS systems.
+
+The ISO 8859 and Windows conversion tables have been updated to comply
+with Unicode 3.1, and the KOI8-R table has been verified as compliant with
+Unicode 3.1.
+
+The SPECIALS mechanism for passing parameters to the lowest level Makefile
+has been updated to be more general.  See the next item for why you might
+care.
+
+New lrh port to build on Red Hat Linux 7.2, with pre-set definitions for
+the places where Red Hat has placed Kerberos and SSL.  It's actually just
+the lnp port with SPECIALS defined accordingly.  You may want to use it as
+a model if your system needs such definitions.  Note that SPECIALS is
+primarily for IMAP toolkit (and Pine) purposes, and that user settings
+should use EXTRASPECIALS instead.
+
+
+Updated: 22 June 2001
+
+imap-2001 is a major release.  Programs written for imap-2000 will probably
+build with this version without modification.
+
+The FAQ document has been significantly expanded.  Be sure to read it for
+more information.
+
+In addition to the usual bugfixes, the following features are new in
+imap-2001:
+
+SSL is now fully integrated into the IMAP toolkit; the old "alt" kludges to
+be able to produce a "sanitized" version of the IMAP toolkit to comply with
+late unlamented US export regulations are now completely gone.
+
+Full client and server TLS support is also in this release.
+
+The server certificate must be signed by a trusted certificate authority and
+the name in the certificate match the user's entry for the server host name;
+this means that the user must enter a fully-qualified host name.
+
+To build with SSL/TLS on UNIX, you now use "SSLTYPE=unix" instead of the
+former "SPECIALAUTHENTICATORS=ssl".  To build with SSL/TLS on UNIX and disable
+the use of plaintext passwords except when under SSL/TLS, use "SSLTYPE=nopwd"
+instead of "SSLTYPE=unix".
+
+RFC 1730 (IMAP4 as opposed to IMAP4rev1) support is turned off by default in
+imapd.  No clients should still be using RFC 1730 protocol.  Look at the imapd
+Makefile for how to re-enable RFC 1730 support.  Note that this code may be
+removed in the future, so if you think you need it you had better let me know.
+
+There are some new options (turned off by default) which attempt to work around
+problems in certain clients.  See the FAQ file for more details.
+
+
+Updated: 24 January 2001
+
+imap-2000c is a maintenance release, consisting primarily of bugfixes.
+
+
+Updated: 9 January 2001
+
+imap-2000b is a maintenance release, consisting primarily of bugfixes.
+
+
+Updated: 9 November 2000
+
+imap-2000a is a maintenance release, consisting primarily of bugfixes.
+
+
+Updated: 19 September 2000
+
+imap-2000 is a major release.  There are major internal and external changes
+from earlier versions (imap-4.x and imap-3.x series).  Programs written for
+imap-4.x will probably build with this version without modification.  It is
+extremely unlikely that a program written for imap-3.x or earlier series will
+build with this version without modifications.  Drivers written for earlier
+versions will definitely need to be rewritten.
+
+In addition to the usual bugfixes, the following features are new in imap-2000:
+
+SSL support is now available.  For UNIX, it is necessary to install some
+version of OpenSSL; see imap-2000/docs/SSLBUILD for more information.  SSL
+support is now automatic for the NT, NTK, and W2K ports.  SSL use is indicated
+by the /ssl switch in the mailbox name.
+
+With SSL connections, the server certificate is validated by the client code
+on UNIX, and Windows 2000 unless /novalidate-cert is specified.  Server
+certificates are currently is not validated on Windows 9x, Windows Millenium,
+or Windows NT 4; this is an artifact of the operating system and not the port
+(e.g. client code using the NT port will validate certificates if running on
+Windows 2000).  On UNIX, the server certificate must be signed by a trusted
+certificate authority.  On Windows 2000, the certificate must be signed by a
+trusted certificate authority and match the user's entry for the server host
+name; this means that the user must enter a fully-qualified host name.
+
+Calendar reclama for the benefit of old broken non-Y2K compliant software.
+Two digit years from 00 to 69 will be interpreted as 2000 through 2069.  In
+addition, three digit years from 100 to 105 will be interpreted as 2000
+through 2005.
+
+Support for REFERENCES threading (in addition to the previously-existing
+ORDEREDSUBJECT threading).
+
+Support for the IMAP MULTIAPPEND extension.  This allows much faster uploading
+of multiple messages to an IMAP server.
+
+Support for the LOGINDISABLED IMAP capability.  If the IMAP server sends
+LOGINDISABLED as a capability, the client code will never attempt to send an
+IMAP LOGIN command.
+
+Support for SASL authentication identity vs. authorization identity.  If the
+authentication method does not support this concept (e.g. AUTH=CRAM-MD5,
+AUTH=LOGIN, LOGIN command), the "*" character in the user name may be used to
+indicate a separate authentication identity; for example, "fred*joe" indicates
+authorization identity "fred", authentication identity "joe".
+
+
+UNIX-specific Changes:
+
+Support for SASL authentication identity vs. authorization identity in the
+IMAP and POP3 servers.  If the user indicated by the authentication identity
+is in the "mailadm" group, he may specify any authorization identity and get
+logged in as the authorization identity user.
+
+If the IMAP and POP3 servers are build with PASSWDTYPE=nul, it will send
+LOGINDISABLED as a capability and also disable the AUTH=LOGIN and AUTH=PLAIN
+SASL authenticators.
+
+New MAILSUBDIR build option to change the default mailbox directory from the
+user's home directory to a subdirectory of the user's home directory.  See
+imap-2000/Makefile for more information.
+
+New CHROOT_SERVER build option for closed server systems only.  If defined, a
+chroot() call to the user's home directory is done as part of the login
+process.  See imap-2000/Makefile for more information.
+
+New ADVERTISE_THE_WORLD build option which will add an IMAP namespace that
+points to the root.  Not for the faint of heart.
+
+UNIX format mailboxes no longer require the pseudo-message, nor will a
+pseudo-message be added to a mailbox that does not have one.  A new
+X-IMAPbase: header will be written in the first message.  This is rather less
+efficient and robust than the pseudo-message (which remains the encouraged
+mechanism; UNIX format mailboxes will always be created with it), but perhaps
+will pacify some people who get upset by the pseudo-message.
+
+When building with MIT Kerberos it will try to detect and use libk5crypto.a
+instead of libcrypto.a.
+
+The mbx driver is more aggressive about cleaning up expunged messages that
+couldn't be purged because of shared access to the mailbox at the time of
+expunge.  Now, every checkpoint will try to purge such messages; and a
+checkpoint is attempted at close time.
+
+
+Windows-specific Changes:
+
+New W2K port for Windows 2000.  In addition to supporting SSL using the
+official SSPI interface (the NT and NTK ports invoke SChannel.DLL directly),
+the W2K port also supports Microsoft Kerberos.  Note that the NT and NTK ports
+will work on Windows 2000, but the W2K port will not work on NT4, Windows
+9x, or Windows Millenium.
+
+There is now a #user namespace, equivalent to the "~" namespace on UNIX.
+
+
+
+Changes for Developers:
+
+New c-client.h file which acts as a master include.  c-client based
+applications should now include c-client.h instead of the individual c-client
+files (mail.h, misc.h, etc.).  It is believed that c-client.h will work in C++
+applications.
+
+New GET_FREEENVELOPESPAREP/SET_FREEENVELOPESPAREP and
+GET_FREEELTSPAREP/SET_FREEELTSPAREP function callbacks to free the "sparep"
+member of the envelope and cache elements, respectively.
+
+New OP_MULNEWSRC flag to mail_open() to use multiple newsrc files, and new
+GET_NEWSRCQUERY/SET_NEWSRCQUERY function callbacks to get the name of the
+newsrc file for news access.
+
+New "secret" nntp_article() function to do the NNTP ARTICLE command; this is
+generally useful only when chasing news URLs.
+
+New GET_HIDEDOTFILES/SET_HIDEDOTFILES feature to suppress file names that
+start with "." in mail_list() results.

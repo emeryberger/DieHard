@@ -1,0 +1,17 @@
+;
+; Lynxos os-lyn.ic file for building os-lyn.c.
+;
+; Boilerplate header.
+include(header)
+
+include(unix)
+
+include(spell.unx)
+
+include(read.sel)
+
+include(raw.ios)
+
+include(term.cap)
+
+include(getcwd)

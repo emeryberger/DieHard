@@ -1,0 +1,27 @@
+# Don't edit makefile, edit makefile.bas instead.
+#
+
+RM=  del
+
+ALL	=	os-dos.c os-win.c os-wnt.c
+
+.SUFFIXES: .ic
+
+.ic.c:
+		.\includer < $*.ic > $*.c
+
+all:		includer.exe $(ALL)
+
+includer.exe:	includer.c
+		$(CC) /F 4000 -o includer.exe includer.c
+
+clean:
+		$(RM) $(ALL) includer.exe
+
+# You don't have to run this unless you change a .ic file.
+depend:
+		echo Dependencies must be built under Unix
+
+os-win.c: os-win.ic header dosgen win spell.ms
+os-wnt.c: os-win.ic header dosgen win spell.ms
+os-dos.c: os-dos.ic header dosgen dos term.dos

@@ -1,0 +1,124 @@
+#!/bin/sh
+#
+# $Id: krb5-setup 10777 2000-02-04 20:06:04Z hubert $
+#
+#            T H E    P I N E    M A I L   S Y S T E M
+#
+#   Laurence Lundblade and Mike Seibel
+#   Networks and Distributed Computing
+#   Computing and Communications
+#   University of Washington
+#   Administration Building, AG-44
+#   Seattle, Washington, 98195, USA
+#   Internet: lgl@CAC.Washington.EDU
+#             mikes@CAC.Washington.EDU
+#
+#   Please address all bugs and comments to "pine-bugs@cac.washington.edu"
+#
+#
+#   Pine and Pico are registered trademarks of the University of Washington.
+#   No commercial use of these trademarks may be made without prior written
+#   permission of the University of Washington.
+#
+#   Pine, Pico, and Pilot software and its included text are Copyright
+#   1989-2000 by the University of Washington.
+#
+#   The full text of our legal notices is contained in the file called
+#   CPYRIGHT, included with this distribution.
+#
+#
+#   Pine is in part based on The Elm Mail System:
+#    ***********************************************************************
+#    *  The Elm Mail System  -  Revision: 2.13                             *
+#    *                                                                     *
+#    * 			Copyright (c) 1986, 1987 Dave Taylor               *
+#    * 			Copyright (c) 1988, 1989 USENET Community Trust    *
+#    ***********************************************************************
+# 
+#
+
+
+#
+#  Helper script for setting up Kerberos5
+#
+# Make a symlink called "krb5" to the directory where your Kerberos5 include
+# files and libraries are located. That is, krb5/include and krb5/lib.
+# The symlink should be in the top-level pine directory, where the pine
+# build script is located. For example, if the libraries are in the directory
+# /usr/local/lib and the includes are in /usr/local/include then make a symlink
+# like  "ln -s /usr/local krb5". The script you're looking at is called by the
+# "build" script in that same top-level directory. It probably won't help
+# much to run this script standalone. The script just checks to make sure
+# things appear to be set up the way pine expects them.
+#
+
+exitval=0
+ptarget=xxx
+btarget=xxx
+if [ $# != "2" ]
+then
+    echo "Usage: contrib/krb5-setup pinetarget buildtarget"
+    exitval=1
+elif [ ! -d krb5 ]
+then
+    exitval=1
+    ptarget=$1
+    btarget=$2
+elif [ ! -d krb5/lib ]
+then
+    echo "Krb5-setup: Expected directory \"krb5/lib\" is missing."
+    exitval=1
+    ptarget=$1
+    btarget=$2
+fi
+
+
+# This is where c-client expects the libraries to be.
+if [ \( -f krb5/lib/libgssapi_krb5.a -o -f krb5/lib/libgssapi_krb5.so \) -a \
+     \( -f krb5/lib/libkrb5.a        -o -f krb5/lib/libkrb5.so \)        -a \
+     \( -f krb5/lib/libcrypto.a      -o -f krb5/lib/libk5crypto.a    -o \
+        -f krb5/lib/libcrypto.so     -o -f krb5/lib/libk5crypto.so \)    -a \
+     \( -f krb5/lib/libcom_err.a     -o -f krb5/lib/libcom_err.so \) ]
+then
+    exit 0
+fi
+
+if [ $exitval -eq 1 ]
+then
+    echo "If you are attempting to use a Kerberos5 library other than the one"
+    echo "from MIT then the pine build script won't be able to help much."
+    echo "Instead, you will have to modify c-client/Makefile and set the GSS"
+    echo "macros correctly. In order to build pine without Kerberos5"
+    echo "functionality you may rename or remove the directory \"krb5\" and"
+    echo "run the pine \"build $btarget\" command again."
+    exit 1
+fi
+
+
+if [ ! -f krb5/lib/libgssapi_krb5.a ]
+then
+    echo "The Kerberos5 library \"krb5/lib/libgssapi_krb5.a\""
+fi
+if [ ! -f krb5/lib/libkrb5.a ]
+then
+    echo "The Kerberos5 library \"krb5/lib/libkrb5.a\""
+fi
+if [ ! -f krb5/lib/libcrypto.a ]
+then
+    echo "The Kerberos5 library \"krb5/lib/libcrypto.a\""
+fi
+if [ ! -f krb5/lib/libcom_err.a ]
+then
+    echo "The Kerberos5 library \"krb5/lib/libcom_err.a\""
+fi
+
+echo "doesn't appear to be built yet."
+
+echo ""
+echo "After you've successfully built the libraries"
+echo "you can try the \"build $btarget\" command again."
+echo ""
+echo "In order to build pine without Kerberos5 functionality you may rename or"
+echo "remove the directory \"krb5\" and run the \"build $btarget\" command again."
+
+exit 1

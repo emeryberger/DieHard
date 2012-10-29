@@ -1,0 +1,555 @@
+#line 2 "osdep/dosextra"
+
+/*
+ * map the ftruncate call into DOS' chsize
+ */
+int
+ftruncate(fd, size)
+    int	 fd;
+    long size;
+{
+    return(chsize(fd, size));
+}
+
+
+#ifndef OS2
+/*
+ * have_ printer - use BIOS int 0x17 to get a system equipment list
+ *		   returning whether or not there's a printer
+ */
+have_printer()
+{
+    union REGS rg;
+
+    int86(0x11, &rg, &rg);		/* what's there ? */
+    return(rg.x.ax & 0xc000);		/* any printers ? */
+}
+
+
+/*
+ * printer_status - get printer status using BIOS printer services (int 17h)
+ * 		    return 0 if printer responds bad status otherwise.
+ */
+unsigned short printer_ready()
+{
+    union REGS rg;
+
+    if(!have_printer())			/* bother to get stat ? */
+      return(0xffff);
+
+    rg.h.ah = 0x02;			/* get printer status */
+    rg.x.dx = 0;			/* which printer */
+    int86(0x17, &rg, &rg);		/* do it */
+
+    return(rg.h.ah & ~(0xd6));		/* 0x10, 0x40 & 0x80 are OK */
+					/* 0x02 and 0x04 are ignored */
+}
+
+
+/*
+ * p_printer_error - given a a byte of error code, return the string
+ *                   corresponding to it.
+ */
+char *p_printer_error(err)
+unsigned short err;
+{
+    if(err == 0xffff)
+	return("No printer found");
+    else if(err & 0x01)
+	return("Status 1: Time out (on line?)");
+    else if(err & 0x08)
+	return("Status 8: I/O error");
+    else if(err & 0x20)
+	return("Status 32: Out of paper ");
+    else if(err & 0x40 || err & 0x80 || err & 0x10)
+	/* ACK from printer or printer NOT busy or printer selected */
+	return("");
+    else
+        return("Weird printer status");
+}
+
+
+/*
+ * send_printer - write a byte to the printer returning status 
+ */
+int send_printer(c)
+char c;
+{
+    union REGS rg;
+
+    rg.h.ah = 0;			/* service 0: send a byte */
+    rg.h.al = c;			/* which byte */
+    rg.x.dx = 0;			/* which printer */
+    int86(0x17, &rg, &rg);		/* do it */
+    return(rg.h.ah & ~(0xd6));		/* 0x10, 0x40 & 0x80 are OK */
+					/* 0x02 and 0x04 are ignored */
+}
+
+
+/*
+ * coreleft - returns the amount of core memory currently available
+ */
+long
+coreleft()
+{
+#ifdef _WINDOWS
+    return (GetFreeSpace (0));
+#else
+    long ramfree = 0L;
+    register int i = 0, j;
+    static unsigned segs[10];
+    union  REGS r;
+    struct SREGS s;
+
+    while(1){
+        r.h.ah = 0x48;			/* DOS alloc a paragraph */
+        r.x.bx = 0x0001;		/* grab 1 paragraph (16 bytes) */
+        intdos(&r, &r);
+        if(r.x.cflag){			/* carry flag set, no more core */
+	    for(j=0;j<i;j++){
+                r.h.ah = 0x49;		/* DOS free alloc'd core */
+                s.es = segs[j];		/* segment to free */
+                intdosx(&r, &r, &s);
+	    }
+	    return(ramfree*16L);
+        }
+	else
+            segs[i] = r.x.ax;		/* remember the sigment */
+
+        r.h.ah = 0x4a;			/* DOS resize alloc'd core */
+        r.x.bx = 0xffff;		/* grab the biggest we can */
+        s.es = segs[i];			/* segment to resize */
+        intdosx(&r, &r, &s);
+
+	if(r.x.cflag){
+            r.h.ah = 0x4a;			/* DOS resize alloc'd core */
+            s.es = segs[i];			/* segment to resize */
+            intdosx(&r, &r, &s);
+	    ramfree += r.x.bx;
+	}
+        else
+	    ramfree += 0xffff;
+
+        i++;
+    }
+#endif
+}
+#endif
+
+/*
+ * OS unique c-client calls and such.
+ */
+
+
+/*
+ * zone_offset - print the time zone offset in local differential
+ *               form : hours+minutes (HHMM)
+ */
+void
+zone_offset(buf)
+char *buf;
+{
+    struct timeb tb;
+
+    ftime(&tb);
+    sprintf(buf, "%02.2u%02.2u", tb.timezone/60, tb.timezone%60);
+}
+
+
+#ifndef OS2
+/*
+ * Special hook so externally we can avoid copying from one file to
+ * another.  It's quite a hack, and not exactly clear, but does help
+ * performance-wise.
+ */
+FILE *append_file = NULL;
+
+/*
+ * dos_gets - c-client callback for mail_fetchbody to use when receiving 
+ *            a message text too large for free mem (see mailview.c).
+ */
+char *dos_gets (f, stream, size)
+readfn_t  f;
+void     *stream;
+unsigned long      size;
+{
+    char tmp[MAILTMPLEN+1];
+    unsigned long j = 0L;
+    extern unsigned long gets_bytes;
+
+    if(!append_file){
+	char es[128];
+	/* post error message, dump the text in the bit bucket */
+	mm_log("dos_gets: NO FILE HANDLE TO APPEND",ERROR);
+	return(NULL);
+    }
+
+    while(size -= j){
+	(*f) (stream, j = min ((long) MAILTMPLEN, size), tmp);
+	gets_bytes += j;
+#ifndef	_WINDOWS
+	win_multiplex();
+#endif
+	if(fwrite(tmp, sizeof(char), (size_t)j, append_file) != j){
+	    /* problem writing temp file! bail gracefully */
+	    sprintf(tmp,"Error getting message: %s", error_description(errno));
+	    mm_log(tmp, ERROR);
+	    return(NULL);
+        }
+    }
+
+    return(cpystr("programmer botch: data on disk"));
+}
+
+
+/*
+ *                   ******* DOS Cache Manager *******
+ *
+ * Each mail stream has associated with it a cache of mail elements 
+ * ("elt" in c-client parlance).  This can get too ponderous slog around
+ * in the 640K *MAX* that DOS allows, so the idea is to manager some number
+ * of them in core and page the rest out to disk.  ALL CACHE ACCESS IN
+ * C-CLIENT MUST TO GO THRU THE mailcache() FUNCTION!!
+ *
+ */
+
+
+/*
+ * CacheBlock_SIZE: number of elt's cached in core at any one time
+ */
+#define	CB_SIZE	(20L)
+
+
+/*
+ * Meta cache structure.  Used by dos_cache to hold either short or long
+ * elt's and a flag reporting if the entry's been accessed/used or not.
+ */
+typedef struct metacache {
+    short		use;		/* cache slot in use flag */
+    union {
+	MESSAGECACHE	mc;
+	LONGCACHE	lc;
+    } cachel;				/* access to cache elements */
+} METACACHE;
+
+
+/*
+ * Master DOS cache structure.  Every mail stream gets one, and has it
+ * until it dies.  c-client worries about freeing this with a CH_INIT.
+ */
+typedef struct doscache {
+	FILE		*dcf;		/* DOS cache file pointer */
+	char		*name;		/* DOS cache file's name  */
+        long		cbase;		/* index of array in slot 1 of block */
+	METACACHE	mcb[CB_SIZE];	/* meta cache block */
+} DOSCACHE;
+
+
+/*
+ * dcreadb - dos cache read block; given a stream, read a new block
+ *	     of cache entries into core.  Doscache's cbase field
+ *           describes where to start loading.
+ */
+void dcreadb(cache)
+DOSCACHE *cache;
+{
+    size_t n;
+    
+    if(fseek(cache->dcf, cache->cbase * sizeof(METACACHE), SEEK_SET))
+      fatal("ran off end of dos cache file in dcreadb");
+
+    n = fread((void *)&cache->mcb[0],sizeof(METACACHE),
+		(size_t)CB_SIZE,cache->dcf);
+
+    if(n != CB_SIZE)
+      fatal("Can't read cache block in from disk");
+}
+
+
+/*
+ * dcwriteb - dos cache write block; given a stream, write the current 
+ *            block of cache entries to disk.  Guaranteed write, or fatal.
+ */
+void dcwriteb(cache)
+DOSCACHE *cache;
+{
+    size_t n;
+
+    if(fseek(cache->dcf, cache->cbase * sizeof(METACACHE), SEEK_SET))
+      fatal("ran off end of dos cache file in dcwriteb");
+
+    n = fwrite(&cache->mcb[0], sizeof(METACACHE), (size_t)CB_SIZE, cache->dcf);
+
+    if(n != CB_SIZE)
+      fatal("Can't write cache block to from disk");
+}
+
+
+
+/*
+ * dchit - make sure metacache entry for msgno is in core, if not, 
+ *         write current block and read in new one that contains it.
+ */
+void dchit(cache, msgno)
+DOSCACHE *cache;
+long      msgno;
+{
+    long i = msgno - 1;			/* index of msgno's elt */
+    size_t n;
+
+    if(msgno <= 0)
+      fatal("bogus msgno passed to dchit");
+
+    if(i >= cache->cbase && i < cache->cbase + CB_SIZE)
+      return;				/* everything's okey dokey */
+
+    dcwriteb(cache);			/* roll out the current block */
+
+    cache->cbase = (i/CB_SIZE) * CB_SIZE;
+    dcreadb(cache);			/* roll in the new block */
+}
+
+
+
+/*
+ * dcget - dos cache get; given a stream and a message number in it, 
+ *         return a pointer to the cache entry associated with it.
+ */
+METACACHE *dcget(stream, msgno)
+MAILSTREAM *stream;
+long        msgno;
+{
+    int i;
+    DOSCACHE *dc = (DOSCACHE *)stream->cache.c;
+
+    dchit(dc, msgno);			/* correct block in core? */
+
+    i = (int)((msgno-1)%CB_SIZE);	/* offset of entry in block */
+    if(!dc->mcb[i].use){		/* new cache entry! */
+	memset((void *)&dc->mcb[i], 0, sizeof(METACACHE));
+	dc->mcb[i].use = 1;		/* mark entry as accessed */
+	if(stream->scache){
+	    dc->mcb[i].cachel.mc.lockcount = 1;
+	    dc->mcb[i].cachel.mc.msgno = msgno;
+	}
+	else{
+	    dc->mcb[i].cachel.lc.elt.lockcount = 1;
+	    dc->mcb[i].cachel.lc.elt.msgno = msgno;
+	    dc->mcb[i].cachel.lc.env = NULL;
+	    dc->mcb[i].cachel.lc.body = NULL;
+	}
+    }
+
+    return(&dc->mcb[i]);
+}
+
+
+
+/*
+ * dos_cache - c-client callback used to manage cached elt's and 
+ *             envelopes. (see ../c-client/mail.c)
+ */
+void *dos_cache(stream, msgno, op)
+MAILSTREAM *stream;
+long        msgno;
+long        op;
+{
+    size_t n;
+    void *ret = NULL;
+    long i = msgno - 1;
+    unsigned long j = stream->cachesize;
+    METACACHE ctmp;
+    DOSCACHE  *dtmp = (DOSCACHE *)stream->cache.c;
+
+    switch ((int) op) {			/* what function? */
+      case CH_INIT:			/* initialize cache */
+        if (stream->cachesize) {	/* flush old cache contents */
+	    
+	    /*
+	     * WARNING: if lock counts are ever important, this will 
+	     *          have to become a loop counting down the 
+	     *          cachesize and calling something like 
+	     *          mail_free_elt() for each one!
+	     */
+	    fclose(dtmp->dcf); /* should auto blast tmpfile */
+	    if(dtmp->name){
+		unlink(dtmp->name);
+		free(dtmp->name);
+		dtmp->name = NULL;
+	    }
+
+	    fs_give((void **)&stream->cache.c);
+	    stream->cachesize = 0;
+        }
+        break;
+
+      case CH_SIZE:			/* (re-)size the cache */
+        if (msgno > j) {		/* do nothing if size adequate */
+	    /*
+	     * TUNING POTENTIAL: the const 4 below could be tweeked
+	     */
+	    while(msgno > stream->cachesize)
+	      stream->cachesize += (CB_SIZE * 4);
+
+            if (stream->cache.c == NULL){
+		stream->cache.c = (void *)fs_get(sizeof(DOSCACHE));
+		memset(stream->cache.c, 0, sizeof(DOSCACHE));
+		dtmp = (DOSCACHE *)stream->cache.c;
+		if(!dtmp->name)
+		  dtmp->name = temp_nam(NULL, "pi");
+
+		/*
+		 * Can't use tmpfile() as MSC's library call won't 
+		 * observe TMP or TEMP env vars.  Wonders never cease.
+		 */
+		if((dtmp->dcf = (void *)fopen(dtmp->name, "w+b")) == NULL){
+		    sprintf(tmp_20k_buf,"Can't open DOS cache: %s",dtmp->name);
+		    fatal(tmp_20k_buf);
+		}
+
+		for(j = 0; j < stream->cachesize; j += CB_SIZE){
+		    dtmp->cbase = j;
+		    dcwriteb(dtmp);
+		}
+		dtmp->cbase = 0;
+	    }
+	    else{
+		/* init new entries */
+		fseek(dtmp->dcf, j * sizeof(METACACHE), SEEK_SET);
+		memset((void *)&ctmp, 0, sizeof(METACACHE));
+		for(;j < stream->cachesize; j++){
+		    n = fwrite((void *)&ctmp,sizeof(METACACHE),1,dtmp->dcf);
+		    if(n != 1L)
+		      fatal("Cache init failed on fwrite");
+		}
+	    }
+        }
+        break;
+ 
+      case CH_ELT:			/* return elt */
+      case CH_MAKEELT:			/* short elt, make if necessary */
+      case CH_LELT:			/* return long elt */
+      case CH_MAKELELT:			/* long elt, make if necessary */
+	ret = (stream->scache) ? (void *) &dcget(stream, msgno)->cachel.mc
+	                       : (void *) &dcget(stream, msgno)->cachel.lc;
+	break;
+
+      case CH_FREE:			/* free (l)elt */
+	/* 
+	 * SEE WARNING ABOVE! if we ever need lock counts
+	 * this should call an appropriate mail_free_XXX-like 
+	 * function.
+	 */
+	dcget(stream, msgno)->use = 0;
+	break;
+
+      case CH_EXPUNGE:			/* expunge cache slot */
+	{				/* slide down remainder of cache */
+	    METACACHE *dc_copy=(METACACHE *)fs_get(sizeof(METACACHE));
+
+/*
+ * OPTIMIZE: this could be made a little more efficient by using offset
+ *           into the current block in memory, and copying blocks of 
+ *           elt's at a time rather than individually.
+ */
+	    for (i = msgno+1; i <= stream->nmsgs; ++i){
+		memcpy((void *)dc_copy,
+		       (void *)dcget(stream, i),
+		       sizeof(METACACHE));
+		if(stream->scache) 
+		  dc_copy->cachel.mc.msgno = i - 1L;
+		else
+		  dc_copy->cachel.lc.elt.msgno = i - 1L;
+
+		memcpy((void *)dcget(stream, i-1),
+		       (void *)dc_copy,
+		       sizeof(METACACHE));
+	    }
+
+	    fs_give((void **)&dc_copy);
+	    memset((void *)dcget(stream, stream->nmsgs),
+		   0, 
+		   sizeof(METACACHE));
+	}
+
+	break;
+
+    default:
+      fatal ("Bad dos_cache op");
+      break;
+    }
+
+    return ret;
+}
+
+
+
+/*
+ * ***** FOR DEBUGGING *****
+ */
+void dumpmetacache(stream)
+MAILSTREAM *stream;
+{
+    FILE *fp;
+    long i;
+    size_t  n;
+    METACACHE ce;
+    DOSCACHE *dp = (DOSCACHE *)stream->cache.c;
+
+    if((fp=fopen("\\tmp\\cache.out","a")) == NULL)
+	return;
+    if(!stream->cache.c){
+	fprintf(fp,"NO CACHE ASSOCIATED WITH STREAM!!!\n");
+    }
+    else{
+        fprintf(fp,"****** cache has %ld entries (%d element blocks)\n", 
+		stream->cachesize, CB_SIZE);
+	fprintf(fp,"Those in core are:\n");
+	for(i=0; i < CB_SIZE; i++){
+	  fprintf(fp,"  %d) ", i+1);
+	  if(!dp->mcb[i].use){
+	     fprintf(fp,"EMPTY\n");
+	  }
+	  else{
+	     fprintf(fp,"# %ld, lock = %d, size = %ld\n", 
+			dp->mcb[i].cachel.mc.msgno,
+			dp->mcb[i].cachel.mc.lockcount,
+			dp->mcb[i].cachel.mc.rfc822_size);
+	  }
+	}
+
+	fprintf(fp,"Those on disk are:\n");
+	fseek(dp->dcf, 0L, SEEK_SET);
+	for(i=0; i < stream->cachesize; i++){
+	  fprintf(fp,"  %d) ", i+1);
+	  n = fread(&ce, sizeof(METACACHE), 1, dp->dcf);
+	  if(n != 1){
+	     fprintf(fp,"PROBLEM READING ENTRY!!!\n");
+	     break;
+	  }
+	  if(!ce.use){
+	     fprintf(fp,"EMPTY\n");
+	  }
+	  else{
+	     fprintf(fp,"# %ld, lock = %d, size = %ld\n", 
+			ce.cachel.mc.msgno,
+			ce.cachel.mc.lockcount,
+			ce.cachel.mc.rfc822_size);
+	  }
+	}
+    }
+    fclose(fp);
+}
+
+
+#ifndef	_WINDOWS
+/*
+ *
+ */
+unsigned
+alarm(t)
+    unsigned t;
+{
+}
+#endif
+#endif

@@ -1,0 +1,8 @@
+#if defined(USE_QUOTAS)
+
+#include <ufs/quota.h>
+
+include(sunquota)
+#endif /* USE_QUOTAS */
+
+

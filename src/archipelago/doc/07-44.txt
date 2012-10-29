@@ -1,0 +1,40 @@
+TR #: 07-44
+
+TR title: Archipelago: Trading Address Space for Reliability and Security
+
+Author (s): Vitaliy B. Lvin, Gene Novark, Emery D. Berger, Benjamin G. Zorn
+Address           Computer Science Department
+                  140 Governors Drive
+                  University of Massachusetts
+                  Amherst, MA  01003-9264
+
+Date: August 11, 2007
+
+Keywords: memory management, security, reliability, address space
+
+			       ABSTRACT
+
+Memory errors are a notorious source of security vulnerabilities that
+can lead to service interruptions, information leakage and
+unauthorized access. Because such errors are also difficult to debug,
+the absence of timely patches can leave users vulnerable to attack for
+long periods of time. A variety of approaches have been introduced to
+combat these errors, but these often incur large runtime overheads and
+generally abort on errors, threatening availability.
+
+This paper presents Archipelago, a runtime system that takes advantage
+of available address space to substantially reduce the likelihood that
+a memory error will impact program execution. Archipelago randomly
+allocates heap objects far apart in virtual address space, effectively
+isolating each object from buffer overflows. Archipelago also protects
+against dangling pointer errors by preserving the contents of freed
+objects after they are freed. Archipelago thus trades virtual address
+space---a plentiful resource on 64-bit systems---for significantly
+improved program reliability and security, while limiting physical
+memory consumption by tracking the working set of an application and
+compacting cold objects. We show that Archipelago allows applications
+to continue to run correctly in the face of thousands of memory
+errors. Across a suite of server applications, Archipelago's
+performance overhead is 6% on average (between -7% and 22%), making it
+especially suitable to protect servers that have known security
+vulnerabilities due to heap memory errors.

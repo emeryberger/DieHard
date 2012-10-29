@@ -1,0 +1,139 @@
+
+This tests the exception system, so you will get
+a long list of error messages
+
+-----------------------------------------
+
+Incompatible dimensions
+
+
+An exception has been thrown
+Logic error:- detected by Newmat: incompatible dimensions
+
+MatrixType = Rect   # Rows = 2; # Cols = 3
+MatrixType = Rect   # Rows = 2; # Cols = 3
+MatrixType = Rect   # Rows = 4; # Cols = 5
+Trace: GeneralAdd; Block A; Test.
+
+-----------------------------------------
+
+Bad index
+
+
+An exception has been thrown
+Logic error:- detected by Newmat: index error: requested indices = 3, 3
+
+MatrixType = Rect   # Rows = 2; # Cols = 3
+Trace: Block B; Test.
+
+-----------------------------------------
+
+Illegal conversion
+
+
+An exception has been thrown
+Logic error:- detected by Newmat: Illegal Conversion
+MatrixTypes = Rect ; UT   
+
+Trace: Block C; Test.
+
+-----------------------------------------
+
+Invert non-square matrix
+
+
+An exception has been thrown
+Logic error:- detected by Newmat: incompatible dimensions
+
+MatrixType = Rect   # Rows = 2; # Cols = 3
+MatrixType = Rect   # Rows = 2; # Cols = 3
+MatrixType = Diag   # Rows = 2; # Cols = 2; lower BW = 0; upper BW = 0
+Trace: GeneralSolv; InvertedMatrix::Evaluate; CroutMatrix; Block D; Test.
+
+-----------------------------------------
+
+Non 1x1 matrix to scalar
+
+
+An exception has been thrown
+Logic error:- detected by Newmat: Cannot convert to scalar
+
+MatrixType = Rect   # Rows = 2; # Cols = 3
+Trace: AsScalar; Block E; Test.
+
+-----------------------------------------
+
+Matrix to vector
+
+
+An exception has been thrown
+Logic error:- detected by Newmat: can't convert matrix to vector
+
+MatrixType = Rect   # Rows = 2; # Cols = 3
+Trace: ColumnVector; Block F; Test.
+
+-----------------------------------------
+
+Invert singular matrix
+
+
+An exception has been thrown
+Runtime error:- detected by Newmat: matrix is singular
+
+MatrixType = Crout  # Rows = 2; # Cols = 2
+Trace: Crout(lubksb); GeneralSolv; InvertedMatrix::Evaluate; Block G; Test.
+
+-----------------------------------------
+
+SubMatrix error
+
+
+An exception has been thrown
+Logic error:- detected by Newmat: incompatible submatrix dimension
+
+Trace: SubMatrix(evaluate); Block H; Test.
+
+-----------------------------------------
+
+SubMatrix error
+
+
+An exception has been thrown
+Logic error:- detected by Newmat: incompatible submatrix dimension
+
+Trace: SubMatrix(row); Block I; Test.
+
+-----------------------------------------
+
+Cholesky error
+
+
+An exception has been thrown
+Runtime error:- detected by Newmat: matrix not positive definite
+
+MatrixType = Sym    # Rows = 50; # Cols = 50
+Trace: Cholesky; Block J; Test.
+
+-----------------------------------------
+
+Inequality error
+
+
+An exception has been thrown
+Logic error:- detected by Newmat: inequalities not defined for matrices
+
+Trace: Block K; Test.
+
+-----------------------------------------
+
+
+End test
+
+(The following memory checks are probably not valid with all
+compilers - see documentation)
+
+Checking for lost memory: 34734136 34734136  - ok
+
+
+Checking for lost memory: 34604228 34604228  - ok
+

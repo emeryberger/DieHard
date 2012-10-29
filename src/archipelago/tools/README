@@ -1,0 +1,11 @@
+This directory contains tools for gathering page-level reference
+histograms (libmemtrace) and malloc traces (libmalloctrace). To
+collect a memory trace, set the LD_PRELOAD variable to point to
+libmemtrace.so; malloc tracing works the same way, but with
+libmalloctrace.so.
+
+Memtrace generates a file "memtrace.<pid>.<random>" after executing a
+process. You can then process this trace file to generate LRU miss and
+histograms with the lrusim2 utility.
+
+

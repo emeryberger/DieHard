@@ -1,0 +1,140 @@
+/*----------------------------------------------------------------------
+    Filter file names for strange characters
+
+   Args:  file  -- the file name to check
+ 
+ Result: Returns NULL if file name is OK
+         Returns formatted error message if it is not
+  ----*/
+char *
+filter_filename(file, fatal)
+    char *file;
+    int  *fatal;
+{
+#ifdef ALLOW_WEIRD
+    static char illegal[] = {'\177', '\0'};
+#else
+    static char illegal[] = {'"', '#', '$', '%', '&', /*'/',*/ '(', ')','*',
+                          ',', ';', '<', '=', '>', '?', '[', ']',
+                          '^', '|', '\177', '\0'};
+#endif
+    static char error[100];
+    char ill_file[MAXPATH+1], *ill_char, *ptr, e2[10];
+    int  i;
+
+    for(ptr = file; *ptr == ' '; ptr++) ; /* leading spaces gone */
+
+    while(*ptr && (unsigned char)(*ptr) >= ' ' && strindex(illegal, *ptr) == 0)
+      ptr++;
+
+    *fatal = TRUE;
+    if(*ptr != '\0') {
+	if(*ptr == '\t') {
+    	    ill_char = "<tab>";
+	    *fatal = FALSE;		/* just whitespace */
+        } else if(*ptr == '\n') {
+            ill_char = "<newline>";
+        } else if(*ptr == '\r') {
+            ill_char = "<carriage return>";
+        } else if(*ptr < ' ') {
+            sprintf(ill_char = e2, "control-%c", *ptr + '@');
+        } else if (*ptr == '\177') {
+    	    ill_char = "<del>";
+        } else {
+    	    e2[0] = *ptr;
+    	    e2[1] = '\0';
+    	    ill_char = e2;
+	    *fatal = FALSE;		/* less offensive? */
+        }
+	if(!*fatal){
+	    strncpy(error, ill_char, sizeof(error)-1);
+	    error[sizeof(error)-1] = '\0';
+	}
+	else if(ptr != file) {
+            strncpy(ill_file, file, min(ptr-file,sizeof(ill_file)-1));
+            ill_file[min(ptr-file,sizeof(ill_file)-1)] = '\0';
+	    sprintf(error,
+		    "Character \"%s\" after \"%.*s\" not allowed in file name",
+		    ill_char, sizeof(error)-50, ill_file);
+        } else {
+            sprintf(error,
+                    "First character, \"%s\", not allowed in file name",
+                    ill_char);
+        }
+            
+        return(error);
+    }
+
+    if((i=is_writable_dir(file)) == 0 || i == 1){
+	sprintf(error, "\"%.*s\" is a directory", sizeof(error)-50, file);
+        return(error);
+    }
+
+    if(ps_global->restricted || ps_global->VAR_OPER_DIR){
+	for(ptr = file; *ptr == ' '; ptr++) ;	/* leading spaces gone */
+
+	if((ptr[0] == '.' && ptr[1] == '.') || srchstr(ptr, "/../")){
+	    sprintf(error, "\"..\" not allowed in filename");
+	    return(error);
+	}
+    }
+
+    return(NULL);
+}
+
+
+/*----------------------------------------------------------------------
+    Check to see if user is allowed to read or write this folder.
+
+   Args:  s  -- the name to check
+ 
+ Result: Returns 1 if OK
+         Returns 0 and posts an error message if access is denied
+  ----*/
+int
+cntxt_allowed(s)
+    char *s;
+{
+    struct variable *vars = ps_global->vars;
+    int retval = 1;
+    MAILSTREAM stream; /* fake stream for error message in mm_notify */
+
+    if(ps_global->restricted
+         && (strindex("./~", s[0]) || srchstr(s, "\\..\\"))){
+	stream.mailbox = s;
+	mm_notify(&stream, "Restricted mode doesn't allow operation", WARN);
+	retval = 0;
+    }
+    else if(VAR_OPER_DIR
+	    && s[0] != '{' && !(s[0] == '*' && s[1] == '{')
+	    && strucmp(s,ps_global->inbox_name) != 0
+	    && strcmp(s, ps_global->VAR_INBOX_PATH) != 0){
+	char *p, *free_this = NULL;
+
+	p = s;
+	/* add home dir to relative paths */
+	if(s[0] != '/'){
+	    free_this = p = (char *)fs_get(strlen(s)
+					    + strlen(ps_global->home_dir) + 2);
+	    build_path(p, ps_global->home_dir, s,
+		       strlen(s)+strlen(ps_global->home_dir)+2);
+	}
+	
+	if(!in_dir(VAR_OPER_DIR, p)){
+	    char err[200];
+
+	    sprintf(err, "No operations allowed outside of %.*s",
+		    sizeof(err)-50, VAR_OPER_DIR);
+	    stream.mailbox = p;
+	    mm_notify(&stream, err, WARN);
+	    retval = 0;
+	}
+
+	if(free_this)
+	  fs_give((void **)&free_this);
+    }
+    
+    return retval;
+}
+
+

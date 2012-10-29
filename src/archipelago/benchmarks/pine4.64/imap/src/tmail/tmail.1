@@ -1,0 +1,191 @@
+.TH TMAIL 1 "May 18, 2004"
+.SH NAME
+tmail \- Mail Delivery Module
+.nh
+.SH SYNOPSIS
+.B tmail
+.I [\-D] [-f from_name] [\-I inbox_specifier] user[+folder] ...
+.SH DESCRIPTION
+.I tmail
+delivers mail to a user's INBOX or a designated folder.
+.I tmail
+may be configured as a drop-in replacement for
+.IR binmail (1),
+.IR mail.local (1)
+or any program intended for use for mail delivery by
+.IR sendmail (8).
+.PP
+.I tmail
+is intended to be used for direct delivery by the mailer daemon;
+.IR dmail (1)
+is the preferred tool for user applications, e.g. a mail delivery
+filter such as
+.IR procmail (1) .
+If
+.I tmail
+is used for a user application,
+then the calling program must be aware of the restrictions noted below.
+.PP
+When
+.I tmail
+exits, it returns exit status values to enable
+.IR sendmail (8)
+to determine whether a message was delivered successfully or had a
+temporary (requeue for later delivery) or permanent (return to sender)
+failure.
+.PP
+If the 
+.I +folder
+extension is included in the user argument, 
+.I tmail
+will attempt to deliver to the designated folder.  If the folder does not 
+exist or the extension is not included, the message is delivered to the 
+user's INBOX.
+If delivery is to INBOX and no INBOX currently exists,
+.I tmail
+will create a new INBOX, using the \fB-I\fR flag if specified.
+.I tmail
+recognizes the format of an existing INBOX or folder, and appends the new
+message in that format.
+.PP
+The \fB-D\fR flag specifies debugging; this enables additional message
+telemetry.
+.PP
+The \fB-f\fR or \fB-r\fR flag is used by
+.IR sendmail (8)
+to specify a Return-Path.  The header
+.br
+   Return-Path: <\fIfrom_name\fR> 
+.br 
+is prepended to the message before delivery.  
+.PP
+The \fB-I\fR flag is used by
+.IR sendmail (8)
+to specify an alternative INBOX name.  This affects the location and
+format of INBOX, and requires privileges.  If specified, it should be
+in one of three forms:
+.sp
+The first form of argument to \fB-I\fR is the string "INBOX", which
+means to write to the system default inbox using the system default
+mailbox format.  These system defaults are defined when the c-client
+library is built.
+.sp
+The second form of argument to \fB-I\fR is a delivery specification,
+consisting of "#driver.", a c-client mailbox format driver name, "/",
+and a file name.  This will write to the specified file in the
+specified format.  For example, #driver.mbx/INBOX will write to file
+"INBOX" in the home directory in mbx format; and
+#driver.unix/mail/incoming will write to file "incoming" in the
+user's "mail" subdirectory in unix (default UNIX) format.
+.sp
+The third form of argument to \fB-I\fR is any other name.  Normally,
+this will write to the specified file on the user's home directory in
+the specified format.  However, certain names are special.  These are:
+.PP
+.nf
+  value       equivalant to
+  -----       -------------
+  INBOX.MTX   #driver.mtx/INBOX.MTX
+  mbox        #driver.unix/mbox
+  mail.txt    #driver.tenex/mail.txt
+.fi
+.PP
+If \fB-I\fR is not specified, the default action is \fB-I INBOX\fR.
+.PP
+If multiple recipients are specified on the command line,
+.I tmail
+spawns one child process per recipient to perform actual delivery.  This
+way of calling
+.I tmail
+is not recommended; see below under
+.IR RESTRICTIONS .
+.SH INSTALLATION
+If 
+.I tmail
+is to be used for mail delivery from 
+.IR sendmail (8),
+it 
+.I must
+be installed setuid root.
+.sp
+.I tmail
+is invoked from sendmail.cf.  Look for the "Mlocal" line, and substitute
+the path name for the
+.I tmail
+binary in place of /bin/mail, /usr/lib/mail.local, etc.  You should also
+add the flag to invoke
+.I tmail
+with CRLF style newlines; this is usually done with E=\\r\\n in the Mlocal
+line.
+.sp
+For example, this is what is used on the author's system with
+sendmail version 8:
+.sp
+.nf
+Mlocal, P=/usr/local/etc/tmail, F=lsDFMAw5:/|@qPrn+,
+  S=10/30, R=20/40, E=\\r\\n, T=DNS/RFC822/X-Unix,
+  A=tmail $u
+.fi
+.PP
+If
+.I tmail
+is to be called with the \fB-I\fR flag, it must be invoked with both
+real and effective UID root.  Many sendmail configurations invoke the
+local mailer as the sending user when that user is local, which
+will prevent \fB-I\fR from working.
+.SH SECURITY CONSIDERATIONS
+If
+.I tmail
+is invoked by an ordinary user, the Received: header line will
+indicate the name or UID of the user that invoked it.
+.PP
+Ordinary users are not permitted to use the \fB-I\fR flag since
+otherwise a user could create any file on another user's directory.
+.PP
+.I tmail
+can deliver mail to home directories.  In addition,
+.I tmail
+can be used to deliver mail to other mail folders in a home directory
+or an inferior directory of a home directory.
+.SH RESTRICTIONS
+The calling program should invoke
+.I tmail
+with CRLF newlines, otherwise
+.I tmail
+will complain in syslog.
+.PP
+Absolute pathnames and 
+.I ~user
+specifications are not permitted in
+.I +folder
+extensions.
+.PP
+Ordinary users are not permitted to use the \fB-I\fR flag.
+.PP
+IMAP4 namespace names are not yet supported in 
+.I +folder
+extensions.
+.PP
+It is not possible to use
+.I tmail
+to deliver to
+.IR mh (1)
+format mailboxes.
+.PP
+If delivery to multiple users is specified and delivery to any single user
+fails, the entire delivery will be reported as having failed, even though
+delivery to other users may have succeeded.  If
+.I tmail
+is used for mail delivery from
+.IR sendmail (8),
+a separate tmail invocation should be done for each user.  Otherwise a
+delivery failure for a single user in a message going to multiple users
+will cause multiple deliveries to all the other users every time
+.IR sendmail (8),
+retries.
+.SH AUTHOR
+Mark Crispin, MRC@CAC.Washington.EDU
+.SH "SEE ALSO"
+binmail(1)
+.br
+sendmail(8)

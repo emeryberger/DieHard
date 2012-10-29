@@ -1,0 +1,24 @@
+/*----------------------------------------------------------------------
+     This routine returns 1 if job control is available.  Note, thiis
+     could be some type of fake job control.  It doesn't have to be
+     real BSD-style job control.
+  ----*/
+
+/* 
+     No job control available.
+*/
+have_job_control()
+{
+    return 0;
+}
+
+
+/*----------------------------------------------------------------------
+    If we don't have job control, this routine is never called.
+  ----*/
+void
+stop_process()
+{
+}
+
+

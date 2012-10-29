@@ -1,0 +1,8 @@
+Usage: build <make-options> <target-platform>
+
+<target-platform> may be one of the ports listed in doc/pine-ports or
+  clean   Clean up object files and such.
+          Also, a good way to rebuild Pine/Pico from scratch.
+
+See the README file for more information.
+

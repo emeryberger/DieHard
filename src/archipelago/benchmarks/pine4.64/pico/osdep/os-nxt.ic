@@ -1,0 +1,17 @@
+;
+; NeXT os-nxt.ic file for building os-nxt.c.
+;
+; Boilerplate header.
+include(header)
+
+include(unix)
+
+include(spell.unx)
+
+include(read.sel)
+
+include(raw.brk)
+
+include(term.cap)
+
+include(getcwd)

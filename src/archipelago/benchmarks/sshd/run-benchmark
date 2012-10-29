@@ -1,0 +1,154 @@
+#!/bin/bash
+BASEDIR=`dirname $0`
+
+if [[ ${BASEDIR:0:1} != / ]]
+    then
+    BASEDIR=`pwd`/${BASEDIR}
+fi
+
+TIMECMD="/usr/bin/time -a -o"
+TIMEFORMAT="%U %S %e"
+timestamp=`date +%F_%T`
+SSHCMD="ssh -p 2022 -i ${BASEDIR}/id_rsa -T -a -x localhost true"
+AUTHFILE=~/.ssh/authorized_keys2
+MYAUTHFILE=${BASEDIR}/authorized_keys2
+START="sudo ${BASEDIR}/start_server -o"
+LIBC=
+DIEHARD2=-d2
+DIEHARD1024=-d1024
+EFENCE=-e
+ARCH=-a
+STOP="sudo ${BASEDIR}/stop_server"
+NUMRUNS=10
+RUNS=`seq 1 ${NUMRUNS}`
+MTRACE=-m
+
+echo Setting up connection environment...
+
+#save value of time variable
+if [[ -n "${TIME}" ]]
+    then 
+    TIMESAVE=${TIME}
+fi
+
+#set new time format
+export TIME=${TIMEFORMAT}
+
+#save authorized_keys2 file
+if [[ -e "${AUTHFILE}" ]]
+    then
+    mv ${AUTHFILE} ${AUTHFILE}.bak
+fi
+
+#set up new authorized_keys2
+ln -s ${MYAUTHFILE} ${AUTHFILE}
+
+#Archipelago experiments
+#echo Running experiments with Archipelago...
+
+#start server
+#eval ${START} ./sshd_arch_${timestamp}.mem ${ARCH}
+
+#for i in `seq 1 10` ; do
+#    ${TIMECMD} ./ssh_arch_${timestamp}.time ${SSHCMD}
+#done	
+
+#stop server
+#${STOP}
+
+#sleep 2
+
+#libc experiments
+#echo Running experiments with libc...
+
+#start server
+#${START} ./sshd_libc_${timestamp}.mem ${LIBC}
+
+#for i in `seq 1 10` ; do
+#    ${TIMECMD} ./ssh_libc_${timestamp}.time ${SSHCMD}
+#done	
+
+#stop server
+#${STOP}
+
+#sleep 2
+
+#DieHard experiments
+#echo Running experiments with DieHard-2...
+
+#start server
+#${START} ./sshd_dh2_${timestamp}.mem ${DIEHARD2}
+
+#for i in `seq 1 10` ; do
+#    ${TIMECMD} ./ssh_dh2_${timestamp}.time ${SSHCMD}
+#done	
+
+#stop server
+#${STOP}
+
+sleep 2
+
+#DieHard experiments
+#echo Running experiments with DieHard-1024...
+
+#start server
+#${START} ./sshd_dh1024_${timestamp}.mem ${DIEHARD1024}
+
+#for i in `seq 1 10` ; do
+#    ${TIMECMD} ./ssh_dh1024_${timestamp}.time ${SSHCMD}
+#done	
+
+#stop server
+#${STOP}
+
+
+#DieHard experiments
+echo Running experiments with mtrace...
+
+#start server
+${START} ./sshd_mt_${timestamp}.mem ${MTRACE}
+
+for i in `seq 1 10` ; do
+    ${TIMECMD} ./ssh_mt_${timestamp}.time ${SSHCMD}
+done	
+
+${STOP}
+
+
+#sleep 2
+
+#EFence experiments
+#echo Running experiments with Electric Fence...
+
+#start server
+#${START} ./sshd_ef_${timestamp}.mem ${EFENCE}
+
+#for i in `seq 1 10` ; do
+#    ${TIMECMD} ./ssh_ef_${timestamp}.time ${SSHCMD}
+#done	
+
+#stop server
+#${STOP}
+
+
+
+echo Cleaning up...
+
+#remove new authorized_keys2
+rm ${AUTHFILE}
+
+#restore old authorized_keys2
+if [[ -e "${AUTHFILE}.bak" ]]
+    then
+    mv ${AUTHFILE}.bak ${AUTHFILE}
+fi
+
+#restore time variable
+if [[ -n "${TIMESAVE}" ]]
+    then 
+    export TIME=${TIMESAVE}
+else 
+    unset TIME
+fi
+
+sudo chown vlvin:plasma *.mem

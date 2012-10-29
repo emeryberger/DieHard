@@ -1,0 +1,12 @@
+symbol-file /home/vlvin/work/plasma/diehard-nih/libdiehardnih.so
+file /home/vlvin/work/plasma/diehard-nih/libtest
+set environment LD_PRELOAD /home/vlvin/work/plasma/diehard-nih/libdiehardnih.so
+b main
+directory /home/vlvin/work/plasma/diehard-nih/
+directory /home/vlvin/work/plasma/diehard-nih/heaplayers
+directory /home/vlvin/work/plasma/diehard-nih/heaplayers/util
+directory /home/vlvin/work/plasma/diehard-nih/allocators/opp_allocator
+directory /home/vlvin/work/plasma/diehard-nih/coldcache
+directory /home/vlvin/work/plasma/diehard-nih/pagetracker
+directory /home/vlvin/work/plasma/diehard-nih/sighandler
+directory /home/vlvin/work/plasma/diehard-nih/util

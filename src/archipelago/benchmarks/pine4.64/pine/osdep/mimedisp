@@ -1,0 +1,91 @@
+/*----------------------------------------------------------------------
+       Can we display this type/subtype?
+
+   Args: type       -- the MIME type to check
+         subtype    -- the MIME subtype
+         params     -- parameters
+	 use_viewer -- tell caller he should run external viewer cmd to view
+
+ Result: Returns:
+
+	 MCD_NONE	if we can't display this type at all
+	 MCD_INTERNAL	if we can display it internally
+	 MCD_EXTERNAL	if it can be displayed via an external viewer
+
+ ----*/
+mime_can_display(type, subtype, params)
+    int       type;
+    char      *subtype;
+    PARAMETER *params;
+{
+    return((mailcap_can_display(type, subtype, params, 0)
+	      ? MCD_EXTERNAL 
+	    : (mailcap_can_display(type, subtype, params, 1) 
+	       ? (MCD_EXT_PROMPT | MCD_EXTERNAL) : MCD_NONE))
+	   | ((type == TYPETEXT || type == TYPEMESSAGE
+	       || MIME_VCARD(type,subtype))
+	        ? MCD_INTERNAL : MCD_NONE));
+}
+
+
+/*
+ * Determine if there is an OS-specific mechanism for accessing
+ * MIME and extension data.  In the general *nix case this is all
+ * done through mailcap and mime.types files.
+ *
+ * Returns: 0 if there is no support (most *nix cases)
+ *          1 if there is support (Mac OS X, Windows)
+ */
+int
+mime_os_specific_access()
+{
+    return 0;
+}
+
+/*
+ * Return the command based on either the mimetype or the file
+ * extension.  Mime-type always takes precedence.
+ *
+ *   mime_type - mime-type of the file we're looking at
+ *   mime_ext  - file extension given us by the mime data
+ *   cmd       - buffer to copy the resulting command into
+ *   chk       - whether or not we should check the file extension
+ *
+ *   Returns: 1 on success, 0 on failure
+ */
+int
+mime_get_os_mimetype_command(mime_type, mime_ext, cmd, clen, chk, sp_hndlp)
+    char *mime_type, *mime_ext, *cmd;
+    int   clen, chk, *sp_hndlp;
+{
+    /* stubbed out */
+    return 0;
+}
+
+/*
+ * Given a file extension, return the mime-type if there is one
+ *
+ * Returns: 1 on success, 0 on failure
+ */
+int
+mime_get_os_mimetype_from_ext(file_ext, mime_type, mime_type_len)
+    char *file_ext, *mime_type;
+    int mime_type_len;
+{
+    /* stubbed out */
+    return 0;
+}
+
+/*
+ * Given a mime-type, return the file extension if there is one
+ *
+ * Returns: 1 on success, 0 on failure
+ */
+int
+mime_get_os_ext_from_mimetype(mime_type, file_ext, file_ext_len)
+    char *mime_type, *file_ext;
+    int file_ext_len;
+{
+    /* stubbed out */
+    return 0;
+}

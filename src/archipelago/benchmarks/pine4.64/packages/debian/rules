@@ -1,0 +1,79 @@
+#!/usr/bin/make -f
+
+DEBUG =
+INSTALL_PROGRAM = install
+
+ifneq (,$(findstring debug,$(DEB_BUILD_OPTIONS)))
+  DEBUG = -DDEBUG -g
+endif
+
+ifeq (,$(findstring nostrip,$(DEB_BUILD_OPTIONS)))
+  INSTALL_PROGRAM += -s
+endif
+
+build: build-all
+
+build-all:
+	$(checkdir)
+	./build DEBUG="$(DEBUG)" ldb
+	touch build-all
+
+clean: checkroot
+	$(checkdir)
+	-rm -f build-all
+	./build clean
+	-rm -rf bin/* .bld.hlp pine/date.c
+	-rm -rf debian/tmp debian/files* core debian/substvars
+
+binary-indep: checkroot build-all
+
+binary-arch: checkroot build-all
+	$(checkdir)
+	-rm -rf debian/tmp
+	install -D -m755 debian/preinst debian/tmp/DEBIAN/preinst
+	install -D -m755 debian/postinst debian/tmp/DEBIAN/postinst
+	install -D -m755 debian/postrm debian/tmp/DEBIAN/postrm
+	install -D -m644 debian/menu debian/tmp/usr/lib/menu/pine
+
+	$(INSTALL_PROGRAM) -D -m755 bin/pine debian/tmp/usr/bin/pine
+	$(INSTALL_PROGRAM) -D -m755 imap/mlock/mlock debian/tmp/usr/sbin/mlock
+	$(INSTALL_PROGRAM) -D -m755 bin/rpload debian/tmp/usr/bin/rpload
+	$(INSTALL_PROGRAM) -D -m755 bin/rpdump debian/tmp/usr/bin/rpdump
+	$(INSTALL_PROGRAM) -D -m755 bin/pico debian/tmp/usr/bin/pico
+	$(INSTALL_PROGRAM) -D -m755 bin/pilot debian/tmp/usr/bin/pilot
+	$(INSTALL_PROGRAM) -D -m755 bin/mailutil debian/tmp/usr/bin/mailutil
+
+	install -D -m644 bin/pine.1 debian/tmp/usr/share/man/man1/pine.1
+	install -D -m644 doc/rpload.1 debian/tmp/usr/share/man/man1/rpload.1
+	install -D -m644 doc/rpdump.1 debian/tmp/usr/share/man/man1/rpdump.1
+	install -D -m644 doc/pico.1 debian/tmp/usr/share/man/man1/pico.1
+	install -D -m644 doc/pilot.1 debian/tmp/usr/share/man/man1/pilot.1
+	install -D -m644 imap/src/mailutil/mailutil.1 debian/tmp/usr/share/man/man1/mailutil.1
+	install -D -m644 bin/tech-notes.txt debian/tmp/usr/share/doc/pine/tech-notes.txt
+	install -D -m644 CPYRIGHT debian/tmp/usr/share/doc/pine/copyright
+	install -D -m644 README debian/tmp/usr/share/doc/pine/README
+	install -D -m644 debian/changelog debian/tmp/usr/share/doc/pine/changelog
+
+	gzip -r9 debian/tmp/usr/share/man
+	gzip -9 debian/tmp/usr/share/doc/pine/changelog
+	dpkg-shlibdeps bin/pine bin/pico bin/pilot imap/mlock/mlock bin/rpload bin/rpdump
+	cd debian/tmp && md5sum `find * -type f ! -regex "DEBIAN/.*"` > DEBIAN/md5sums
+	dpkg-gencontrol -isp -ppine
+	chown -R root.root debian/tmp
+	chmod -R go=rX debian/tmp
+	chown root.mail debian/tmp/usr/sbin/mlock
+	chmod 2755 debian/tmp/usr/sbin/mlock
+	dpkg --build debian/tmp ..
+
+define checkdir
+	test -f pine/pine.c -a -f debian/rules
+endef
+
+binary: binary-indep binary-arch
+
+checkroot:
+	$(checkdir)
+	test root = "`whoami`"
+
+.PHONY: binary binary-arch binary-indep clean checkroot
+

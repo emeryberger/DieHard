@@ -1,0 +1,625 @@
+/*======================================================================
+    pipe
+    
+    Initiate I/O to and from a process.  These functions are similar to 
+    popen and pclose, but both an incoming stream and an output file are 
+    provided.
+   
+ ====*/
+
+#ifndef	STDIN_FILENO
+#define	STDIN_FILENO	0
+#endif
+#ifndef	STDOUT_FILENO
+#define	STDOUT_FILENO	1
+#endif
+#ifndef	STDERR_FILENO
+#define	STDERR_FILENO	2
+#endif
+
+
+/*
+ * Defs to help fish child's exit status out of wait(2)
+ */
+#ifdef	HAVE_WAIT_UNION
+#define WaitType	union wait
+#ifndef	WIFEXITED
+#define	WIFEXITED(X)	(!(X).w_termsig)	/* child exit by choice */
+#endif
+#ifndef	WEXITSTATUS
+#define	WEXITSTATUS(X)	(X).w_retcode		/* childs chosen exit value */
+#endif
+#else
+#define	WaitType	int
+#ifndef	WIFEXITED
+#define	WIFEXITED(X)	(!((X) & 0xff))		/* low bits tell how it died */
+#endif
+#ifndef	WEXITSTATUS
+#define	WEXITSTATUS(X)	(((X) >> 8) & 0xff)	/* high bits tell exit value */
+#endif
+#endif
+
+
+/*
+ * Global's to helpsignal handler tell us child's status has changed...
+ */
+short	child_signalled;
+short	child_jump = 0;
+jmp_buf child_state;
+int	child_pid;
+
+
+/*
+ * Internal Protos
+ */
+void pipe_error_cleanup PROTO((PIPE_S **, char *, char *, char *));
+void zot_pipe PROTO((PIPE_S **));
+static SigType pipe_alarm SIG_PROTO((int));
+
+
+
+
+/*----------------------------------------------------------------------
+     Spawn a child process and optionally connect read/write pipes to it
+
+  Args: command -- string to hand the shell
+	outfile -- address of pointer containing file to receive output
+	errfile -- address of pointer containing file to receive error output
+	mode -- mode for type of shell, signal protection etc...
+  Returns: pointer to alloc'd PIPE_S on success, NULL otherwise
+
+  The outfile is either NULL, a pointer to a NULL value, or a pointer
+  to the requested name for the output file.  In the pointer-to-NULL case
+  the caller doesn't care about the name, but wants to see the pipe's
+  results so we make one up.  It's up to the caller to make sure the
+  free storage containing the name is cleaned up.
+
+  Mode bits serve several purposes.
+    PIPE_WRITE tells us we need to open a pipe to write the child's
+	stdin.
+    PIPE_READ tells us we need to open a pipe to read from the child's
+	stdout/stderr.  *NOTE*  Having neither of the above set means 
+	we're not setting up any pipes, just forking the child and exec'ing
+	the command.  Also, this takes precedence over any named outfile.
+    PIPE_STDERR means we're to tie the childs stderr to the same place
+	stdout is going.  *NOTE* This only makes sense then if PIPE_READ
+	or an outfile is provided.  Also, this takes precedence over any
+	named errfile.
+    PIPE_PROT means to protect the child from the usual nasty signals
+	that might cause premature death.  Otherwise, the default signals are
+	set so the child can deal with the nasty signals in its own way.     
+    PIPE_NOSHELL means we're to exec the command without the aid of
+	a system shell.  *NOTE* This negates the affect of PIPE_USER.
+    PIPE_USER means we're to try executing the command in the user's
+	shell.  Right now we only look in the environment, but that may get
+	more sophisticated later.
+    PIPE_RESET means we reset the terminal mode to what it was before
+	we started pine and then exec the command.
+ ----*/
+PIPE_S *
+open_system_pipe(command, outfile, errfile, mode, timeout)
+    char  *command;
+    char **outfile, **errfile;
+    int    mode, timeout;
+{
+    PIPE_S *syspipe = NULL;
+    char    shellpath[32], *shell;
+    int     p[2], oparentd = -1, ochildd = -1, iparentd = -1, ichildd = -1;
+
+    dprint(5, (debugfile, "Opening pipe: \"%s\" (%s%s%s%s%s%s)\n",
+	       command ? command : "NULL cmd",
+	       (mode & PIPE_WRITE)   ? "W":"", (mode & PIPE_READ)  ? "R":"",
+	       (mode & PIPE_NOSHELL) ? "N":"", (mode & PIPE_PROT)  ? "P":"",
+	       (mode & PIPE_USER)    ? "U":"", (mode & PIPE_RESET) ? "T":""));
+
+    syspipe = (PIPE_S *)fs_get(sizeof(PIPE_S));
+    memset(syspipe, 0, sizeof(PIPE_S));
+
+    /*
+     * If we're not using the shell's command parsing smarts, build
+     * argv by hand...
+     */
+    if(mode & PIPE_NOSHELL){
+	char   **ap, *p;
+	size_t   n;
+
+	/* parse the arguments into argv */
+	for(p = command; *p && isspace((unsigned char)(*p)); p++)
+	  ;					/* swallow leading ws */
+
+	if(*p){
+	    syspipe->args = cpystr(p);
+	}
+	else{
+	    pipe_error_cleanup(&syspipe, "<null>", "execute",
+			       "No command name found");
+	    return(NULL);
+	}
+
+	for(p = syspipe->args, n = 2; *p; p++)	/* count the args */
+	  if(isspace((unsigned char)(*p))
+	     && *(p+1) && !isspace((unsigned char)(*(p+1))))
+	    n++;
+
+	syspipe->argv = ap = (char **)fs_get(n * sizeof(char *));
+	memset(syspipe->argv, 0, n * sizeof(char *));
+
+	for(p = syspipe->args; *p; ){		/* collect args */
+	    while(*p && isspace((unsigned char)(*p)))
+	      *p++ = '\0';
+
+	    *ap++ = (*p) ? p : NULL;
+	    while(*p && !isspace((unsigned char)(*p)))
+	      p++;
+	}
+
+	/* make sure argv[0] exists in $PATH */
+	if(can_access_in_path(getenv("PATH"), syspipe->argv[0],
+			      EXECUTE_ACCESS) < 0){
+	    pipe_error_cleanup(&syspipe, syspipe->argv[0], "access",
+			       error_description(errno));
+	    return(NULL);
+	}
+    }
+
+    /* fill in any output filenames */
+    if(!(mode & PIPE_READ)){
+	if(outfile && !*outfile)
+	  *outfile = temp_nam(NULL, "pine_p");	/* asked for, but not named? */
+
+	if(errfile && !*errfile)
+	  *errfile = temp_nam(NULL, "pine_p");	/* ditto */
+    }
+
+    /* create pipes */
+    if(mode & (PIPE_WRITE | PIPE_READ)){
+	if(mode & PIPE_WRITE){
+	    pipe(p);				/* alloc pipe to write child */
+	    oparentd = p[STDOUT_FILENO];
+	    ichildd  = p[STDIN_FILENO];
+	}
+
+	if(mode & PIPE_READ){
+	    pipe(p);				/* alloc pipe to read child */
+	    iparentd = p[STDIN_FILENO];
+	    ochildd  = p[STDOUT_FILENO];
+	}
+    }
+    else if(!(mode & PIPE_SILENT)){
+	flush_status_messages(0);		/* just clean up display */
+	ClearScreen();
+	fflush(stdout);
+    }
+
+    if((syspipe->mode = mode) & PIPE_RESET)
+      ttyfix(0);
+
+#ifdef	SIGCHLD
+    /*
+     * Prepare for demise of child.  Use SIGCHLD if it's available so
+     * we can do useful things, like keep the IMAP stream alive, while
+     * we're waiting on the child. The handler may have been changed by
+     * something in the composer, in particular, by an alt_editor call.
+     * So we need to re-set it to child_signal and then set it back
+     * when we're done.
+     */
+    child_signalled = child_jump = 0;
+    syspipe->chld   = signal(SIGCHLD, child_signal);
+#endif
+
+    if((syspipe->pid = vfork()) == 0){
+ 	/* reset child's handlers in requested fashion... */
+	(void)signal(SIGINT,  (mode & PIPE_PROT) ? SIG_IGN : SIG_DFL);
+	(void)signal(SIGQUIT, (mode & PIPE_PROT) ? SIG_IGN : SIG_DFL);
+	(void)signal(SIGHUP,  (mode & PIPE_PROT) ? SIG_IGN : SIG_DFL);
+#ifdef	SIGCHLD
+	(void) signal(SIGCHLD,  SIG_DFL);
+#endif
+
+	/* if parent isn't reading, and we have a filename to write */
+	if(!(mode & PIPE_READ) && outfile){	/* connect output to file */
+	    int output = creat(*outfile, 0600);
+	    dup2(output, STDOUT_FILENO);
+	    if(mode & PIPE_STDERR)
+	      dup2(output, STDERR_FILENO);
+	    else if(errfile)
+	      dup2(creat(*errfile, 0600), STDERR_FILENO);
+	}
+
+	if(mode & PIPE_WRITE){			/* connect process input */
+	    close(oparentd);
+	    dup2(ichildd, STDIN_FILENO);	/* tie stdin to pipe */
+	    close(ichildd);
+	}
+
+	if(mode & PIPE_READ){			/* connect process output */
+	    close(iparentd);
+	    dup2(ochildd, STDOUT_FILENO);	/* tie std{out,err} to pipe */
+	    if(mode & PIPE_STDERR)
+	      dup2(ochildd, STDERR_FILENO);
+	    else if(errfile)
+	      dup2(creat(*errfile, 0600), STDERR_FILENO);
+
+	    close(ochildd);
+	}
+
+	if(mode & PIPE_NOSHELL){
+	    execvp(syspipe->argv[0], syspipe->argv);
+	}
+	else{
+	    if(mode & PIPE_USER){
+		char *env, *sh;
+		if((env = getenv("SHELL")) && (sh = strrchr(env, '/'))){
+		    shell = sh + 1;
+		    strncpy(shellpath, env, sizeof(shellpath)-1);
+		    shellpath[sizeof(shellpath)-1] = '\0';
+		}
+		else{
+		    shell = "csh";
+		    strncpy(shellpath, "/bin/csh", sizeof(shellpath)-1);
+		    shellpath[sizeof(shellpath)-1] = '\0';
+		}
+	    }
+	    else{
+		shell = "sh";
+		strncpy(shellpath, "/bin/sh", sizeof(shellpath)-1);
+		shellpath[sizeof(shellpath)-1] = '\0';
+	    }
+
+	    execl(shellpath, shell, command ? "-c" : 0, command, 0);
+	}
+
+	fprintf(stderr, "Can't exec %s\nReason: %s",
+		command, error_description(errno));
+	_exit(-1);
+    }
+
+    if((child_pid = syspipe->pid) > 0){
+	syspipe->isig = signal(SIGINT,  SIG_IGN); /* Reset handlers to make */
+	syspipe->qsig = signal(SIGQUIT, SIG_IGN); /* sure we don't come to  */
+	syspipe->hsig = signal(SIGHUP,  SIG_IGN); /* a premature end...     */
+	if((syspipe->timeout = timeout) != 0){
+	    syspipe->alrm      = signal(SIGALRM,  pipe_alarm);
+	    syspipe->old_timeo = alarm(timeout);
+	}
+
+	if(mode & PIPE_WRITE){
+	    close(ichildd);
+	    if(mode & PIPE_DESC)
+	      syspipe->out.d = oparentd;
+	    else
+	      syspipe->out.f = fdopen(oparentd, "w");
+	}
+
+	if(mode & PIPE_READ){
+	    close(ochildd);
+	    if(mode & PIPE_DESC)
+	      syspipe->in.d = iparentd;
+	    else
+	      syspipe->in.f = fdopen(iparentd, "r");
+	}
+
+	dprint(5, (debugfile, "PID: %d, COMMAND: %s\n", syspipe->pid,
+	       command ? command : "?"));
+    }
+    else{
+	if(mode & (PIPE_WRITE | PIPE_READ)){
+	    if(mode & PIPE_WRITE){
+		close(oparentd);
+		close(ichildd);
+	    }
+
+	    if(mode & PIPE_READ){
+		close(iparentd);
+		close(ochildd);
+	    }
+	}
+	else if(!(mode & PIPE_SILENT)){
+	    ClearScreen();
+	    ps_global->mangled_screen = 1;
+	}
+
+	if(mode & PIPE_RESET)
+	  ttyfix(1);
+
+#ifdef	SIGCHLD
+	(void) signal(SIGCHLD,  SIG_DFL);
+#endif
+	if(outfile && *outfile){
+	    (void)unlink(*outfile);
+	    fs_give((void **) outfile);
+	}
+
+	if(errfile && *errfile){
+	    (void)unlink(*errfile);
+	    fs_give((void **) errfile);
+	}
+
+	pipe_error_cleanup(&syspipe, command, "fork",error_description(errno));
+    }
+
+    return(syspipe);
+}
+
+
+/*
+ * pipe_* functions introduced so out.f, in.f don't need to be used
+ * by whatever's setting up the pipe.  
+ * Should be similar on unix and windows, but since we're faking piping
+ * in windows, closing the write pipe would signify that the child
+ * process can start running.  This makes it possible for PIPE_WRITE
+ * and PIPE_READ flags to be simultaneously set across all platforms.
+ * Unix piping should eventually have NON_BLOCKING_IO stuff rolled up
+ * into it.
+ */
+
+int
+pipe_putc(c, syspipe)
+    int     c;
+    PIPE_S *syspipe;
+{
+    if(!syspipe || !syspipe->out.f)
+      return -1;
+    return(fputc(c, syspipe->out.f));
+}
+
+int
+pipe_puts(str, syspipe)
+    char   *str;
+    PIPE_S *syspipe;
+{
+    if(!syspipe || !syspipe->out.f)
+      return -1;
+    return(fputs(str, syspipe->out.f));
+}
+
+char *
+pipe_gets(str, size, syspipe)
+    char   *str;
+    int     size;
+    PIPE_S *syspipe;
+{
+    if(!syspipe || !syspipe->in.f)
+      return NULL;
+    return(fgets(str, size, syspipe->in.f));
+}
+
+int
+pipe_readc(c, syspipe)
+    unsigned char *c;
+    PIPE_S     *syspipe;
+{
+    int rv = 0;
+
+    if(!syspipe || !syspipe->in.f)
+      return -1;
+
+    do {
+	errno = 0;
+	clearerr(syspipe->in.f);
+	rv = fread(c, sizeof(unsigned char), (size_t)1, syspipe->in.f);
+    } while(!rv && ferror(syspipe->in.f) && errno == EINTR);
+
+    return(rv);
+}
+
+int
+pipe_writec(c, syspipe)
+    int        c;
+    PIPE_S *syspipe;
+{
+    unsigned char ch = (unsigned char)c;
+    int rv = 0;
+
+    if(!syspipe || !syspipe->out.f)
+      return -1;
+
+    do
+      rv = fwrite(&ch, sizeof(unsigned char), (size_t)1, syspipe->out.f);
+    while(!rv && ferror(syspipe->out.f) && errno == EINTR);
+
+    return(rv);
+}
+
+/*
+ * Returns: 0 if all went well, -1 otherwise
+ */
+int
+pipe_close_write(syspipe)
+    PIPE_S *syspipe;
+{
+    int rv = 0;
+
+    if(!syspipe || !syspipe->out.f)
+      return -1;
+
+    rv = fclose(syspipe->out.f) ? -1 : 0;
+    syspipe->out.f = NULL;
+    return(rv);
+}
+
+
+/*----------------------------------------------------------------------
+    Write appropriate error messages and cleanup after pipe error
+
+  Args: syspipe -- address of pointer to struct to clean up
+	cmd -- command we were trying to exec
+	op -- operation leading up to the exec
+	res -- result of that operation
+
+ ----*/
+void
+pipe_error_cleanup(syspipe, cmd, op, res)
+    PIPE_S **syspipe;
+    char    *cmd, *op, *res;
+{
+    q_status_message3(SM_ORDER, 3, 3, "Pipe can't %s \"%.30s\": %s",
+		      op, cmd, res);
+    dprint(1, (debugfile, "* * PIPE CAN'T %s(%s): %s\n",
+	   op ? op : "?",
+	   cmd ? cmd : "?",
+	   res ? res : "?"));
+    zot_pipe(syspipe);
+}
+
+
+
+/*----------------------------------------------------------------------
+    Free resources associated with the given pipe struct
+
+  Args: syspipe -- address of pointer to struct to clean up
+
+ ----*/
+void
+zot_pipe(syspipe)
+    PIPE_S **syspipe;
+{
+    if((*syspipe)->args)
+      fs_give((void **) &(*syspipe)->args);
+
+    if((*syspipe)->argv)
+      fs_give((void **) &(*syspipe)->argv);
+
+    if((*syspipe)->tmp)
+      fs_give((void **) &(*syspipe)->tmp);
+
+    fs_give((void **)syspipe);
+}
+
+
+
+/*----------------------------------------------------------------------
+    Close pipe previously allocated and wait for child's death
+
+  Args: syspipe -- address of pointer to struct returned by open_system_pipe
+        exitval -- return exit status here.
+
+  Returns:
+    Two modes of return values for backcompat.
+      If exitval == NULL
+	 returns exit status of child or -1 if invalid syspipe
+      If exitval != NULL
+         returns -1 if invalid syspipe or 0 if ok. In that case, exitval
+	 of child is returned in exitval
+ ----*/
+int
+close_system_pipe(syspipe, exitval, dontnewmail)
+    PIPE_S **syspipe;
+    int     *exitval;
+    int      dontnewmail;
+{
+    WaitType stat;
+    int	     status, pid;
+
+    if(!(syspipe && *syspipe))
+      return -1;
+
+    if(((*syspipe)->mode) & PIPE_WRITE){
+	if(((*syspipe)->mode) & PIPE_DESC){
+	    if((*syspipe)->out.d >= 0)
+	      close((*syspipe)->out.d);
+	}
+	else if((*syspipe)->out.f)
+	  fclose((*syspipe)->out.f);
+    }
+
+    if(((*syspipe)->mode) & PIPE_READ){
+	if(((*syspipe)->mode) & PIPE_DESC){
+	    if((*syspipe)->in.d >= 0)
+	      close((*syspipe)->in.d);
+	}
+	else if((*syspipe)->in.f)
+	  fclose((*syspipe)->in.f);
+    }
+
+#ifdef	SIGCHLD
+    {
+	SigType (*alarm_sig)();
+	int	old_cue = F_ON(F_SHOW_DELAY_CUE, ps_global);
+
+	/*
+	 * remember the current SIGALRM handler, and make sure it's
+	 * installed when we're finished just in case the longjmp
+	 * out of the SIGCHLD handler caused sleep() to lose it.
+	 * Don't pay any attention to that man behind the curtain.
+	 */
+	alarm_sig = signal(SIGALRM, SIG_IGN);
+	F_SET(F_SHOW_DELAY_CUE, ps_global, 0);
+	ps_global->noshow_timeout = 1;
+	while(!child_signalled){
+	    /* wake up and prod server */
+	    if(!dontnewmail)
+	      new_mail(0, 2, ((*syspipe)->mode & PIPE_RESET)
+			      ? NM_NONE : NM_DEFER_SORT);
+
+	    if(!child_signalled){
+		if(setjmp(child_state) == 0){
+		    child_jump = 1;	/* prepare to wake up */
+		    sleep(600);		/* give it 5mins to happend */
+		}
+		else
+		  our_sigunblock(SIGCHLD);
+	    }
+
+	    child_jump = 0;
+	}
+
+	ps_global->noshow_timeout = 0;
+	F_SET(F_SHOW_DELAY_CUE, ps_global, old_cue);
+	(void) signal(SIGALRM, alarm_sig);
+	(void) signal(SIGCHLD, (*syspipe)->chld);
+    }
+#endif
+
+    /*
+     * Call c-client's pid reaper to wait() on the demise of our child,
+     * then fish out its exit status...
+     */
+    grim_pid_reap_status((*syspipe)->pid, 0, &stat);
+    status = WIFEXITED(stat) ? WEXITSTATUS(stat) : -1;
+
+    /*
+     * restore original handlers...
+     */
+    (void)signal(SIGINT,  (*syspipe)->isig);
+    (void)signal(SIGHUP,  (*syspipe)->hsig);
+    (void)signal(SIGQUIT, (*syspipe)->qsig);
+
+    if((*syspipe)->timeout){
+	(void)signal(SIGALRM, (*syspipe)->alrm);
+	alarm((*syspipe)->old_timeo);
+	child_pid = 0;
+    }
+
+    if((*syspipe)->mode & PIPE_RESET)		/* restore our tty modes */
+      ttyfix(1);
+
+    if(!((*syspipe)->mode & (PIPE_WRITE | PIPE_READ | PIPE_SILENT))){
+	ClearScreen();				/* No I/O to forked child */
+	ps_global->mangled_screen = 1;
+    }
+
+    pid = (*syspipe)->pid;
+    zot_pipe(syspipe);
+
+    if(exitval){
+	*exitval = status;
+	dprint(5, (debugfile, "Closed pipe: PID=%d: exitval=%d\n",
+		pid, status));
+	return 0;
+    }
+    else{
+	dprint(5, (debugfile, "Closed pipe: PID=%d: status=%d\n",
+		pid, status));
+	return(status);
+    }
+}
+
+
+
+static SigType
+pipe_alarm SIG_PROTO((int sig))
+{
+    if(child_pid)
+      kill(child_pid, SIGINT);
+}

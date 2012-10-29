@@ -1,0 +1,15 @@
+;
+; SCO os-sc5.ic file for building os-sc5.c.
+;
+; Boilerplate header.
+include(header)
+
+include(unix)
+
+include(spell.unx)
+
+include(read.sel)
+
+include(raw.ios)
+
+include(term.inf)

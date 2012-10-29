@@ -1,0 +1,109 @@
+#line 2 "osdep/execview.os2"
+/*----------------------------------------------------------------------
+    Routine to execute command mailcap says is used to display MIME segment
+    under OS/2
+
+ The exported routine is:
+
+    exec_viewer -- 
+
+ ----*/
+
+#include	<process.h>
+
+
+/* ----------------------------------------------------------------------
+   Execute the given 
+
+  Args: cmd -- 
+	image_file --
+  
+     
+  ----*/
+void
+exec_mailcap_cmd(cmd, image_file, needsterminal)
+    char *cmd;
+    char *image_file;
+    int   needsterminal;  /* not used in DOS */
+{
+    int   rc;
+
+    cancel_busy_alarm(1);
+    interrupt_ok();
+    rc = system(cmd);
+    dont_interrupt();
+
+    if(rc < 0)
+      q_status_message1(SM_ORDER, 3, 4, "Failed to exec viewer: %s",
+			(errno == E2BIG) ? "Argument list too big" :
+			  (errno == ENOENT) ? "No command interpreter" :
+			    (errno == ENOMEM) ? "Not enough memory"
+				: "Unknown Error");
+    unlink(image_file);
+}
+
+
+/* ----------------------------------------------------------------------
+   Execute the given test= cmd
+
+  Args: cmd -- command to execute
+  Returns exit status
+     
+  ----*/
+int
+exec_mailcap_test_cmd(cmd)
+    char *cmd;
+{
+#define	MAXARGS	10
+    char *args[MAXARGS], *cp;
+    int   i, rv;
+
+    cp = cmd;
+
+    /* build args */
+    for(i=0; *cp != '\0'; i++){			/* build args array */
+	if(i < MAXARGS+2){
+	    args[i] = NULL;			/* in case we break out */
+	}
+	else{
+	    q_status_message1(SM_ORDER | SM_DING, 3, 5,
+			      "Too many args : %s",
+			      ps_global->VAR_IMAGE_VIEWER);
+	    return -1;
+	}
+
+	while(isspace((unsigned char)(*cp)))
+	  if(*cp != '\0')
+	    cp++;
+	  else
+	    break;
+
+	args[i] = cp;
+
+	while(!isspace((unsigned char)(*cp)))
+	  if(*cp != '\0')
+	    cp++;
+	  else
+	    break;
+
+	if(*cp != '\0')
+	  *cp++ = '\0';
+    }
+    args[i] = NULL;
+
+    /* actually display the sucker */
+    interrupt_ok();
+    rv = spawnvp(P_WAIT, args[0], args);
+    dont_interrupt();
+    if(rv == -1) {
+	/* error spawning image viewer */
+        q_status_message2(SM_ORDER | SM_DING, 4, 5, "Error \"%s\" spawning %s",
+                          error_description(errno),
+			  ps_global->VAR_IMAGE_VIEWER); 
+	return -1;
+    }
+
+    return(rv);
+}
+
+

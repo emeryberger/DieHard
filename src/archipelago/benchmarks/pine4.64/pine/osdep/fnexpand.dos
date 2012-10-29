@@ -1,0 +1,20 @@
+/*----------------------------------------------------------------------
+       Does nothing on dos since ~ is meaningless
+
+   Args: buf --  The filename to expand (nothing happens unless begins with ~)
+         len --  The length of the buffer passed in (expansion is in place)
+
+ Result: buf is returned
+ ----*/
+char *
+fnexpand(buf, len)
+     char *buf;
+     int len;
+{
+    if(*buf == '~' && *(buf+1) == '\\' && ps_global->home_dir)
+      rplstr(buf, 1, ps_global->home_dir);
+
+    return(buf);
+}
+
+

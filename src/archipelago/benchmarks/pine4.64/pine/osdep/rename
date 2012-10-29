@@ -1,0 +1,16 @@
+/*----------------------------------------------------------------------
+      Rename a file
+
+  Args: tmpfname -- Old name of file
+        fname    -- New name of file
+ 
+ Result: File is renamed.  Returns 0 on success, else -1 on error
+	 and errno is valid.
+  ----*/
+rename_file(tmpfname, fname)
+    char *tmpfname, *fname;
+{
+    return(rename(tmpfname, fname));
+}
+
+

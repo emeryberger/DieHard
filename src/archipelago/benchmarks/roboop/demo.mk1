@@ -1,0 +1,17 @@
+!define BLANK ""
+demo.obj : source\demo.cpp .AUTODEPEND
+ *wpp386 source\demo.cpp $(CFLAGS)
+
+demo.exe : demo.obj newmat.lib roboop.lib .AUTODEPEND
+ @%write demo.lk1 NAME demo
+ @%append demo.lk1 FIL demo.obj
+ @%append demo.lk1 LIBR newmat.lib,roboop.lib
+!ifneq BLANK ""
+ *wlib -q -n -b demo.imp 
+ @%append demo.lk1 LIBR demo.imp
+!endif
+ *wlink SYS nt op m d all op st=8192 op maxe=25 op q op symf @demo.lk1
+!ifneq BLANK ""
+ wrc -q -ad -s0  demo.exe
+!endif
+

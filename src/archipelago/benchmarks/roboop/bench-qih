@@ -1,0 +1,10 @@
+#!/bin/bash
+BIN=~/work/plasma/diehard-nih/benchmarks/roboop
+LIB=~/work/plasma/diehard-nih
+
+#ulimit -c unlimited
+
+LD_PRELOAD=${LIB}/libdiehardnih.so ${BIN}/bench #> /dev/null &
+#pid=$!
+#echo $pid > /tmp/bench.pid
+#wait $pid 	

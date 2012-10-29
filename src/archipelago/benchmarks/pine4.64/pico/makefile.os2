@@ -1,0 +1,134 @@
+# $Id: makefile.os2 7883 1998-02-28 00:10:21Z hubert $
+#
+#   Michael Seibel
+#   Networks and Distributed Computing
+#   Computing and Communications
+#   University of Washington
+#   Administration Builiding, AG-44
+#   Seattle, Washington, 98195, USA
+#   Internet: mikes@cac.washington.edu
+#
+#   Please address all bugs and comments to "pine-bugs@cac.washington.edu"
+#
+#
+#   Pine and Pico are registered trademarks of the University of Washington.
+#   No commercial use of these trademarks may be made without prior written
+#   permission of the University of Washington.
+#
+#   Pine, Pico, and Pilot software and its included text are Copyright
+#   1989-1998 by the University of Washington.
+#
+#   The full text of our legal notices is contained in the file called
+#   CPYRIGHT, included with this distribution.
+#
+
+#
+# Makefile for OS/2 version of the PINE composer library and 
+# stand-alone editor pico.
+#
+
+# Common macros
+
+CC=	gcc
+CP=	cp
+MAKE=	make
+MV=	mv
+RM=	rm -f
+
+OS=	os2
+
+# emx OMF format build
+# Used to build .dlls with data exports
+
+DEBUG=
+ZOMF=	-Zomf
+O=	.obj
+A=	.lib
+E=	.exe
+D=	.dll
+AR=	emxomfar r
+ZLIB=	-Zcrtdll
+ZOPT=	-O3 -fno-strength-reduce -mprobe
+ZDEF=	-DOS2 -DOMF
+
+.SUFFIXES: .c .obj .exe
+
+# emx AOUT format build
+# Useful for debugging with gdb
+
+#DEBUG=	-g
+#ZOMF=	
+#O=	.o
+#A=	.a
+#D=	.dll
+#E=	.exe
+#AR=	ar rus
+#ZLIB=	-Zcrtdll
+#ZOPT=	-O3 -fno-strength-reduce -mprobe
+#ZDEF=	-DOS2
+
+#.SUFFIXES: .c .o .exe
+
+.c$O: ; $(CC) $(ZOMF) $(CFLAGS) -c $<
+
+#includes symbol for debugging
+#for normal build
+MOUSE=		-DMOUSE
+DASHO=		$(ZOPT) $(DEBUG)
+CFLAGS=		$(ZDEF) -Dbsd -DFASTVIO -DHELPFILE -DJOB_CONTROL -DANSI $(MOUSE) $(DASHO)
+LDFLAGS=	$(ZOMF) $(ZLIB) $(DEBUG)
+ARCHIVE=	picolib$A
+
+# switches for library building
+
+LIBS=
+
+OFILES=		attach$O basic$O bind$O browse$O buffer$O \
+		composer$O display$O file$O fileio$O line$O pico_os$O \
+		pico$O random$O region$O search$O \
+		window$O word$O
+
+CFILES=		attach.c basic.c bind.c browse.c buffer.c \
+		composer.c display.c file.c fileio.c line.c pico_os.c \
+		pico.c random.c region.c search.c \
+		window.c word.c
+
+HFILES=		headers.h estruct.h edef.h efunc.h pico.h os.h
+
+#
+# dependencies for the Unix versions of pico and pico.lib
+#
+
+all:		blddate$E pico$E pilot$E
+
+$(ARCHIVE):	$(OFILES) picolib.def
+		$(CC) -Zdll -o picolib$D $(OFILES) picolib.def $(LDFLAGS)
+		emximp -o picolib$A picolib.def
+
+pico$E:		main.c $(ARCHIVE)
+		$(CC) $(CFLAGS) main.c -L. -lpicolib $(LIBS) -o pico$E $(LDFLAGS)
+
+pilot$E:	pilot.c $(ARCHIVE) osdep.h
+		$(CC) $(CFLAGS) pilot.c -L. -lpicolib $(LIBS) -o pilot$E $(LDFLAGS)
+
+blddate$E:	blddate.c
+		$(CC) $(CFLAGS) blddate.c -o blddate$E $(LDFLAGS) -lsocket
+
+$(OFILES):	osdep.h $(HFILES)
+pico.o:		ebind.h
+
+clean:
+		rm -f *$E *$A *$D *$O *~ *.bak osdep.c osdep.h pico pilot
+
+os.h:		osdep/os-os2.h
+		$(RM) os.h
+		$(CP) osdep/os-os2.h os.h
+
+pico_os.c:	osdep/os-os2.c
+		$(RM) pico_os.c
+		$(CP) osdep/os-os2.c pico_os.c
+
+osdep/os-os2.c: \
+	osdep/header osdep/os2 osdep/term.dos osdep/spell.os2 \
+	osdep/os-os2.ic
+	( cd osdep && $(MAKE) -f makefile.os2 includer.exe os-os2.c )

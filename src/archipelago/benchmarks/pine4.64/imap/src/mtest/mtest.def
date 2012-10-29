@@ -1,0 +1,9 @@
+;
+; MTEST.DEF - def file for c-client test application mtest
+;
+
+NAME         mtest
+DESCRIPTION  'C-Client Test Application'
+;PROTMODE
+;CODE           PRELOAD MOVEABLE DISCARDABLE
+;DATA           PRELOAD MOVEABLE

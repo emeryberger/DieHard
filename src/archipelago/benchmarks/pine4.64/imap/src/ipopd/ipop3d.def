@@ -1,0 +1,9 @@
+;
+; IPOP3D.DEF - def file for POP3 server
+;
+
+NAME         IPOP3D
+DESCRIPTION  'POP3 Server Application'
+;PROTMODE
+;CODE           PRELOAD MOVEABLE DISCARDABLE
+;DATA           PRELOAD MOVEABLE

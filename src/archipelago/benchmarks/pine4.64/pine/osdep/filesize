@@ -1,0 +1,108 @@
+/*----------------------------------------------------------------------
+      Return the number of bytes in given file
+
+    Args: file -- file name
+
+  Result: the number of bytes in the file is returned or
+          -1 on error, in which case errno is valid
+ ----*/
+long
+name_file_size(file)
+    char *file;
+{
+    struct stat buffer;
+
+    if(stat(file, &buffer) != 0)
+      return(-1L);
+
+    return((long)buffer.st_size);
+}
+
+
+/*----------------------------------------------------------------------
+      Return the number of bytes in given file
+
+    Args: fp -- FILE * for open file
+
+  Result: the number of bytes in the file is returned or
+          -1 on error, in which case errno is valid
+ ----*/
+long
+fp_file_size(fp)
+    FILE *fp;
+{
+    struct stat buffer;
+
+    if(fstat(fileno(fp), &buffer) != 0)
+      return(-1L);
+
+    return((long)buffer.st_size);
+}
+
+
+/*----------------------------------------------------------------------
+      Return the modification time of given file
+
+    Args: file -- file name
+
+  Result: the time of last modification (mtime) of the file is returned or
+          -1 on error, in which case errno is valid
+ ----*/
+time_t
+name_file_mtime(file)
+    char *file;
+{
+    struct stat buffer;
+
+    if(stat(file, &buffer) != 0)
+      return((time_t)(-1));
+
+    return(buffer.st_mtime);
+}
+
+
+/*----------------------------------------------------------------------
+      Return the modification time of given file
+
+    Args: fp -- FILE * for open file
+
+  Result: the time of last modification (mtime) of the file is returned or
+          -1 on error, in which case errno is valid
+ ----*/
+time_t
+fp_file_mtime(fp)
+    FILE *fp;
+{
+    struct stat buffer;
+
+    if(fstat(fileno(fp), &buffer) != 0)
+      return((time_t)(-1));
+
+    return(buffer.st_mtime);
+}
+
+
+/*----------------------------------------------------------------------
+      Copy the mode, owner, and group of sourcefile to targetfile.
+
+    Args: targetfile -- 
+	  sourcefile --
+    
+    We don't bother keeping track of success or failure because we don't care.
+ ----*/
+void
+file_attrib_copy(targetfile, sourcefile)
+    char *targetfile;
+    char *sourcefile;
+{
+    struct stat buffer;
+
+    if(stat(sourcefile, &buffer) == 0){
+	chmod(targetfile, buffer.st_mode);
+#if !defined(DOS) && !defined(OS2)
+	chown(targetfile, buffer.st_uid, buffer.st_gid);
+#endif
+    }
+}
+
+

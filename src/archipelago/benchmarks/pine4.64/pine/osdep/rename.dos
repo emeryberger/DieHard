@@ -1,0 +1,34 @@
+/*----------------------------------------------------------------------
+      Rename a file
+
+  Args: tmpfname -- Old name of file
+        fname    -- New name of file
+ 
+ Result: File is renamed.  Returns 0 on success, else -1 on error
+	 and errno is valid.
+  ----*/
+rename_file(tmpfname, fname)
+    char *tmpfname, *fname;
+{
+    int ret;
+
+    /*
+     * DOS rename doesn't unlink destination for us...
+     */
+    if((ret = unlink(fname)) && (errno == EPERM)){
+	dprint(1, (debugfile, "rename_file: unlink(%s) failed: %s\n",
+	       fname ? fname : "?", error_description(errno)));
+	dprint(1, (debugfile, "  :%s may be in use by another pine\n",
+	       fname ? fname : "?"));
+	ret = -5;
+    }
+    else if(ret = rename(tmpfname, fname)){
+	dprint(1, (debugfile, "rename_file: rename(%s,%s) failed: %s\n",
+	       tmpfname ? tmpfname : "?",
+	       fname ? fname : "?", error_description(errno)));
+    }
+
+    return(ret);
+}
+
+

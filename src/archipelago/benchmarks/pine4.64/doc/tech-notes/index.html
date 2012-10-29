@@ -1,0 +1,147 @@
+<HTML>
+<HEAD><TITLE>Pine Technical Notes</TITLE></HEAD>
+<BODY>
+<H1>Pine Technical Notes</H1>
+ 
+Version 4.64, September 2005<P>
+
+<EM>Pine</EM> and <EM>Pico</EM> are trademarks of the University of Washington.
+<BR>
+No commercial use of these trademarks may be made without prior
+<BR>
+written permission of the University of Washington.
+<BR>
+Pine, Pico and Pilot Copyright 1989-2005
+<A HREF="http://www.washington.edu">University of Washington</A>.
+<BR>
+Additional legal notices are at the web URL
+<A HREF="http://www.washington.edu/pine/legal">http://www.washington.edu/pine/legal</A>.
+<P>
+
+<H2><A NAME="TOC">Table of Contents</A></H2><P>
+
+<H3><A HREF="introduction.html">Introduction</A></H3>
+
+<UL>
+<LI><A HREF="introduction.html#design">Design Goals</A><BR>
+<LI><A HREF="introduction.html#components">Pine Components</A><BR>
+</UL>
+
+<H3><A HREF="background.html">Background Details</A></H3>
+
+<UL>
+<LI><A HREF="background.html#DNS">Domain Names</A><BR>
+<LI><A HREF="background.html#rfc822">RFC 822 Compliance</A><BR>
+<LI><A HREF="background.html#SMTP">SMTP and Sendmail</A><BR>
+<LI><A HREF="background.html#IMAP">Internet Message Access Protocol (IMAP)</A><BR>
+<LI><A HREF="background.html#MIME">Multipurpose Internet Mail Extensions (MIME)</A><BR>
+<LI><A HREF="background.html#collections">Folder Collections</A><BR>
+</UL>
+
+<H3><A HREF="installation.html">Building and Installation</A></H3>
+
+<UL>
+<LI><A HREF="installation.html#compile">Compile-time Options</A><BR>
+<LI><A HREF="installation.html#ldap-compile">Including LDAP Functionality</A><BR>
+<LI><A HREF="installation.html#krb5-compile">Including Kerberos 5 Functionality</A><BR>
+<LI><A HREF="installation.html#pine-compile">Pine Compile-time Options</A><BR>
+<LI><A HREF="installation.html#pico-compile">Pico Compile-time Options</A><BR>
+<LI><A HREF="installation.html#osdep-compile">OS Dependent Compile-time Settings</A><BR>
+<LI><A HREF="installation.html#imapd-compile">IMAPd Compile-time Options</A><BR>
+<LI><A HREF="installation.html#build">Building the Pine Programs</A><BR>
+<LI><A HREF="installation.html#install-unix">Installing Pine and Pico on UNIX Platforms</A><BR>
+<LI><A HREF="installation.html#install-pc">Installing PC-Pine</A><BR>
+<LI><A HREF="installation.html#install-imapd">Installing IMAPd</A><BR>
+<LI><A HREF="installation.html#files-unix">Support Files and Environment Variables:  UNIX Pine</A><BR>
+<LI><A HREF="installation.html#files-pc">Support Files, Environment Variables, and Registry Values:  PC-Pine</A><BR>
+</UL>
+
+<H3><A HREF="cmd-line.html">Command Line Arguments</A></H3>
+
+<UL>
+<LI><A HREF="cmd-line.html#pine">Pine</A><BR>
+<LI><A HREF="cmd-line.html#pico">Pico</A><BR>
+<LI><A HREF="cmd-line.html#pilot">Pilot</A><BR>
+</UL>
+
+<H3><A HREF="config.html">Configuration and Preferences</A></H3>
+
+<UL>
+<LI><A HREF="config.html#pine-conf">Pine Configuration</A><BR>
+<LI><A HREF="config.html#gen-conf">General Configuration Variables</A><BR>
+<LI><A HREF="config.html#features-conf">Configuration Features</A><BR>
+<LI><A HREF="config.html#hidden-config">Hidden Config Variables and Features</A><BR>
+<LI><A HREF="config.html#ret-var">Retired Variables</A><BR>
+<LI><A HREF="config.html#index-tokens">Tokens for Index and Replying</A><BR>
+<LI><A HREF="config.html#reply-token-conditionals">Conditional Inclusion of Text for Reply-Leadin, Signatures, and Templates</A><BR>
+<LI><A HREF="config.html#per-server-ldap-config">Per Server Directory Configuration</A><BR>
+<LI><A HREF="config.html#color-config">Color Configuration</A><BR>
+<LI><A HREF="config.html#index-color-config">Index Line Color Configuration</A><BR>
+<LI><A HREF="config.html#role-config">Role Configuration</A><BR>
+<LI><A HREF="config.html#filter-config">Filtering Configuration</A><BR>
+<LI><A HREF="config.html#scoring-config">Scoring Configuration</A><BR>
+<LI><A HREF="config.html#other-config">Other Rules Configuration</A><BR>
+<LI><A HREF="config.html#patterns-section">Patterns</A><BR>
+<LI><A HREF="config.html#configuring-news">Configuring News</A><BR>
+
+<H4><A HREF="config-notes.html">Configuration Notes</A></H4>
+
+<UL>
+<LI><A HREF="config-notes.html#fkey">Pine in Function Key Mode</A><BR>
+<LI><A HREF="config-notes.html#domain">Domain Settings</A><BR>
+<LI><A HREF="config-notes.html#collections">Syntax for Collections</A><BR>
+<LI><A HREF="config-notes.html#remote-folders">Syntax for Folder Names</A><BR>
+<LI><A HREF="config-notes.html#server-name-syntax">Server Name Syntax</A><BR>
+<LI><A HREF="config-notes.html#folder-namespaces">Folder Namespaces</A><BR>
+<LI><A HREF="config-notes.html#maildrop">What is a Mail Drop?</A><BR>
+<LI><A HREF="config-notes.html#sorting">Sorting a Folder</A><BR>
+<LI><A HREF="config-notes.html#alt-ed">Alternate Editor</A><BR>
+<LI><A HREF="config-notes.html#signature">Signatures and Signature Placement</A><BR>
+<LI><A HREF="config-notes.html#feature-list">Feature List Variable</A><BR>
+<LI><A HREF="config-notes.html#config-inheritance">Configuration Inheritance</A><BR>
+<LI><A HREF="config-notes.html#env-variables">Using Environment Variables</A><BR>
+<LI><A HREF="config-notes.html#smtp-server">SMTP Servers</A><BR>
+<LI><A HREF="config-notes.html#mime.types">MIME.Types file</A><BR>
+<LI><A HREF="config-notes.html#color-config-notes">Color Details</A><BR>
+<LI><A HREF="config-notes.html#pc-notes">Additional Notes on PC-Pine</A><BR>
+</UL>
+
+</UL>
+
+<H3><A HREF="low-level.html">Behind the Scenes</A></H3>
+
+<UL>
+<LI><A HREF="low-level.html#addrbook">Address Books</A><BR>
+<LI><A HREF="low-level.html#remote-config">Remote Configuration</A><BR>
+<LI><A HREF="low-level.html#checkpoint">Checkpointing</A><BR>
+<LI><A HREF="low-level.html#debug">Debug Files</A><BR>
+<LI><A HREF="low-level.html#filters">Filters</A><BR>
+<LI><A HREF="low-level.html#format">Folder Formats and Name Extensions</A><BR>
+<LI><A HREF="low-level.html#locking">Folder Locking</A><BR>
+<LI><A HREF="low-level.html#INBOX">INBOX and Special Folders</A><BR>
+<LI><A HREF="low-level.html#help">Internal Help Files</A><BR>
+<LI><A HREF="low-level.html#char-set">International Character Sets</A><BR>
+<LI><A HREF="low-level.html#interrupt">Interrupted and Postponed Messages</A><BR>
+<LI><A HREF="low-level.html#status">Message Status</A><BR>
+<LI><A HREF="low-level.html#MIME-read">MIME:  Reading a Message</A><BR>
+<LI><A HREF="low-level.html#MIME-send">MIME:  Sending a Message</A><BR>
+<LI><A HREF="low-level.html#new-mail">New Mail Notification</A><BR>
+<LI><A HREF="low-level.html#NFS">NFS</A><BR>
+<LI><A HREF="low-level.html#print">Printers and Printing</A><BR>
+<LI><A HREF="low-level.html#save">Save and Export</A><BR>
+<LI><A HREF="low-level.html#sent-mail">Sent Mail</A><BR>
+<LI><A HREF="low-level.html#spell">Spell Checker</A><BR>
+<LI><A HREF="low-level.html#terminal">Terminal Emulation and Key Mapping</A><BR>
+</UL>
+
+<H3><A HREF="porting.html">Notes for Porting and Modification</A></H3>
+
+<UL>
+<LI><A HREF="porting.html#new-port">Porting Pine to Other Platforms</A><BR>
+<LI><A HREF="porting.html#checklist">Test Checklist</A><BR>
+</UL>
+
+<P>
+
+</BODY>
+</HTML>

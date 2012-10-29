@@ -1,0 +1,47 @@
+# Program:	IPOPD Makefile for Windows 2000
+#
+# Author:	Mark Crispin
+#		Networks and Distributed Computing
+#		Computing & Communications
+#		University of Washington
+#		Administration Building, AG-44
+#		Seattle, WA  98195
+#		Internet: MRC@CAC.Washington.EDU
+#
+# Date:		28 October 1990
+# Last Edited:	21 August 2002
+#
+# The IMAP toolkit provided in this Distribution is
+# Copyright 2002 University of Washington.
+#
+# The full text of our legal notices is contained in the file called
+# CPYRIGHT, included with this Distribution.
+
+
+C = ..\c-client
+CCLIENTLIB = $C\cclient.lib
+LIBS = $(CCLIENTLIB) wsock32.lib winmm.lib advapi32.lib secur32.lib crypt32.lib
+CFLAGS= -I$C /MT /W3 /DWIN32 -nologo $(EXTRACFLAGS)
+
+ipopd: ipop2d ipop3d
+
+ipop2d: $(CCLIENTLIB) ipop2d.obj
+	LINK /NOLOGO /DEF:ipop2d.def ipop2d.obj $(LIBS)
+
+ipop3d: $(CCLIENTLIB) ipop3d.obj
+	LINK /NOLOGO /DEF:ipop3d.def ipop3d.obj $(LIBS)
+
+ipop2d.obj: $C\mail.h $C\misc.h $C\osdep.h
+
+ipop3d.obj: $C\mail.h $C\misc.h $C\osdep.h
+
+$(CCLIENTLIB):
+	@echo Make c-client first
+	false
+
+clean:
+	del *.obj *.exe *.lib *.exp || rem
+
+# A monument to a hack of long ago and far away...
+love:
+	@echo not war?

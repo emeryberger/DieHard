@@ -1,0 +1,1111 @@
+#ifdef	_WINDOWS
+#line 3 "osdep/termin.gen"
+
+static int g_mc_row, g_mc_col;
+
+int	pcpine_oe_cursor PROTO((int, long));
+#endif
+
+
+/*
+ *     Generic tty input routines
+ */
+
+
+/*----------------------------------------------------------------------
+        Read a character from keyboard with timeout
+ Input:  none
+
+ Result: Returns command read via read_char
+         Times out and returns a null command every so often
+
+  Calculates the timeout for the read, and does a few other house keeping 
+things.  The duration of the timeout is set in pine.c.
+  ----------------------------------------------------------------------*/
+int
+read_command()
+{
+    int i, ch, tm = 0, more_freq_timeo;
+    long dtime; 
+    MAILSTREAM *m;
+    char *fname;
+
+    /*
+     * timeo is the mail-check-interval. What we want to do (ignoring the
+     * messages_queued part) is timeout more often than timeo but only
+     * check for new mail every timeo or so seconds. The reason we want to
+     * timeout more often is so that we will have a chance to catch the user
+     * in an idle period where we can do a check_point(). Otherwise, with
+     * a default mail-check-interval, we are almost always calling newmail
+     * right after the user presses a key, making it the worst possible
+     * time to do a checkpoint.
+     */
+
+    more_freq_timeo = min(timeo, IDLE_TIMEOUT);
+
+    cancel_busy_alarm(-1);
+    tm = (messages_queued(&dtime) > 1) ? (int)dtime : more_freq_timeo;
+
+    /*
+     * Before we sniff at the input queue, make sure no external event's
+     * changed our picture of the message sequence mapping.  If so,
+     * recalculate the dang thing and run thru whatever processing loop
+     * we're in again...
+     */
+    for(i = 0; i < ps_global->s_pool.nstream; i++){
+	m = ps_global->s_pool.streams[i];
+	if(m && sp_flagged(m, SP_LOCKED) && sp_flagged(m, SP_USERFLDR)
+	   && sp_expunge_count(m)){
+	    fname = STREAMNAME(m);
+	    q_status_message3(SM_ORDER, 3, 3,
+			      "%s message%s expunged from folder \"%s\"",
+			      long2string(sp_expunge_count(m)),
+			      plural(sp_expunge_count(m)),
+			      pretty_fn(fname));
+	    sp_set_expunge_count(m, 0L);
+	    display_message('x');
+	}
+    }
+
+    if(sp_mail_box_changed(ps_global->mail_stream)
+       && sp_new_mail_count(ps_global->mail_stream)){
+        dprint(2, (debugfile, "Noticed %ld new msgs! \n",
+		   sp_new_mail_count(ps_global->mail_stream)));
+	return(NO_OP_COMMAND);		/* cycle thru so caller can update */
+    }
+
+    ch = read_char(tm);
+    dprint(9, (debugfile, "Read command returning: %d %s\n", ch,
+              pretty_command(ch)));
+    if(ch != NO_OP_COMMAND && ch != NO_OP_IDLE && ch != KEY_RESIZE)
+      zero_new_mail_count();
+
+#ifdef	BACKGROUND_POST
+    /*
+     * Any expired children to report on?
+     */
+    if(ps_global->post && ps_global->post->pid == 0){
+	int   winner = 0;
+
+	if(ps_global->post->status < 0){
+	    q_status_message(SM_ORDER | SM_DING, 3, 3, "Abysmal failure!");
+	}
+	else{
+	    (void) pine_send_status(ps_global->post->status,
+				    ps_global->post->fcc, tmp_20k_buf,
+				    &winner);
+	    q_status_message(SM_ORDER | (winner ? 0 : SM_DING), 3, 3,
+			     tmp_20k_buf);
+
+	}
+
+	if(!winner)
+	  q_status_message(SM_ORDER, 0, 3,
+	  "Re-send via \"Compose\" then \"Yes\" to \"Continue INTERRUPTED?\"");
+
+	if(ps_global->post->fcc)
+	  fs_give((void **) &ps_global->post->fcc);
+
+	fs_give((void **) &ps_global->post);
+    }
+#endif
+
+    return(ch);
+}
+
+
+
+
+/*
+ *
+ */
+static struct display_line {
+    int   row, col;			/* where display starts		 */
+    int   dlen;				/* length of display line	 */
+    char *dl;				/* line on display		 */
+    char *vl;				/* virtual line 		 */
+    int   vlen;				/* length of virtual line        */
+    int   vused;			/* length of virtual line in use */
+    int   vbase;			/* first virtual char on display */
+} dline;
+
+
+
+static struct key oe_keys[] =
+       {{"^G","Help",KS_SCREENHELP},	{"^C","Cancel",KS_NONE},
+	{"^T","xxx",KS_NONE},		{"Ret","Accept",KS_NONE},
+	{NULL,NULL,KS_NONE},		{NULL,NULL,KS_NONE},
+	{NULL,NULL,KS_NONE},		{NULL,NULL,KS_NONE},
+	{NULL,NULL,KS_NONE},		{NULL,NULL,KS_NONE},
+	{NULL,NULL,KS_NONE},		{NULL,NULL,KS_NONE}};
+INST_KEY_MENU(oe_keymenu, oe_keys);
+#define	OE_HELP_KEY	0
+#define	OE_CANCEL_KEY	1
+#define	OE_CTRL_T_KEY	2
+#define	OE_ENTER_KEY	3
+
+
+/*---------------------------------------------------------------------- 
+       Prompt user for a string in status line with various options
+
+  Args: string -- the buffer result is returned in, and original string (if 
+                   any) is passed in.
+        y_base -- y position on screen to start on. 0,0 is upper left
+                    negative numbers start from bottom
+        x_base -- column position on screen to start on. 0,0 is upper left
+        field_len -- Maximum length of string to accept
+        prompt -- The string to prompt with
+	escape_list -- pointer to array of ESCKEY_S's.  input chars matching
+                       those in list return value from list.
+        help   -- Arrary of strings for help text in bottom screen lines
+        flags  -- pointer (because some are return values) to flags
+		  OE_USER_MODIFIED       - Set on return if user modified buffer
+		  OE_DISALLOW_CANCEL     - No cancel in menu.
+		  OE_DISALLOW_HELP       - No help in menu.
+		  OE_KEEP_TRAILING_SPACE - Allow trailing space.
+		  OE_SEQ_SENSITIVE       - Caller is sensitive to sequence
+					   number changes.
+		  OE_APPEND_CURRENT      - String should not be truncated
+					   before accepting user input.
+		  OE_PASSWD              - Don't echo on screen.
+
+  Result:  editing input string
+            returns -1 unexpected errors
+            returns 0  normal entry typed (editing and return or PF2)
+            returns 1  typed ^C or PF2 (cancel)
+            returns 3  typed ^G or PF1 (help)
+            returns 4  typed ^L for a screen redraw
+
+  WARNING: Care is required with regard to the escape_list processing.
+           The passed array is terminated with an entry that has ch = -1.
+           Function key labels and key strokes need to be setup externally!
+	   Traditionally, a return value of 2 is used for ^T escapes.
+
+   Unless in escape_list, tabs are trapped by isprint().
+This allows near full weemacs style editing in the line
+   ^A beginning of line
+   ^E End of line
+   ^R Redraw line
+   ^G Help
+   ^F forward
+   ^B backward
+   ^D delete
+----------------------------------------------------------------------*/
+
+optionally_enter(string, y_base, x_base, field_len,
+                 prompt, escape_list, help, flags)
+     char       *string, *prompt;
+     ESCKEY_S   *escape_list;
+     HelpType	 help;
+     int         x_base, y_base, field_len;
+     int	*flags;
+{
+    register char *s2;
+    register int   field_pos;
+    int            i, j, return_v, cols, ch, prompt_len, too_thin,
+                   real_y_base, km_popped, passwd;
+    char          *saved_original = NULL, *k, *kb;
+    char          *kill_buffer = NULL;
+    char         **help_text;
+    int		   fkey_table[12];
+    struct	   key_menu *km;
+    bitmap_t	   bitmap;
+    COLOR_PAIR    *lastc = NULL, *promptc = NULL;
+    struct variable *vars = ps_global->vars;
+#ifdef	_WINDOWS
+    int		   cursor_shown;
+#endif
+
+    dprint(5, (debugfile, "=== optionally_enter called ===\n"));
+    dprint(9, (debugfile, "string:\"%s\"  y:%d  x:%d  length: %d append: %d\n",
+               string ? string : "",
+	       x_base, y_base, field_len,
+	       (flags && *flags & OE_APPEND_CURRENT)));
+    dprint(9, (debugfile, "passwd:%d   prompt:\"%s\"   label:\"%s\"\n",
+               (flags && *flags & OE_PASSWD),
+	       prompt ? prompt : "",
+	       (escape_list && escape_list[0].ch != -1)
+		 ? escape_list[0].label: ""));
+
+    if(!ps_global->ttyo)
+      return(pre_screen_config_opt_enter(string, field_len, prompt,
+					 escape_list, help, flags));
+
+#ifdef _WINDOWS
+    if (mswin_usedialog ())
+      return(win_dialog_opt_enter(string, field_len, prompt, escape_list,
+				  help, flags));
+#endif
+
+    suspend_busy_alarm();
+    cols       = ps_global->ttyo->screen_cols;
+    prompt_len = strlen(prompt);
+    too_thin   = 0;
+    km_popped  = 0;
+    if(y_base > 0)
+      real_y_base = y_base;
+    else{
+        real_y_base = y_base + ps_global->ttyo->screen_rows;
+	real_y_base = max(real_y_base, 0);
+    }
+
+    flush_ordered_messages();
+    mark_status_dirty();
+    if(flags && *flags & OE_APPEND_CURRENT) /* save a copy in case of cancel */
+      saved_original = cpystr(string);
+
+    /*
+     * build the function key mapping table, skipping predefined keys...
+     */
+    memset(fkey_table, NO_OP_COMMAND, 12 * sizeof(int));
+    for(i = 0, j = 0; escape_list && escape_list[i].ch != -1 && i+j < 12; i++){
+	if(i+j == OE_HELP_KEY)
+	  j++;
+
+	if(i+j == OE_CANCEL_KEY)
+	  j++;
+
+	if(i+j == OE_ENTER_KEY)
+	  j++;
+
+	fkey_table[i+j] = escape_list[i].ch;
+    }
+
+#if defined(HELPFILE)
+    help_text = (help != NO_HELP) ? get_help_text(help) : (char **)NULL;
+#else
+    help_text = help;
+#endif
+    if(help_text){			/*---- Show help text -----*/
+	int width = ps_global->ttyo->screen_cols - x_base;
+
+	if(FOOTER_ROWS(ps_global) == 1){
+	    km_popped++;
+	    FOOTER_ROWS(ps_global) = 3;
+	    clearfooter(ps_global);
+
+	    y_base = -3;
+	    real_y_base = y_base + ps_global->ttyo->screen_rows;
+	}
+
+	for(j = 0; j < 2 && help_text[j]; j++){
+	    MoveCursor(real_y_base + 1 + j, x_base);
+	    CleartoEOLN();
+
+	    if(width < strlen(help_text[j])){
+		char *tmp = fs_get((width + 1) * sizeof(char));
+		strncpy(tmp, help_text[j], width);
+		tmp[width] = '\0';
+		PutLine0(real_y_base + 1 + j, x_base, tmp);
+		fs_give((void **)&tmp);
+	    }
+	    else
+	      PutLine0(real_y_base + 1 + j, x_base, help_text[j]);
+	}
+
+#if defined(HELPFILE)
+	free_list_array(&help_text);
+#endif
+
+    } else {
+	clrbitmap(bitmap);
+	clrbitmap((km = &oe_keymenu)->bitmap);		/* force formatting */
+	if(!(flags && (*flags) & OE_DISALLOW_HELP))
+	  setbitn(OE_HELP_KEY, bitmap);
+
+	setbitn(OE_ENTER_KEY, bitmap);
+	if(!(flags && (*flags) & OE_DISALLOW_CANCEL))
+	  setbitn(OE_CANCEL_KEY, bitmap);
+
+	setbitn(OE_CTRL_T_KEY, bitmap);
+
+        /*---- Show the usual possible keys ----*/
+	for(i=0,j=0; escape_list && escape_list[i].ch != -1 && i+j < 12; i++){
+	    if(i+j == OE_HELP_KEY)
+	      j++;
+
+	    if(i+j == OE_CANCEL_KEY)
+	      j++;
+
+	    if(i+j == OE_ENTER_KEY)
+	      j++;
+
+	    oe_keymenu.keys[i+j].label = escape_list[i].label;
+	    oe_keymenu.keys[i+j].name = escape_list[i].name;
+	    setbitn(i+j, bitmap);
+	}
+
+	for(i = i+j; i < 12; i++)
+	  if(!(i == OE_HELP_KEY || i == OE_ENTER_KEY || i == OE_CANCEL_KEY))
+	    oe_keymenu.keys[i].name = NULL;
+
+	draw_keymenu(km, bitmap, cols, 1-FOOTER_ROWS(ps_global), 0, FirstMenu);
+    }
+    
+    if(pico_usingcolor() && VAR_PROMPT_FORE_COLOR &&
+       VAR_PROMPT_BACK_COLOR &&
+       pico_is_good_color(VAR_PROMPT_FORE_COLOR) &&
+       pico_is_good_color(VAR_PROMPT_BACK_COLOR)){
+	lastc = pico_get_cur_color();
+	if(lastc){
+	    promptc = new_color_pair(VAR_PROMPT_FORE_COLOR,
+				     VAR_PROMPT_BACK_COLOR);
+	    (void)pico_set_colorp(promptc, PSC_NONE);
+	}
+    }
+    else
+      StartInverse();
+
+    /*
+     * if display length isn't wide enough to support input,
+     * shorten up the prompt...
+     */
+    if((dline.dlen = cols - (x_base + prompt_len + 1)) < 5){
+	prompt_len += (dline.dlen - 5);	/* adding negative numbers */
+	prompt     -= (dline.dlen - 5);	/* subtracting negative numbers */
+	dline.dlen  = 5;
+    }
+
+    dline.dl    = fs_get((size_t)dline.dlen + 1);
+    memset((void *)dline.dl, 0, (size_t)(dline.dlen + 1) * sizeof(char));
+    dline.row   = real_y_base;
+    dline.col   = x_base + prompt_len;
+    dline.vl    = string;
+    dline.vlen  = --field_len;		/* -1 for terminating NULL */
+    dline.vbase = field_pos = 0;
+
+#ifdef	_WINDOWS
+    cursor_shown = mswin_showcaret(1);
+#endif
+    
+    PutLine0(real_y_base, x_base, prompt);
+    /* make sure passed in string is shorter than field_len */
+    /* and adjust field_pos..                               */
+
+    while((flags && *flags & OE_APPEND_CURRENT) &&
+          field_pos < field_len && string[field_pos] != '\0')
+      field_pos++;
+
+    string[field_pos] = '\0';
+    dline.vused = (int)(&string[field_pos] - string);
+    passwd = (flags && *flags & OE_PASSWD) ? 1 : 0;
+    line_paint(field_pos, &passwd);
+
+    /*----------------------------------------------------------------------
+      The main loop
+   
+    here field_pos is the position in the string.
+    s always points to where we are in the string.
+    loops until someone sets the return_v.
+      ----------------------------------------------------------------------*/
+    return_v = -10;
+
+    while(return_v == -10) {
+
+#ifdef	MOUSE
+	mouse_in_content(KEY_MOUSE, -1, -1, 0x5, 0);
+	register_mfunc(mouse_in_content, 
+		       real_y_base, x_base + prompt_len,
+		       real_y_base, ps_global->ttyo->screen_cols);
+#endif
+#ifdef	_WINDOWS
+	mswin_allowpaste(MSWIN_PASTE_LINE);
+	g_mc_row = real_y_base;
+	g_mc_col = x_base + prompt_len;
+	mswin_mousetrackcallback(pcpine_oe_cursor);
+#endif
+
+	/* Timeout 10 min to keep imap mail stream alive */
+	ps_global->conceal_sensitive_debugging = passwd ? 1 : 0;
+        ch = read_char(600);
+	ps_global->conceal_sensitive_debugging = 0;
+
+#ifdef	MOUSE
+	clear_mfunc(mouse_in_content);
+#endif
+#ifdef	_WINDOWS
+	mswin_allowpaste(MSWIN_PASTE_DISABLE);
+	mswin_mousetrackcallback(NULL);
+#endif
+
+	/*
+	 * Don't want to intercept all characters if typing in passwd.
+	 * We select an ad hoc set that we will catch and let the rest
+	 * through.  We would have caught the set below in the big switch
+	 * but we skip the switch instead.  Still catch things like ^K,
+	 * DELETE, ^C, RETURN.
+	 */
+	if(passwd)
+	  switch(ch) {
+            case ctrl('F'):  
+	    case KEY_RIGHT:
+            case ctrl('B'):
+	    case KEY_LEFT:
+            case ctrl('U'):
+            case ctrl('A'):
+	    case KEY_HOME:
+            case ctrl('E'):
+	    case KEY_END:
+	    case TAB:
+	      goto ok_for_passwd;
+	  }
+
+        if(too_thin && ch != KEY_RESIZE && ch != ctrl('Z') && ch != ctrl('C'))
+          goto bleep;
+
+	switch(ch) {
+
+	    /*--------------- KEY RIGHT ---------------*/
+          case ctrl('F'):  
+	  case KEY_RIGHT:
+	    if(field_pos >= field_len || string[field_pos] == '\0')
+              goto bleep;
+
+	    line_paint(++field_pos, &passwd);
+	    break;
+
+	    /*--------------- KEY LEFT ---------------*/
+          case ctrl('B'):
+	  case KEY_LEFT:
+	    if(field_pos <= 0)
+	      goto bleep;
+
+	    line_paint(--field_pos, &passwd);
+	    break;
+
+          /*-------------------- WORD SKIP --------------------*/
+	  case ctrl('@'):
+	    /*
+	     * Note: read_char *can* return NO_OP_COMMAND which is
+	     * the def'd with the same value as ^@ (NULL), BUT since
+	     * read_char has a big timeout (>25 secs) it won't.
+	     */
+
+	    /* skip thru current word */
+	    while(string[field_pos]
+		  && isalnum((unsigned char) string[field_pos]))
+	      field_pos++;
+
+	    /* skip thru current white space to next word */
+	    while(string[field_pos]
+		  && !isalnum((unsigned char) string[field_pos]))
+	      field_pos++;
+
+	    line_paint(field_pos, &passwd);
+	    break;
+
+          /*--------------------  RETURN --------------------*/
+	  case PF4:
+	    if(F_OFF(F_USE_FK,ps_global)) goto bleep;
+	  case ctrl('J'): 
+	  case ctrl('M'): 
+	    return_v = 0;
+	    break;
+
+          /*-------------------- Destructive backspace --------------------*/
+	  case '\177': /* DEL */
+	  case ctrl('H'):
+            /*   Try and do this with by telling the terminal to delete a
+                 a character. If that fails, then repaint the rest of the
+                 line, acheiving the same much less efficiently
+             */
+	    if(field_pos <= 0)
+	      goto bleep;
+
+	    field_pos--;
+	    /* drop thru to pull line back ... */
+
+          /*-------------------- Delete char --------------------*/
+	  case ctrl('D'): 
+	  case KEY_DEL: 
+            if(field_pos >= field_len || !string[field_pos])
+	      goto bleep;
+
+	    dline.vused--;
+	    for(s2 = &string[field_pos]; *s2 != '\0'; s2++)
+	      *s2 = s2[1];
+
+	    *s2 = '\0';			/* Copy last NULL */
+	    line_paint(field_pos, &passwd);
+	    if(flags)		/* record change if requested  */
+	      *flags |= OE_USER_MODIFIED;
+
+	    break;
+
+
+            /*--------------- Kill line -----------------*/
+          case ctrl('K'):
+            if(kill_buffer != NULL)
+              fs_give((void **)&kill_buffer);
+
+	    if(field_pos != 0 || string[0]){
+		if(!passwd && F_ON(F_DEL_FROM_DOT, ps_global))
+		  dline.vused -= strlen(&string[i = field_pos]);
+		else
+		  dline.vused = i = 0;
+
+		kill_buffer = cpystr(&string[field_pos = i]);
+		string[field_pos] = '\0';
+		line_paint(field_pos, &passwd);
+		if(flags)		/* record change if requested  */
+		  *flags |= OE_USER_MODIFIED;
+
+	    }
+
+            break;
+
+            /*------------------- Undelete line --------------------*/
+          case ctrl('U'):
+            if(kill_buffer == NULL)
+              goto bleep;
+
+            /* Make string so it will fit */
+            kb = cpystr(kill_buffer);
+            dprint(2, (debugfile,
+		       "Undelete: %d %d\n", strlen(string), field_len));
+            if(strlen(kb) + strlen(string) > field_len) 
+                kb[field_len - strlen(string)] = '\0';
+            dprint(2, (debugfile,
+		       "Undelete: %d %d\n", field_len - strlen(string),
+		       strlen(kb)));
+                       
+            if(string[field_pos] == '\0') {
+                /*--- adding to the end of the string ----*/
+                for(k = kb; *k; k++)
+		  string[field_pos++] = *k;
+
+                string[field_pos] = '\0';
+            } else {
+                goto bleep;
+                /* To lazy to do insert in middle of string now */
+            }
+
+	    if(*kb && flags)		/* record change if requested  */
+	      *flags |= OE_USER_MODIFIED;
+
+	    dline.vused = strlen(string);
+            fs_give((void **)&kb);
+	    line_paint(field_pos, &passwd);
+            break;
+            
+
+	    /*-------------------- Interrupt --------------------*/
+	  case ctrl('C'): /* ^C */ 
+	    if(F_ON(F_USE_FK,ps_global)
+	       || (flags && ((*flags) & OE_DISALLOW_CANCEL)))
+	      goto bleep;
+
+	    goto cancel;
+
+	  case PF2:
+	    if(F_OFF(F_USE_FK,ps_global)
+	       || (flags && ((*flags) & OE_DISALLOW_CANCEL)))
+	      goto bleep;
+
+	  cancel:
+	    return_v = 1;
+	    if(saved_original)
+	      strcpy(string, saved_original);
+
+	    break;
+	    
+
+          case ctrl('A'):
+	  case KEY_HOME:
+            /*-------------------- Start of line -------------*/
+	    line_paint(field_pos = 0, &passwd);
+            break;
+
+
+          case ctrl('E'):
+	  case KEY_END:
+            /*-------------------- End of line ---------------*/
+	    line_paint(field_pos = dline.vused, &passwd);
+            break;
+
+
+	    /*-------------------- Help --------------------*/
+	  case ctrl('G') : 
+	  case PF1:
+	    if(flags && ((*flags) & OE_DISALLOW_HELP))
+	      goto bleep;
+	    else if(FOOTER_ROWS(ps_global) == 1 && km_popped == 0){
+		km_popped++;
+		FOOTER_ROWS(ps_global) = 3;
+		clearfooter(ps_global);
+		if(lastc)
+		  (void)pico_set_colorp(lastc, PSC_NONE);
+		else
+		  EndInverse();
+
+		draw_keymenu(km, bitmap, cols, 1-FOOTER_ROWS(ps_global),
+			     0, FirstMenu);
+
+		if(promptc)
+		  (void)pico_set_colorp(promptc, PSC_NONE);
+		else
+		  StartInverse();
+
+		mark_keymenu_dirty();
+		y_base = -3;
+		dline.row = real_y_base = y_base + ps_global->ttyo->screen_rows;
+		PutLine0(real_y_base, x_base, prompt);
+		fs_resize((void **)&dline.dl, (size_t)dline.dlen + 1);
+		memset((void *)dline.dl, 0, (size_t)(dline.dlen + 1));
+		line_paint(field_pos, &passwd);
+		break;
+	    }
+
+	    if(FOOTER_ROWS(ps_global) > 1){
+		mark_keymenu_dirty();
+		return_v = 3;
+	    }
+	    else
+	      goto bleep;
+
+	    break;
+
+#ifdef	MOUSE
+	  case KEY_MOUSE :
+	    {
+	      MOUSEPRESS mp;
+
+	      mouse_get_last (NULL, &mp);
+
+	      /* The clicked line have anything special on it? */
+	      switch(mp.button){
+		case M_BUTTON_LEFT :			/* position cursor */
+		  mp.col -= x_base + prompt_len;	/* normalize column */
+		  if(dline.vbase + mp.col <= dline.vused)
+		    line_paint(field_pos = dline.vbase + mp.col, &passwd);
+
+		  break;
+
+		case M_BUTTON_RIGHT :
+#ifdef	_WINDOWS
+		  mp.col -= x_base + prompt_len;	/* normalize column */
+		  if(dline.vbase + mp.col <= dline.vused)
+		    line_paint(field_pos = dline.vbase + mp.col, &passwd);
+
+		  mswin_allowpaste(MSWIN_PASTE_LINE);
+		  mswin_paste_popup();
+		  mswin_allowpaste(MSWIN_PASTE_DISABLE);
+		  break;
+#endif
+
+		case M_BUTTON_MIDDLE :			/* NO-OP for now */
+		default:				/* just ignore */
+		  break;
+	      }
+	    }
+
+	    break;
+#endif
+
+          case NO_OP_IDLE:
+	    /* Keep mail stream alive */
+	    i = new_mail(0, 2, NM_DEFER_SORT);
+	    if(sp_expunge_count(ps_global->mail_stream) &&
+	       flags && ((*flags) & OE_SEQ_SENSITIVE))
+	      goto cancel;
+
+	    if(i < 0){
+	      line_paint(field_pos, &passwd);
+	      break;			/* no changes, get on with life */
+	    }
+	    /* Else fall into redraw */
+
+	    /*-------------------- Redraw --------------------*/
+	  case ctrl('L'):
+            /*---------------- re size ----------------*/
+          case KEY_RESIZE:
+            
+	    dline.row = real_y_base = y_base > 0 ? y_base :
+					 y_base + ps_global->ttyo->screen_rows;
+	    if(lastc)
+	      (void)pico_set_colorp(lastc, PSC_NONE);
+	    else
+	      EndInverse();
+
+            ClearScreen();
+            redraw_titlebar();
+            if(ps_global->redrawer != (void (*)())NULL)
+              (*ps_global->redrawer)();
+
+            redraw_keymenu();
+	    if(promptc)
+	      (void)pico_set_colorp(promptc, PSC_NONE);
+	    else
+	      StartInverse();
+            
+            PutLine0(real_y_base, x_base, prompt);
+            cols     =  ps_global->ttyo->screen_cols;
+            too_thin = 0;
+            if(cols < x_base + prompt_len + 4) {
+		Writechar(BELL, 0);
+                PutLine0(real_y_base, 0, "Screen's too thin. Ouch!");
+                too_thin = 1;
+            } else {
+		dline.col   = x_base + prompt_len;
+		dline.dlen  = cols - (x_base + prompt_len + 1);
+		fs_resize((void **)&dline.dl, (size_t)dline.dlen + 1);
+		memset((void *)dline.dl, 0, (size_t)(dline.dlen + 1));
+		line_paint(field_pos, &passwd);
+            }
+            fflush(stdout);
+
+            dprint(9, (debugfile,
+                    "optionally_enter  RESIZE new_cols:%d  too_thin: %d\n",
+                       cols, too_thin));
+            break;
+
+	  case PF3 :		/* input to potentially remap */
+	  case PF5 :
+	  case PF6 :
+	  case PF7 :
+	  case PF8 :
+	  case PF9 :
+	  case PF10 :
+	  case PF11 :
+	  case PF12 :
+	      if(F_ON(F_USE_FK,ps_global)
+		 && fkey_table[ch - PF1] != NO_OP_COMMAND)
+		ch = fkey_table[ch - PF1]; /* remap function key input */
+  
+          default:
+	    if(escape_list){		/* in the escape key list? */
+		for(j=0; escape_list[j].ch != -1; j++){
+		    if(escape_list[j].ch == ch){
+			return_v = escape_list[j].rval;
+			break;
+		    }
+		}
+
+		if(return_v != -10)
+		  break;
+	    }
+
+	    if(iscntrl(ch & 0x7f)){
+       bleep:
+		putc(BELL, stdout);
+		continue;
+	    }
+
+       ok_for_passwd:
+	    /*--- Insert a character -----*/
+	    if(dline.vused >= field_len)
+	      goto bleep;
+
+	    /*---- extending the length of the string ---*/
+	    for(s2 = &string[++dline.vused]; s2 - string > field_pos; s2--)
+	      *s2 = *(s2-1);
+
+	    string[field_pos++] = ch;
+	    line_paint(field_pos, &passwd);
+	    if(flags)		/* record change if requested  */
+	      *flags |= OE_USER_MODIFIED;
+		    
+	}   /*---- End of switch on char ----*/
+    }
+
+#ifdef	_WINDOWS
+    if(!cursor_shown)
+      mswin_showcaret(0);
+#endif
+
+    fs_give((void **)&dline.dl);
+    if(saved_original) 
+      fs_give((void **)&saved_original);
+
+    if(kill_buffer)
+      fs_give((void **)&kill_buffer);
+
+    if (!(flags && (*flags) & OE_KEEP_TRAILING_SPACE))
+      removing_trailing_white_space(string);
+
+    if(lastc){
+	(void)pico_set_colorp(lastc, PSC_NONE);
+	free_color_pair(&lastc);
+	if(promptc)
+	  free_color_pair(&promptc);
+    }
+    else
+      EndInverse();
+
+    MoveCursor(real_y_base, x_base); /* Move the cursor to show we're done */
+    fflush(stdout);
+    resume_busy_alarm(0);
+    if(km_popped){
+	FOOTER_ROWS(ps_global) = 1;
+	clearfooter(ps_global);
+	ps_global->mangled_body = 1;
+    }
+
+    return(return_v);
+}
+
+
+/*
+ * line_paint - where the real work of managing what is displayed gets done.
+ *              The passwd variable is overloaded: if non-zero, don't
+ *              output anything, else only blat blank chars across line
+ *              once and use this var to tell us we've already written the 
+ *              line.
+ */
+void
+line_paint(offset, passwd)
+    int   offset;			/* current dot offset into line */
+    int  *passwd;			/* flag to hide display of chars */
+{
+    register char *pfp, *pbp;
+    register char *vfp, *vbp;
+    int            extra = 0;
+#define DLEN	(dline.vbase + dline.dlen)
+
+    /*
+     * for now just leave line blank, but maybe do '*' for each char later
+     */
+    if(*passwd){
+	if(*passwd > 1)
+	  return;
+	else
+	  *passwd = 2;		/* only blat once */
+
+	extra = 0;
+	MoveCursor(dline.row, dline.col);
+	while(extra++ <= dline.dlen)
+	  Writechar(' ', 0);
+
+	MoveCursor(dline.row, dline.col);
+	return;
+    }
+
+    /* adjust right margin */
+    while(offset >= DLEN + ((dline.vused > DLEN) ? -1 : 1))
+      dline.vbase += dline.dlen/2;
+
+    /* adjust left margin */
+    while(offset < dline.vbase + ((dline.vbase) ? 2 : 0))
+      dline.vbase = max(dline.vbase - (dline.dlen/2), 0);
+
+    if(dline.vbase){				/* off screen cue left */
+	vfp = &dline.vl[dline.vbase+1];
+	pfp = &dline.dl[1];
+	if(dline.dl[0] != '<'){
+	    MoveCursor(dline.row, dline.col);
+	    Writechar(dline.dl[0] = '<', 0);
+	}
+    }
+    else{
+	vfp = dline.vl;
+	pfp = dline.dl;
+	if(dline.dl[0] == '<'){
+	    MoveCursor(dline.row, dline.col);
+	    Writechar(dline.dl[0] = ' ', 0);
+	}
+    }
+
+    if(dline.vused > DLEN){			/* off screen right... */
+	vbp = vfp + (long)(dline.dlen-(dline.vbase ? 2 : 1));
+	pbp = pfp + (long)(dline.dlen-(dline.vbase ? 2 : 1));
+	if(pbp[1] != '>'){
+	    MoveCursor(dline.row, dline.col+dline.dlen);
+	    Writechar(pbp[1] = '>', 0);
+	}
+    }
+    else{
+	extra = dline.dlen - (dline.vused - dline.vbase);
+	vbp = &dline.vl[max(0, dline.vused-1)];
+	pbp = &dline.dl[dline.dlen];
+	if(pbp[0] == '>'){
+	    MoveCursor(dline.row, dline.col+dline.dlen);
+	    Writechar(pbp[0] = ' ', 0);
+	}
+    }
+
+    while(*pfp == *vfp && vfp < vbp)			/* skip like chars */
+      pfp++, vfp++;
+
+    if(pfp == pbp && *pfp == *vfp){			/* nothing to paint! */
+	MoveCursor(dline.row, dline.col + (offset - dline.vbase));
+	return;
+    }
+
+    /* move backward thru like characters */
+    if(extra){
+	while(extra >= 0 && *pbp == ' ') 		/* back over spaces */
+	  extra--, pbp--;
+
+	while(extra >= 0)				/* paint new ones    */
+	  pbp[-(extra--)] = ' ';
+    }
+
+    if((vbp - vfp) == (pbp - pfp)){			/* space there? */
+	while((*pbp == *vbp) && pbp != pfp)		/* skip like chars */
+	  pbp--, vbp--;
+    }
+
+    if(pfp != pbp || *pfp != *vfp){			/* anything to paint?*/
+	MoveCursor(dline.row, dline.col + (int)(pfp - dline.dl));
+
+	do
+	  Writechar((unsigned char)((vfp <= vbp && *vfp)
+		      ? ((*pfp = *vfp++) == TAB) ? ' ' : *pfp
+		      : (*pfp = ' ')), 0);
+	while(++pfp <= pbp);
+    }
+
+    MoveCursor(dline.row, dline.col + (offset - dline.vbase));
+}
+
+
+
+/*----------------------------------------------------------------------
+    Check to see if the given command is reasonably valid
+  
+  Args:  ch -- the character to check
+
+ Result:  A valid command is returned, or a well know bad command is returned.
+ 
+ ---*/
+validatekeys(ch)
+     int  ch;
+{
+#ifndef _WINDOWS
+    if(F_ON(F_USE_FK,ps_global)) {
+	if(ch >= 'a' && ch <= 'z')
+	  return(KEY_JUNK);
+    } else {
+	if(ch >= PF1 && ch <= PF12)
+	  return(KEY_JUNK);
+    }
+#else
+    /*
+     * In windows menu items are bound to a single key command which
+     * gets inserted into the input stream as if the user had typed
+     * that key.  But all the menues are bonund to alphakey commands,
+     * not PFkeys.  to distinguish between a keyboard command and a
+     * menu command we insert a flag (KEY_MENU_FLAG) into the
+     * command value when setting up the bindings in
+     * configure_menu_items().  Here we strip that flag.
+     */
+    if(F_ON(F_USE_FK,ps_global)) {
+	if(ch >= 'a' && ch <= 'z' && !(ch & KEY_MENU_FLAG))
+	  return(KEY_JUNK);
+	ch &= ~ KEY_MENU_FLAG;
+    } else {
+	ch &= ~ KEY_MENU_FLAG;
+	if(ch >= PF1 && ch <= PF12)
+	  return(KEY_JUNK);
+    }
+#endif
+
+    return(ch);
+}
+
+
+
+/*----------------------------------------------------------------------
+  Prepend config'd commands to keyboard input
+  
+  Args:  ch -- pointer to storage for returned command
+
+ Returns: TRUE if we're passing back a useful command, FALSE otherwise
+ 
+ ---*/
+int
+process_config_input(ch)
+    int *ch;
+{
+    static char firsttime = (char) 1;
+
+    /* commands in config file */
+    if(ps_global->initial_cmds && *ps_global->initial_cmds) {
+	/*
+	 * There are a few commands that may require keyboard input before
+	 * we enter the main command loop.  That input should be interactive,
+	 * not from our list of initial keystrokes.
+	 */
+	if(ps_global->dont_use_init_cmds)
+	  return(0);
+
+	*ch = *ps_global->initial_cmds++;
+	if(!*ps_global->initial_cmds && ps_global->free_initial_cmds){
+	    fs_give((void **)&(ps_global->free_initial_cmds));
+	    ps_global->initial_cmds = 0;
+	}
+
+	return(1);
+    }
+
+    if(firsttime) {
+	firsttime = 0;
+	if(ps_global->in_init_seq) {
+	    ps_global->in_init_seq = 0;
+	    ps_global->save_in_init_seq = 0;
+	    clear_cursor_pos();
+	    F_SET(F_USE_FK,ps_global,ps_global->orig_use_fkeys);
+	    /* draw screen */
+	    *ch = ctrl('L');
+	    return(1);
+	}
+    }
+
+    return(0);
+}
+
+
+#define	TAPELEN	256
+static int   tape[TAPELEN];
+static long  recorded = 0L;
+static short length  = 0;
+
+
+/*
+ * record user keystrokes
+ *
+ * Args:  ch -- the character to record
+ *
+ * Returns: character recorded
+ */
+int
+key_recorder(ch)
+    int ch;
+{
+    tape[recorded++ % TAPELEN] = ch;
+    if(length < TAPELEN)
+      length++;
+
+    return(ch);
+}
+
+
+/*
+ * playback user keystrokes
+ *
+ * Args:  ch -- ignored
+ *
+ * Returns: character played back or -1 to indicate end of tape
+ */
+int
+key_playback(ch)
+    int ch;
+{
+    ch = length ? tape[(recorded + TAPELEN - length--) % TAPELEN] : -1;
+    return(ch);
+}
+
+
+#ifdef	_WINDOWS
+int
+pcpine_oe_cursor(col, row)
+    int  col;
+    long row;
+{
+    return((row == g_mc_row
+	    && col >= g_mc_col
+	    && col < ps_global->ttyo->screen_cols)
+	    ? MSWIN_CURSOR_IBEAM
+	    : MSWIN_CURSOR_ARROW);
+}
+#endif

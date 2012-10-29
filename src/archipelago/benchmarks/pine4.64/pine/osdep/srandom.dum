@@ -1,0 +1,10 @@
+/*----------------------------------------------------------------------
+       Dummy srandom function.  Srandom isn't important.
+ ----*/
+void
+srandom(i)
+    int i;
+{
+}
+
+

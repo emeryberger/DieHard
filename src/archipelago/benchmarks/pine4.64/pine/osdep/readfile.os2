@@ -1,0 +1,42 @@
+#line 2 "osdep/readfile.os2"
+/*----------------------------------------------------------------------
+    Read whole file into memory
+
+  Args: filename -- path name of file to read
+
+  Result: Returns pointer to malloced memory with the contents of the file
+          or NULL
+
+This won't work very well if the file has NULLs in it and is mostly
+intended for fairly small text files.
+ ----*/
+
+char *
+read_file(filename)
+    char *filename;
+{
+  int   nb;
+  char  *buf =NULL;
+  char  *p = tmp_20k_buf;
+  char  tmp[1024];
+  FILE  * fp = fopen(filename, "r");
+
+  if (fp){
+
+    while (fgets(tmp, sizeof tmp - 1, fp)!=NULL) {
+      int len = strlen(tmp);
+      if (p - tmp_20k_buf + len > SIZEOF_20KBUF)
+        break;
+
+      memcpy(p, tmp, len);
+      p += len;
+    }
+    *p++ = '\0';
+    nb = p - tmp_20k_buf;
+    fclose(fp);
+    buf = fs_get(nb);
+    memcpy(buf, tmp_20k_buf, nb);
+  }
+  return buf;
+}
+

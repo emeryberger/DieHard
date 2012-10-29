@@ -1,0 +1,19 @@
+/*----------------------------------------------------------------------
+     Abort with a core dump
+
+Some systems can't abort() from a signal handler if the signal handler
+installed catches the signal abort() uses to actually do the abort. That
+is, even resetting the signal default doesn't occur until the program
+leaves the handler routine. This winds up causing infinite loops. To
+avoid this we just never catch SIGFPE which is assumed to be very rare
+in Pine and just kill ourselves with it when we want to abort with a
+core dump.
+ ----*/
+void
+coredump()
+{
+    kill(getpid(), SIGFPE);
+    exit(-1);	/* Just in case */
+}
+
+

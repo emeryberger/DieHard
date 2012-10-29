@@ -1,0 +1,12 @@
+count=0
+for i in `seq 1 100` 
+  do 
+  ./espresso-injected  -f 0.0001 -a 8192 -- -t Input/largest.espresso 
+  if [[ $? != 0 ]] 
+  then 
+    let count=count+1
+  fi
+done
+echo $count
+
+

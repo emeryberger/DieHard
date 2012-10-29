@@ -1,0 +1,182 @@
+#!/bin/bash
+BASEDIR=`dirname $0` #makes it run correctly from any starting directory 
+ESPRESSO=${BASEDIR}/espresso 
+SPARSEHEAPS=${BASEDIR}/../../libsparseheaps.so
+DIEHARD2=${BASEDIR}/../../../diehard/src/libdiehard-2.so
+DIEHARD1024=${BASEDIR}/../../../diehard/src/libdiehard-1024.so
+OVERFLOW=${BASEDIR}/../../brokenmalloc/liboverflowinjector.so
+UNDERALLOC=${BASEDIR}/../../brokenmalloc/libbrokenmalloc.so
+EFENCE=${BASEDIR}/../../../electric-fence-2.1.13/libefence.so
+#parse command line args
+
+while [[ $# > 0 ]]
+  do
+  case $1 in
+      "-e" | "--efence")
+	  USE_EFENCE=1
+	  shift
+	  ;;
+      "-s" | "--sparseheaps" )
+	  if [[ -z "$USE_DIEHARD" ]]
+	      then
+	      USE_SPARSEHEAPS=1
+	  fi
+	  shift
+	  ;;
+      "-d2" | "--diehard-2" )
+	  if [[ -z "$USE_SPARSEHEAPS" ]]
+	      then
+	      USE_DIEHARD_2=1
+	  fi
+	  shift
+	  ;;
+      
+      "-d1024" | "--diehard-1024")
+	  USE_DIEHARD_1024=1
+	  shift
+	  ;;
+      "--dangling" )
+	  UNDERALLOC_USED=1
+	  DANGLING_DISTANCE=$2
+	  shift;shift;
+	  ;;
+      "-a" | "--amount" )
+	  AMOUNT=$2
+	  shift; shift
+	  ;;
+      "-f"  | "--frequency" )
+	  FREQ=$2
+	  shift; shift
+	  ;;
+      "-o" | "--overflow" )
+#	  if [[ -z "$UNDERALLOC_USED" ]]
+#	      then
+#	      OVERFLOW_USED=1
+#	  fi
+	  shift
+	  ;;
+      "-u" | "--underalloc" )
+#	  if [[ -z "$OVERFLOW_USED" ]]
+#	      then
+	  UNDERALLOC_USED=1
+#	  fi
+	  shift
+	  ;;
+      "--threshold" )
+	  THRESHOLD=$2
+	  shift; shift
+	  ;;
+      "--age")
+	  AGE=$2
+	  shift; shift
+	  ;;
+
+      "-w" | "-working-set-size" )
+	  HOT_SIZE=$2
+	  shift; shift
+	  ;;
+      "-p" | "--page-pool-size" )
+	  POOL_SIZE=$2
+	  shift; shift
+	  ;;
+
+      "-q" | "--quiet" )
+	  QUIET="2>/dev/null"
+	  shift 
+	  ;; 
+ 
+      "-h" | "--help" )
+	  echo 'Usage: espresso-injected  -a <amount> -f <frequency> [ -o [--age <overflow age>] | -u [--threshold <size threshold>]] [-w <max working set size>] [-p <preallocation size>] -- <espresso args>'
+	  exit 0
+	  ;;
+      "--" ) # everything after -- gets passed to espresso
+	  shift
+	  break
+	  ;;
+  esac
+done
+
+# check if we have enough info to run
+
+if [[ -z "$AMOUNT" ]]
+    then
+    if [[ -z "%{DANGLING_DISTANCE}" ]]
+	then
+	echo "Error: no overflow amount specified."
+	exit 1
+    fi
+fi
+
+if [[ -z "$FREQ" ]]
+    then
+    echo "Error: no overflow freqency specified."
+
+    exit 1
+fi
+
+
+# check to see whci fault injector is to be used, and set up the environment for that injector
+if [[ -n "$UNDERALLOC_USED" ]]
+    then #underallocating injector
+
+    LIBS="${UNDERALLOC}"
+
+    if [[ -n "$AMOUNT" ]]
+	then
+	VARS="INJECTED_UNDERFLOW_FREQUENCY=${FREQ} INJECTED_UNDERFLOW_AMOUNT=${AMOUNT}"
+   
+	if [[ -n "${THRESHOLD}" ]]
+	    then
+	    $VARS="${VARS} INJECTED_UNDERFLOW_THRESHOLD=${THRESHOLD}"
+	fi
+    else
+	VARS="INJECTED_DANGLING_FREQUENCY=${FREQ} INJECTED_DANGLING_DISTANCE=${DANGLING_DISTANCE}"
+    fi
+
+else # overflowing injector
+
+    LIBS="${OVERFLOW}"
+
+    VARS="INJECTED_OVERFLOW_FREQUENCY=${FREQ} INJECTED_OVERFLOW_AMOUNT=${AMOUNT}"
+
+    if [[ -n "$AGE" ]]
+	then
+	VARS="${VARS} $INJECTED_OVERFLOW_AGE=${AGE}"
+    fi
+fi  
+
+#set up protection libs
+
+if [[ -n "$USE_DIEHARD_2" ]]
+    then
+    LIBS="${LIBS}:${DIEHARD2}"
+elif [[ -n "$USE_DIEHARD_1024" ]]
+    then
+    LIBS="${LIBS}:${DIEHARD1024}"
+elif [[ -n "$USE_SPARSEHEAPS" ]]
+    then
+    LIBS="${LIBS}:${SPARSEHEAPS}"
+
+#check for preallocation size and working set size
+
+    if [[ -n "${HOT_SIZE}" ]]
+	then
+	VARS="${VARS} HOT_SPACE_SIZE=${HOT_SIZE}"
+    fi
+    
+    if [[ -n "${POOL_SIZE}" ]]
+	then
+	VARS="${VARS} PAGE_POOL_SIZE=${POOL_SIZE}"
+    fi
+elif [[ -n "$USE_EFENCE" ]]
+    then
+    LIBS="${LIBS}:${EFENCE}"
+    VARS="${VARS} EF_DISABLE_BANNER=1 EF_ALLOW_MALLOC_0=1"
+fi
+
+# allow cores to be dumped
+#ulimit -c unlimited
+
+# run!
+#echo "${VARS} LD_PRELOAD=${LIBS} ${ESPRESSO} $@"
+eval  ${VARS} LD_PRELOAD=${LIBS} ${ESPRESSO} $@ ${QUIET} 

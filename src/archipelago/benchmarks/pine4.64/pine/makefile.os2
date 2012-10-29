@@ -1,0 +1,227 @@
+# $Id: makefile.os2 11714 2001-07-03 17:03:38Z hubert $
+#
+#            T H E    P I N E    M A I L   S Y S T E M
+#
+#   Laurence Lundblade and Mike Seibel
+#   Networks and Distributed Computing
+#   Computing and Communications
+#   University of Washington
+#   Administration Building, AG-44
+#   Seattle, Washington, 98195, USA
+#   Internet: lgl@CAC.Washington.EDU
+#             mikes@CAC.Washington.EDU
+#
+#   Please address all bugs and comments to "pine-bugs@cac.washington.edu"
+#
+#
+#   Pine and Pico are registered trademarks of the University of Washington.
+#   No commercial use of these trademarks may be made without prior written
+#   permission of the University of Washington.
+#
+#   Pine, Pico, and Pilot software and its included text are Copyright
+#   1989-1998 by the University of Washington.
+#
+#   The full text of our legal notices is contained in the file called
+#   CPYRIGHT, included with this distribution.
+#
+#
+#   Pine is in part based on The Elm Mail System:
+#    ***********************************************************************
+#    *  The Elm Mail System  -  Revision: 2.13                             *
+#    *                                                                     *
+#    * 			Copyright (c) 1986, 1987 Dave Taylor               *
+#    * 			Copyright (c) 1988, 1989 USENET Community Trust    *
+#    ***********************************************************************
+#
+#
+
+# Common macros
+
+CC=	gcc
+CP=	cp
+MAKE=	make
+MV=	mv
+RM=	rm -f
+
+OS=	os2
+
+# emx OMF format build
+# Used to build .dlls with data exports
+
+DEBUG=
+ZOMF=	-Zomf
+O=	.obj
+A=	.lib
+E=	.exe
+D=	.dll
+AR=	emxomfar r
+ZLIB=	-Zcrtdll
+ZOPT=	-O3 -fno-strength-reduce -mprobe
+ZDEF=	-DOS2 -DOMF
+
+.SUFFIXES: .c .obj .exe
+
+# emx AOUT format build
+# Useful for debugging with gdb
+
+#DEBUG=	-g
+#ZOMF=	
+#O=	.o
+#A=	.a
+#D=	.dll
+#E=	.exe
+#AR=	ar rus
+#ZLIB=	-Zcrtdll
+#ZOPT=	-O3 -fno-strength-reduce -mprobe
+#ZDEF=	-DOS2
+
+#.SUFFIXES: .c .o .exe
+
+.c$O: ; $(CC) $(ZOMF) $(CFLAGS) -c $<
+
+#
+#     Make file for the Pine mail system for OS/2
+#
+#
+#   Most commonly fiddled flags for compiler.
+#   Uncomment the setttings desired here
+#
+OPTIMIZE=	$(DEGBUG) $(ZOPT)
+MOUSE=		-DMOUSE
+DDEBUG=		-DDEBUG
+IMAPDIR=	../c-client
+PICODIR=	../pico
+
+LIBES=		-lsocket
+LIBPICO=	-L$(PICODIR) -lpicolib
+LIBCCLIENT=	-L$(IMAPDIR) -lc-client
+LOCLIBES=	$(LIBPICO) $(LIBCCLIENT)
+
+CFLAGS=		$(DEBUG) $(ZDEF) -DHELPFILE -DFASTVIO -DSYSTYPE=\"OS2\" $(MOUSE) $(OPTIMIZE) $(DDEBUG)
+LDFLAGS=	$(DEBUG) $(ZLIB) $(ZOMF)
+
+HELPFILES=	pine.ndx helptext.h
+
+#helpsrc=	helptext.c
+#helpobj=	helptext$O
+
+obj=		addrbook$O adrbklib$O args$O bldaddr$O context$O filter$O \
+		folder$O help$O imap$O init$O mailcap$O mailcmd$O \
+		mailindx$O mailpart$O mailview$O newmail$O \
+		other$O pine$O reply$O screen$O send$O signals$O \
+		status$O strings$O takeaddr$O adrbkcmd$O os$O $(helpobj)
+
+cfiles= 	addrbook.c adrbklib.c args.c bldaddr.c context.c filter.c \
+		folder.c help.c imap.c init.c mailcap.c mailcmd.c \
+		mailindx.c mailpart.c mailview.c newmail.c other.c pine.c \
+		reply.c screen.c send.c signals.c status.c strings.c \
+		takeaddr.c adrbkcmd.c os.c $(helpsrc)
+
+pine$E:		$(obj)
+		..\pico\blddate.exe bdate.c
+		$(CC) $(ZOMF) -c bdate.c
+		$(CC) $(LDFLAGS) $(CFLAGS) -o pine.exe $(obj) bdate$O $(LOCLIBES) $(LIBES)
+
+$(HELPFILES):	helpindx$E
+		helpindx pine.hlp $(HELPFILES)
+
+helpindx$E:	helpindx.c
+		$(CC) $(CFLAGS) -o $@ helpindx.c
+
+abookcpy$E:	abookcpy$O
+		$(CC) $(LDFLAGS) $(CFLAGS) -o abookcpy.exe abookcpy$O $(LOCLIBES) $(LIBES)
+
+# this is not part of pine
+pine-use$E:	pine-use.c
+		$(CC) $(CFLAGS) -o pine-use.exe pine-use.c
+
+clean:
+		$(RM) *$O os.h os.c helptext.c helptext.h rpdump rpload
+		( cd osdep && make clean )
+
+HEADERS=	headers.h pine.h os.h helptext.h context.h \
+		$(PICODIR)/headers.h $(PICODIR)/estruct.h \
+		$(PICODIR)/edef.h $(PICODIR)/efunc.h \
+		$(PICODIR)/pico.h $(PICODIR)/os.h \
+		$(IMAPDIR)/mail.h $(IMAPDIR)/osdep.h \
+		$(IMAPDIR)/rfc822.h $(IMAPDIR)/misc.h
+
+os.h:		osdep/os-os2.h
+		$(RM) os.h
+		$(CP) osdep/os-os2.h os.h
+
+os.c:		osdep/os-os2.c
+		$(RM) os.c
+		$(CP) osdep/os-os2.c os.c
+
+#helptext.c helptext.h:	pine.hlp
+#		cmplhelp.cmd pine.hlp helptext.c helptext.h
+
+osdep/os-os2.c: \
+	osdep/header.os2 \
+	osdep/canacces.os2 \
+	osdep/filesize \
+	osdep/writ_dir \
+	osdep/creatdir.os2 \
+	osdep/rename.dos \
+	osdep/bld_path.dos \
+	osdep/lstcmpnt.dos \
+	osdep/expnfldr.dos \
+	osdep/fnexpand.os2 \
+	osdep/fltrname.os2 \
+	osdep/diskquot.non \
+	osdep/readfile.os2 \
+	osdep/tempfile \
+	osdep/coredump \
+	osdep/hostname \
+	osdep/domnames \
+	osdep/canonicl.dos \
+	osdep/jobcntrl.dos \
+	osdep/err_desc \
+	osdep/pw_stuff.dos \
+	osdep/chnge_pw.dos \
+	osdep/mimedisp \
+	osdep/fgetpos \
+	osdep/dosextra \
+	osdep/pipe.os2 \
+	osdep/sendmail.dos \
+	osdep/execview.os2 \
+	osdep/print.os2 \
+	osdep/debuging.os2 \
+	osdep/termin.dos \
+	osdep/termin.gen \
+	osdep/termout.dos \
+	osdep/termout.gen \
+	osdep/os-os2.ic
+	( cd osdep && $(MAKE) -f makefile.os2 includer.exe os-os2.c )
+
+# dependancies
+
+addrbook$O:	addrbook.c  $(HEADERS) adrbklib.h
+adrbkcmd$O:	adrbkcmd.c  $(HEADERS) adrbklib.h
+adrbklib$O:	adrbklib.c  $(HEADERS) adrbklib.h
+args$O:		args.c      $(HEADERS)
+bldaddr$O: 	bldaddr.c   $(HEADERS) adrbklib.h
+context$O:	context.c   $(HEADERS) $(IMAPDIR)/misc.h
+filter$O:	filter.c    $(HEADERS) $(PICODIR)/pico.h
+folder$O:	folder.c    $(HEADERS)
+help$O:		help.c      $(HEADERS)
+helptext$O:	helptext.c  helptext.h
+imap$O:		imap.c      $(HEADERS)
+init$O:		init.c      $(HEADERS)
+mailcap$O:	mailcap.c   $(HEADERS)
+mailcmd$O:	mailcmd.c   $(HEADERS)
+mailindx$O:	mailindx.c  $(HEADERS)
+mailpart$O:	mailpart.c  $(HEADERS)
+mailview$O:	mailview.c  $(HEADERS)
+newmail$O:	newmail.c   $(HEADERS)
+os$O:		os.c 	    $(HEADERS)
+other$O:	other.c     $(HEADERS)
+pine$O:		pine.c      $(HEADERS)
+reply$O:	reply.c     $(HEADERS)
+screen$O:	screen.c    $(HEADERS)
+send$O:		send.c      $(HEADERS) $(IMAPDIR)/smtp.h $(PICODIR)/pico.h
+signals$O:	signals.c   $(HEADERS)
+status$O:	status.c    $(HEADERS)
+strings$O:	strings.c   $(HEADERS)
+takeaddr$O: 	takeaddr.c  $(HEADERS) adrbklib.h

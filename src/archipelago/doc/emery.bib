@@ -1,0 +1,204 @@
+%%%%%
+%%%%%  Emery Berger's publications.
+%%%%%
+
+@inproceedings{pldi-novark-2007,
+ author = {Gene Novark and Emery D. Berger and Benjamin G. Zorn},
+ title = {{Exterminator}: Automatically Correcting Memory Errors with High Probability},
+ booktitle = {Proceedings of the 2007 ACM SIGPLAN Conference on Programming Language Design and Implementation (PLDI 2007)},
+ year = {2007},
+ isbn = {1-59593-633-2},
+ location = {San Diego, CA},
+ publisher = {ACM Press},
+ address = {New York, NY, USA},
+ }
+
+
+@techreport{berg07,
+  author = {Emery D. Berger and Benjamin G. Zorn},
+  title = {Efficient Probabilistic Memory Safety},
+  month = mar,
+  year = 2007,
+  number = {UMCS TR-2007-17},
+  institution = {Department of Computer Science, University of Massachusetts Amherst},
+}
+
+@misc{hoard,
+  author = "Emery D. Berger",
+  title = "The {Hoard} Memory Allocator",
+  note = "Available at \url{http://www.hoard.org}"
+}
+
+@Article{BrowneBergerDube:IJHPCA2000,
+  author =       "James C. Browne and Emery D. Berger and Aditya Dube",
+  title =        "Compositional Development of Performance Models in
+                 {POEMS}",
+  journal =      "The International Journal of High Performance
+                 Computing Applications",
+  volume =       "14",
+  number =       "4",
+  pages =        "283--291",
+  month =        "Winter",
+  year =         "2000",
+  coden =        "IHPCFL",
+  ISSN =         "1094-3420",
+  bibdate =      "Tue Sep 12 12:28:02 2000",
+}
+
+@inproceedings{BergerMcKinleyBlumofeWilson:ASPLOS2000,
+  author = {Emery D. Berger and Kathryn S. McKinley and Robert D. Blumofe and Paul R. Wilson},
+  title = {Hoard: A Scalable Memory Allocator for Multithreaded Applications},
+  month = nov,
+  year = 2000,
+  pages = "117--128",
+  booktitle =  "Proceedings of the International Conference on Architectural Support for Programming Languages and Operating Systems (ASPLOS-IX)",
+  address = "Cambridge, MA",
+  url = "citeseer.ist.psu.edu/berger00hoard.html"
+}
+
+@inproceedings{BergerZornMcKinley:2001,
+  author = "Emery D. Berger and Benjamin G. Zorn and Kathryn S. McKinley",
+  title =  "Composing High-Performance Memory Allocators",
+  booktitle = "Proceedings of the 2001 ACM SIGPLAN Conference on Programming Language Design and Implementation (PLDI 2001)",
+  year = "2001",
+  month = jun,
+  day = "20--22",
+  address = "Snowbird, Utah",
+  abstract = {In this paper, we present a flexible and efficient infrastructure for building memory allocators that is based on C++ templates and inheritance. This novel approach allows programmers to build custom and general-purpose allocators as "heap layers" that can be composed without incurring any runtime overhead or additional programming cost. We show that this infrastructure simplifies allocator construction and results in allocators that either match or improve the performance of heavily-tuned allocators written in C, including the Kingsley allocator and the GNU obstack library. We further show this infrastructure can be used to rapidly build a general-purpose allocator that has performance comparable to Lea's allocator, the best uniprocesor allocator of which we are aware. We thus demonstrate a clean, easy-to-use allocator interface that seamlessly combines the power and efficiency of any number of general and custom allocators within a single application.},
+}
+
+
+@inproceedings{BZM2002,
+  author = "Emery D. Berger and Benjamin G. Zorn and Kathryn S. McKinley",
+  title = "Reconsidering Custom Memory Allocation",
+  booktitle = "Proceedings of the Conference on Object-Oriented Programming Systems, Languages, and Applications (OOPSLA) 2002",
+  address = "Seattle, Washington",
+  month = Nov,
+  year = "2002",
+  url = "citeseer.ist.psu.edu/berger01reconsidering.html"
+}
+
+
+@inproceedings{savmm-poster,
+  author = "Emery D. Berger and Scott F. Kaplan and Bhuvan Urgaonkar and Pritesh Sharma and Abhishek Chandra and Prashant Shenoy",
+  title = "Scheduler-aware virtual memory management",
+  month = oct,
+  year = 2003,
+  booktitle = {The 19th ACM Symposium on Operating Systems Principles (SOSP-19), poster session}
+}
+
+@inproceedings{yang04,
+  author = "Ting Yang and Matthew Hertz and Emery D. Berger and Scott F. Kaplan and J. Eliot B. Moss",
+  title = "Automatic Heap Sizing: Taking Real Memory into Account",
+  booktitle = "Proceedings of the 2004 {ACM} {SIGPLAN} International Symposium on Memory Management (ISMM 2004)",
+  month = nov,
+ year = {2004},
+ isbn = {1-58113-945-4},
+ pages = {61--72},
+ location = {Vancouver, BC, Canada},
+ doi = {http://doi.acm.org/10.1145/1029873.1029881},
+ publisher = {ACM Press},
+}
+
+
+@inproceedings{1028984,
+ author = {Narendran Sachindran and J. Eliot B. Moss and Emery D. Berger},
+ title = {{MC}$^{2}$: High-performance garbage collection for memory-constrained environments},
+ booktitle = {Proceedings of the 19th Annual ACM SIGPLAN Conference on Object-Oriented Programming, Systems, Languages, and Applications (OOPSLA 2004)},
+ year = {2004},
+ isbn = {1-58113-831-9},
+ pages = {81--98},
+ location = {Vancouver, BC, Canada},
+ doi = {http://doi.acm.org/10.1145/1028976.1028984},
+ publisher = {ACM Press},
+}
+
+@inproceedings{hert05,
+  title = "Garbage Collection without Paging",
+  author = "Matthew Hertz and Emery D. Berger",
+  booktitle = "Proceedings of the 2005 {ACM} {SIGPLAN} Conference on Programming
+ Language Design and Implementation (PLDI 2005)",
+  month = jun,
+  year = 2005,
+  location = "Chicago, IL",
+  publisher = {ACM},
+}
+
+@inproceedings{feng05,
+  author =       "Yi Feng and Emery D. Berger",
+  title =        "A Locality-Improving Dynamic Memory Allocator",
+  booktitle =    "Proceedings of the {ACM SIGPLAN} 2005 Workshop on Memory System Performance (MSP)",
+  year = 	 2005,
+  month =        jun,
+  address =      "Chicago, IL",
+}
+
+@inproceedings{hert05a,
+  crossref = "oopsla05",
+  title = "Quantifying the Performance of Garbage Collection vs. Explicit Memory Management",
+  author = "Matthew Hertz and Emery D. Berger"
+}
+
+@inproceedings{flux06usenix,
+ author = {Brendan Burns and Kevin Grimaldi and Alexander Kostadinov and Emery D. Berger and Mark D. Corner},
+ title = {Flux: A Language for Programming High-Performance Servers},
+ booktitle = {2006 USENIX Annual Technical Conference},
+ month = jun,
+ year = {2006},
+ location = {Boston, Massachusetts},
+ pages = {129--142},
+ abstract = {Programming high-performance server applications is challenging: it is both complicated and error-prone to write the concurrent code required to deliver high performance and scalability. Server performance bottlenecks are difficult to identify and correct. Finally, it is difficult to predict server performance prior to deployment.
+
+This paper presents Flux, a language that dramatically simplifies the construction of scalable high-performance server applications. Flux lets programmers compose off-the-shelf, sequential C or C++ functions into concurrent servers. Flux programs are type-checked and guaranteed to be deadlock-free. We have built a number of servers in Flux, including a web server with PHP support, an image-rendering server, a BitTorrent peer, and a game server. These Flux servers match or exceed the performance of their counterparts written entirely in C. By tracking hot paths through a running server, Flux simplifies the identification of performance bottlenecks. The Flux compiler also automatically generates discrete event simulators that accurately predict actual server performance under load and with different hardware resources.}
+}
+
+@inproceedings{transparent2006usenix,
+  author = {James Cipar and Mark D. Corner and Emery D. Berger},
+  title = {Transparent Contribution of Memory},
+  booktitle = {2006 USENIX Annual Technical Conference},
+  month = jun,
+  year = {2006},
+  location = {Boston, Massachusetts},
+  pages = {109--114},
+  abstract = {A multitude of research and commercial projects have proposed contributory systems that utilize wasted CPU cycles, idle memory and free disk space found on end-user machines. These applications include distributed computation such as signal processing and protein folding, peer-to-peer backup, and large-scale distributed storage. While users are generally willing to give up unused CPU cycles, the use of memory by contributory applications deters participation in such systems. Contributory applications pollute the machine's memory, forcing user pages to be evicted to disk. This paging can disrupt user activity for seconds or even minutes.
+
+In this paper, we describe the design and implementation of an operating system mechanism to support transparent contribution of memory. A transparent memory manager (TMM) controls memory usage by contributory applications, ensuring that users will not notice an increase in the miss rate of their applications. TMM is able to protect user pages such that page miss overhead is limited to 1.7\%, while donating hundreds of megabytes of memory.}
+ 
+}
+
+@inproceedings{1134000,
+ author = {Emery D. Berger and Benjamin G. Zorn},
+ title = {{DieHard}: Probabilistic Memory Safety for Unsafe Languages},
+ booktitle = {Proceedings of the 2006 ACM SIGPLAN Conference on Programming Language Design and Implementation (PLDI 2006)},
+ year = {2006},
+ isbn = {1-59593-320-4},
+ pages = {158--168},
+ location = {Ottawa, Ontario, Canada},
+ doi = {http://doi.acm.org/10.1145/1133981.1134000},
+ publisher = {ACM Press},
+ address = {New York, NY, USA},
+ }
+
+
+@inproceedings{cramm,
+  author = {Ting Yang and Emery D. Berger and Scott F. Kaplan and J. Eliot B. Moss},
+  title = {CRAMM: Virtual Memory Support for Garbage-Collected Applications},
+  booktitle = {Proceedings of the 7th USENIX Symposium on Operating Systems Design and Implementation (OSDI)},
+  month = nov,
+  year = {2006},
+  location = {Seattle, Washington}
+}
+
+%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%
+
+@Proceedings{oopsla05,
+  key = "OOPSLA",
+  title =	"Proceedings of the 20th annual {ACM} {SIGPLAN} Conference on Object-Oriented Programming Systems, Languages, and Applications",
+  booktitle =	"Proceedings of the 20th annual {ACM} {SIGPLAN} Conference on Object-Oriented Programming Systems, Languages, and Applications (OOPSLA)",
+  year = 	 2005,
+  address =	"San Diego, CA",
+  month = 	 Oct
+}
+
+

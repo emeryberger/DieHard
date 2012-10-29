@@ -1,0 +1,30 @@
+/*----------------------------------------------------------------------
+      Check to see if a directory exists and is writable by us
+
+   Args: dir -- directory name
+
+ Result:       returns 0 if it exists and is writable
+                       1 if it is a directory, but is not writable
+                       2 if it is not a directory
+                       3 it doesn't exist.
+  ----*/
+is_writable_dir(dir)
+    char *dir;
+{
+    struct stat sb;
+
+    if(stat(dir, &sb) < 0)
+      /*--- It doesn't exist ---*/
+      return(3);
+
+    if(!(sb.st_mode & S_IFDIR))
+      /*---- it's not a directory ---*/
+      return(2);
+
+    if(can_access(dir, 07))
+      return(1);
+    else
+      return(0);
+}
+
+

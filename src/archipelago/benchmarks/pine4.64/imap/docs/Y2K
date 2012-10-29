@@ -1,0 +1,130 @@
+QUESTION: Is c-client Y2K compliant?
+
+ANSWER:
+
+     There are no known Y2K issues in c-client; nor have there ever
+been any known Y2K issues in c-client from its inception.
+
+     Some older versions of c-client don't like the two-digit year
+"00", although the only impact of this is that messages with that year
+will sort before any other messages.  Nobody should be using two-digit
+years in email messages any more (use "2000" instead of "00").
+
+     You may wish to read the document calendar.txt for more
+information about the Y4K, Y20K, and Y45K issues.  Assuming that
+c-client is still around in 2000-43,000 years, someone will have to
+deal with these.
+
+     Within the plausible lifetimes of people today, there are three
+known date-related issues in c-client which will have to be addressed
+in the future.  If I am still alive when the first problem hits, I
+will be nearly 82 years old, and won't be maintaining c-client any
+more.
+
+
+Y2038:
+
+     c-client, like most UNIX software, has Y2038 issues.  On Tuesday,
+January 19, 2038 at 03:14:08 Coordinated Universal Time (also known as
+UTC, UT, or historically GMT), the clock on 32-bit UNIX systems will
+wrap around to a negative number; that is, from 0x7fffffff to
+0x80000000.
+
+     c-client uses an unsigned long for its 32-bit time; however the C
+library on most UNIX systems uses a signed long and will interpret
+that time as being Friday, December 13, 1901 at 20:45:52 UTC.
+
+     Fixing this problem will require changing the C library to use
+either unsigned longs or a wider (e.g. 64-bit) value for time.  Lots
+of work will need to be done on 32-bit UNIX systems as 2038
+approaches.  History suggests that most of the work will be done in
+the autumn of 2037... ;-) It's not known if anything is necessary to
+do to c-client other than just rebuild it with the new C library.
+
+     Going to 32-bit unsigned longs means that there will be a Y2106
+bug that someone will have to fix.  Hopefully nobody will even think
+of using 32-bit systems by then.
+
+
+Y2070:
+
+     c-client assumes that 2-digit years with values of 70 or greater
+are in the 20th century, and that 2-digit years with values of 69 or
+less are in the 21st century.  Time for UNIX began on January 1, 1970
+and email on ARPAnet happened between the first TENEX systems shortly
+after that; consequently there is no ambiguity with email data with
+2-digit years prior to the year 2070.  This is used only when parsing
+a 2-digit year.  c-client never generates one.
+
+     Fixing this problem requires convincing people not to use 2-digit
+years.  This is a lesson that people should have figured out 70 years
+earlier with Y2K.  Consequently, this may be a "non-problem."
+Otherwise, look in mail_parse_date() for the comment "two digit year"
+and change the statement as desired.  [Note: do not change the
+definition of BASEYEAR since the UNIX port assumes that this matches
+when time began in the operating system.]
+
+
+Y2098:
+
+     On January 1, 2098, the year in per-message internal dates will
+expire, since a 7-bit field is allocated for the year.  c-client will
+mistakenly think that the day is January 1, 1970.
+
+     Fortunately, it is easy to fix this problem.  Just increase the
+width of "year" in MESSAGECACHE in mail.h.  If you make it 8 bits,
+it'll be good until January 1, 2216; 9 bits makes it good until 2482.
+10 bits will push it back that you'd worry about the Y2800 question
+before having to increase it again.  If you ignore Y2800, 11 bits will
+push it it back to having to worry about Y4K first.
+
+
+Y2800:
+
+     At this year, you will need to decide whether to keep the Gregorian
+calendar, which is one day slow every 20,000 years, or go to the more
+accurate Eastern Orthodox calendar which is one day slow every 45,000
+years.  The Gregorian and Eastern Orthodox calendars diverge at this
+year.
+
+     There hasn't been any statement about how the international
+community will deal with the situation of the Orthodox calendar being
+one day ahead of the Gregorian calendar between 2800 and 2900.  This
+will happen again between 3200 and 3300, and at gradually increasing
+intervals until 48,300 when the shift becomes permanent (assuming no
+Y20K or Y45K fixes).
+
+     If you wish to make the transition to the Eastern Orthodox calendar,
+rebuild c-client with -DUSEORTHODOXCALENDAR=1.  You can then ignore Y4K
+and Y20K!
+    
+
+Y4K:
+
+     A little-known rule in the Gregorian calendar is that years that
+are evenly divisible by 4000 are not leap years.  Unlike the other
+rules, this rule hasn't had effect yet, and won't for another 2000 years.
+
+     To fix the Y4K problem, just rebuild c-client with -DY4KBUGFIX=1.
+
+
+Y20K:
+
+     Those of you who stuck with the Gregorian calendar have a
+problem; the calendar is now one day slow.  The Pope has not made any
+statement about how this problem will be fixed.  Maybe they'll declare
+that 20,004 is also not a leap year or something.
+
+     There is no fix for this problem in c-client.
+
+
+Y45K:
+
+     Greeks, Serbs, Russians, and other Eastern Orthodox have spent
+the past 41,000 years laughing at westerners' increasingly futile
+efforts to keep the Gregorian calendar in order.  The day of reckoning
+has come; the Orthodox calendar is now one day slow.  The Patriarch of
+Istanbul (nee Constantinople) has not made any statement about how this
+will be fixed.
+
+     There is no fix for this problem in c-client.

@@ -1,0 +1,11 @@
+/*----------------------------------------------------------------------
+   Create a temporary file, the name of which we don't care about 
+and that goes away when it is closed.  Just like ANSI C tmpfile.
+  ----*/
+FILE  *
+create_tmpfile()
+{
+    return(tmpfile());
+}
+
+

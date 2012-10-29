@@ -1,0 +1,9 @@
+#!/bin/bash
+BIN=~/work/plasma/diehard-nih/benchmarks/cfrac
+
+if (( $# == 2 ))
+then
+LD_PRELOAD=$2 ${BIN}/cfrac $1
+else
+${BIN}/cfrac $1
+fi

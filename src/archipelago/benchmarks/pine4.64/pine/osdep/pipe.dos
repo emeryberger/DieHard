@@ -1,0 +1,47 @@
+#line 2 "osdep/pipe.dos"
+
+/*======================================================================
+    pipe
+    
+    Initiate I/O to and from a process.  These functions are similar to 
+    popen and pclose, but both an incoming stream and an output file are 
+    provided.
+   
+ ====*/
+
+
+
+/*----------------------------------------------------------------------
+     Pipe a single character
+
+  Args: command -- string to hand the shell
+	outfile -- address of pointer containing file to receive output
+	errfile -- file to write stderr to
+	mode -- mode for type of shell, signal protection etc...
+  Returns: NULL on DOS
+
+ ----*/
+PIPE_S *
+open_system_pipe(command, outfile, errfile, mode)
+     char  *command;
+     char **outfile;
+     char **errfile;
+     int    mode;
+{
+    return(NULL);
+}
+
+
+
+/*----------------------------------------------------------------------
+    Close pipe previously allocated and wait for child's death
+
+  Args: syspipe -- address of pointer to struct returned by open_system_pipe
+  Returns: 0 on DOS
+ ----*/
+int
+close_system_pipe(syspipe)
+    PIPE_S **syspipe;
+{
+    return(0);
+}

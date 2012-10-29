@@ -1,0 +1,14 @@
+#!/bin/bash
+BIN=~/work/plasma/sparseheaps/benchmarks/espresso
+
+if [[ $1 == -q ]]
+then
+    shift
+
+    ${BIN}/espresso $@ > /dev/null
+else
+    shift
+    ${BIN}/espresso $@
+fi
+
+

@@ -1,0 +1,9 @@
+;
+; IPOP2D.DEF - def file for POP2 server
+;
+
+NAME         IPOP2D
+DESCRIPTION  'POP2 Server Application'
+;PROTMODE
+;CODE           PRELOAD MOVEABLE DISCARDABLE
+;DATA           PRELOAD MOVEABLE

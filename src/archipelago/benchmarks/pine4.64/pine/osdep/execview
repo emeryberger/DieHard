@@ -1,0 +1,111 @@
+/* ----------------------------------------------------------------------
+   Execute the given mailcap command
+
+  Args: cmd           -- the command to execute
+	image_file    -- the file the data is in
+	needsterminal -- does this command want to take over the terminal?
+  ----*/
+void
+exec_mailcap_cmd(mc_cmd, image_file, needsterminal)
+MCAP_CMD_S *mc_cmd;
+char *image_file;
+int   needsterminal;
+{
+    char   *command = NULL,
+	   *result_file = NULL,
+	   *p, *cmd;
+    char  **r_file_h;
+    PIPE_S *syspipe;
+    int     mode;
+
+    /* no os-specific command handling */
+    if(mc_cmd)
+      cmd = mc_cmd->command;
+    else
+      return;
+    p = command = (char *)fs_get((32 + strlen(cmd) + (2*strlen(image_file)))
+			     * sizeof(char));
+    if(!needsterminal)  /* put in background if it doesn't need terminal */
+      *p++ = '(';
+    sprintf(p, "%s ; rm -f %s", cmd, image_file);
+    p += strlen(p);
+    if(!needsterminal){
+	*p++ = ')';
+	*p++ = ' ';
+	*p++ = '&';
+    }
+    *p++ = '\n';
+    *p   = '\0';
+    dprint(9, (debugfile, "exec_mailcap_cmd: command=%s\n",
+	   command ? command : "?"));
+
+    mode = PIPE_RESET;
+    if(needsterminal == 1)
+      r_file_h = NULL;
+    else{
+	mode       |= PIPE_WRITE | PIPE_STDERR;
+	result_file = temp_nam(NULL, "pine_cmd");
+	r_file_h    = &result_file;
+    }
+
+    if(syspipe = open_system_pipe(command, r_file_h, NULL, mode, 0)){
+	close_system_pipe(&syspipe, NULL, 0);
+	if(needsterminal == 1)
+	  q_status_message(SM_ORDER, 0, 4, "VIEWER command completed");
+	else if(needsterminal == 2)
+	  display_output_file(result_file, "VIEWER", " command result", 1);
+	else
+	  display_output_file(result_file, "VIEWER", " command launched", 1);
+    }
+    else
+      q_status_message1(SM_ORDER, 3, 4, "Cannot spawn command : %s", cmd);
+
+    fs_give((void **)&command);
+    if(result_file)
+      fs_give((void **)&result_file);
+}
+
+
+/* ----------------------------------------------------------------------
+   Execute the given mailcap test= cmd
+
+  Args: cmd -- command to execute
+  Returns exit status
+  
+  ----*/
+int
+exec_mailcap_test_cmd(cmd)
+    char *cmd;
+{
+    PIPE_S *syspipe;
+
+    return((syspipe = open_system_pipe(cmd, NULL, NULL, PIPE_SILENT, 0))
+	     ? close_system_pipe(&syspipe, NULL, 0) : -1);
+}
+
+
+char *
+url_os_specified_browser(url)
+    char *url;
+{
+    /* do nothing here */
+    return(NULL);
+}
+
+/*
+ * Return a pretty command, on some OS's we might do something
+ * different than just display the command.
+ *
+ * free_ret - whether or not to free the return value
+ */
+char *
+execview_pretty_command(mc_cmd, free_ret)
+    MCAP_CMD_S *mc_cmd;
+    int        *free_ret;
+{
+    /* always pretty */
+    if(free_ret)
+      *free_ret = 0;
+    return(mc_cmd->command);
+}
+

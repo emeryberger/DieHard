@@ -1,0 +1,327 @@
+pine.tar.z README
+Last changed: 18 January 2005
+
+-----------------------------------------------------------------------
+                Pine/Pico/Pilot/Imapd Distribution
+-----------------------------------------------------------------------
+
+Pine and Pico are registered trademarks of the University of Washington.
+No commercial use of these trademarks may be made without prior written
+permission of the University of Washington.
+
+Pine, Pico, and Pilot software and its included text are Copyright
+1989-2005 by the University of Washington.
+
+The full text of our legal notices is contained in the file called
+CPYRIGHT, included with this distribution.
+
+For the latest info about Pine, see http://www.washington.edu/pine
+
+-----------------------------------------------------------------------
+DISTRIBUTION CONTENTS
+-----------------------------------------------------------------------
+
+This Pine distribution includes:
+
+bin        - Compiled binaries are found here
+build      - Shell script to compile Pine and Pico
+contrib    - Contributed ports and additions
+doc        - Documentation directory. The main documentation is tech-notes.txt
+imap	   - Source tree containing C-Client IMAP implementation
+makefile   - In case make is tried to build Pine and Pico
+packages   - Scripts for building packages for various Linux distributions
+pico       - The Pico and Pilot source directory
+pine       - The Pine source directory
+
+Most of the documentation is in doc/tech-notes.txt. It is not user level
+documentation, but there are things in it some users might find useful.
+There are also instructions for building and porting Pine.  The directory
+doc/tech-notes contains source for doc/tech-notes.txt in HTML format which
+can be viewed via a Web browser by opening doc/tech-notes/index.html.
+
+
+-----------------------------------------------------------------------
+PRELIMINARIES
+-----------------------------------------------------------------------
+
+If you are reading this, you have presumably succeeded in extracting
+the distribution from the compressed tar archive file, via the following 
+command, or equivalent:
+
+        tar zxf pine.tar.z
+
+Some of the instructions that follow assume that your current workding 
+directory is the pineX.XX directory created by the un-tar process above.
+
+
+-----------------------------------------------------------------------
+BUILD SYNTAX
+-----------------------------------------------------------------------
+
+A shell interpreter script called "build" is used to compile Pine and the
+other programs in the distribution. The build script is also responsible
+for building operating system specific symbolic links into the
+imap/c-client source tree.
+
+Usage: build <make-options> <target-platform>
+
+<target-platform> may be one of the ports listed in doc/pine-ports or
+  clean   Clean up object files and such.
+          Also, a good way to rebuild Pine/Pico from scratch.
+
+"Build" by itself with no arguments is the same as typing in the previous
+build command with the arguments used then.
+
+To build Pine and Pico the command "build xxx" should work where xxx
+is one of the targets. For example "build gul" to build Pine for Ultrix.
+
+There are three pieces of Pine which are optionally included. When
+you build Pine, the three lines
+
+       Including SSL functionality
+       Including LDAP functionality
+       Including Kerberos5 functionality
+
+should be printed early in the build process if the corresponding
+piece is being included.  (See below for more about these options.)
+
+
+-----------------------------------------------------------------------
+INCLUDING LDAP
+-----------------------------------------------------------------------
+
+If you are attempting to compile in the LDAP functionality in pine, you
+should get the OpenLDAP source, set up the libldap and liblber libraries,
+and the include files. A usually easy way to do that is
+
+  ./configure  --disable-slapd --disable-slurpd --without-kerberos --without-threads
+  make depend
+  make
+
+The configure line may not be right for you.
+
+Add a symlink called ldap to this directory (the directory with this
+build file in it) which points to the ldap installation. That is, the directory
+ldap points to should contain the directories include and libraries. For
+example, the command to create the symlink might be something like
+
+  ln -s /path/to/openldap/source/openldap-2.0.7 ldap
+
+Alternatively, you may use the older Univ. of Michigan ldap-3.3 source and
+put it in a directory called "ldap" in this top-level pine directory. Or
+you could put a symlink pointing from here to the actual location. The
+include files should show up in ldap/include and the libraries in
+ldap/libraries.
+
+Alternatively, you can try using the Netscape Directory SDK 1.0 (or probably
+3.0 when it is ready) by putting the include files in ldap/include and
+libldap.a in ldap/libraries. This build script will attempt to notice that
+you are not using ldap-3.3 and leave out liblber.a, which is required when
+using ldap-3.3.
+
+Alternatively, OpenLDAP may already be included in your system libraries.
+Solaris 8 is apparently set up this way. The script contrib/ldap-setup,
+which is called by the build script, tries to detect this automatically.
+It causes ldap-setup to exit with value 3 and the build script notices
+that and sets the appropriate arguments.
+
+
+-----------------------------------------------------------------------
+INCLUDING KERBEROS
+-----------------------------------------------------------------------
+
+If you are attempting to compile in Kerberos5 functionality, put a symlink
+called krb5 pointing from the directory containg the "build" script, to
+the location of the Kerberos includes and libraries. The expected files
+should be in krb5/include and krb5/lib. On many systems, this would be
+accomplished with
+
+  ln -s /usr/local krb5
+
+However, the location (as well as the tools available to find
+the needed files) will vary from one system to another.
+For example, on RedHat Linux 7.2, you could try the command
+
+        locate krb5.h
+
+and discover that the Kerberos libraries are in the directory
+/usr/kerberos  (e.g. /usr/kerberos/include/krb5.h )
+Therefore the needed command for this system would be:
+
+        ln -s /usr/kerberos krb5
+
+
+-----------------------------------------------------------------------
+INCLUDING SSL
+-----------------------------------------------------------------------
+
+An attempt is made to include SSL support automatically. If OpenSSL is
+installed in /usr/local/ssl then it is used. It doesn't make sense to use
+the same "linking" mechanism as is used for LDAP and Kerberos, since the
+SSLDIR is used at run-time, not just compile-time. You can change the
+directory with the build argument:
+
+  SSLDIR=/some/directory
+
+In other words, the build command would be:
+
+  ./build SSLDIR=/some/directory target
+
+where target is one of the 3-letter target names found in doc/pine-ports.
+
+The assumption is that the certs directory is in SSLDIR/certs, the include
+directory is SSLDIR/include, and the library directory is SSLDIR/lib.  Note
+that for some ports different assumptions are made.  In the instances
+different from the default, the difference will be noted in the description
+of that port in doc/pine-ports.  Also, you can change the assumptions for
+any of the directories by adding options to the command line such as the 
+following:
+
+  SSLCERTS=certs_directory
+  SSLINCLUDE=include_directory and
+  SSLLIB=ssl_library_directory
+
+You can override the automatic inclusion of SSL by including the
+argument NOSSL. For example:
+
+  ./build NOSSL target
+
+The possible values for SSLTYPE are:
+
+  none       no SSL support, the default
+  unix       SSL support using OpenSSL
+  nopwd      SSL support using OpenSSL, and plaintext authentication permitted
+               only in SSL or TLS sessions.
+  sco        link SSL before other libraries for SCO
+  sco.nopwd  same as nopwd
+
+Usually SSLTYPE will get set automatically by the script.
+
+Note: The "nopwd" SSLTYPE is similar to "unix" except that it compiles
+the IMAP server (imapd) so that plaintext authentication is only permitted 
+if the session is encrypted via SSL or TLS.
+
+The short description here is not complete. The definitive text is part
+of the c-client distribution (which is included here). Take a look at the
+file imap/docs/SSLBUILD. In particular, look at STEP 3 to learn about
+setting up certificates.
+
+
+-----------------------------------------------------------------------
+EXTRAS
+-----------------------------------------------------------------------
+
+There are some other arguments which you may find useful.
+
+  EXTRACFLAGS=
+  EXTRALDFLAGS=
+
+As an example, it should be ok to move string constants into a read-only
+area because we don't think there are any instances where Pine modifies
+a string constant. So you could pass a flag to your compiler telling it
+to do this. With the AIX a41 port, you could pass the extra build argument
+
+  EXTRACFLAGS=-qro
+
+to accomplish this.
+
+Another place where you might need to use EXTRACFLAGS is if the code that
+makes the NewMail-FIFO-Path work is causing problems. There is a define
+called LEAVEOUTFIFO which will do this. If the fifo code is causing trouble
+(for example, you don't have a mkfifo() function on your system) then
+adding
+
+  EXTRACFLAGS=-DLEAVEOUFIFO
+
+to the build command should fix it.
+
+DEBUG applies only to pico and pine sub-makes. It typically defaults to
+
+  DEBUG="-g -DDEBUG"
+
+which causes symbol table information and debugging code to be compiled
+into pine. That is what we use in our production versions of pine, because
+the symbol table information makes it easier to analyze core dumps, and the
+debugging code makes it possible to have Pine produce debug files. But if
+you wanted an optimized version that produced no debug files you could use
+the argument
+
+  DEBUG=-O
+
+Setting DEBUG to
+
+  DEBUG="-g -DDEBUG -DDEBUGJOURNAL"
+
+adds a DebugLevel subcommand to the Journal command. This allows you to look
+at all of the debugging output from within Pine without having to run Pine
+at a high debugging level. In other words, you have a chance to see the
+level 9 (or whatever) debugging without running pine -d9. This will only
+work on ports that have a debugjournal routine defined. This is normally
+in pine/osdep/debuging.tim. If your port uses pine/osdep/debuging instead
+of debuging.tim then DEBUGJOURNAL will fail to compile.
+
+The argument
+
+  EXTRASPECIALS=
+
+can be used to pass arguments to the c-client make which aren't provided
+for in this build script. For example, if you want to change the FRIZZLE
+parameter (a made-up argument name which the c-client make uses) you might 
+be tempted to type something like
+
+  build FRIZZLE=cruft target
+
+This does work with make on some platforms, but not on others.
+Some makes seem to pass the arguments on to sub-makes, others don't.
+If that doesn't work, then EXTRASPECIALS is for you.
+
+  build EXTRASPECIALS="FRIZZLE=cruft" target
+
+An additional warning. There are some arguments which are overridden
+unconditionally in the sub-makes. Hopefully none of the arguments mentioned
+above falls in this category, but it is something to look out for if you
+are having trouble.
+
+
+-----------------------------------------------------------------------
+RESULTING EXECUTABLES
+-----------------------------------------------------------------------
+
+The executables built by the build script are:
+
+ pine   The Pine mailer. Once compiled this should work just fine on
+        your system with no other files than this binary, and no
+        modifications to your system. Optionally you may create two
+        configuration files, /usr/local/lib/pine.conf and 
+        /usr/local/lib/pine.info. See the documentation for details.
+ 
+ pico   The standalone editor similar to the Pine message composer.
+        This is a very simple straight forward text editor.
+ 
+ pilot  The standalone file system navigator.
+ 
+ imapd  The IMAP daemon. If you want to run Pine in client/server mode,
+        this is the daemon to run on the server. Installing this
+        requires system privileges and modifications to /etc/services.
+        See doc/tech-notes for more details.
+ 
+ mtest  The test IMAP client, an absolutely minimal mail client, useful
+        for debugging.
+
+ rpload Utility for uploading a local pinerc or address book to an IMAP
+	server.
+
+ rpdump Utility for downloading a pinerc or address book to the
+	local machine.
+
+ mailutil 
+	Utility for performing various operations on mailboxes,
+	be they local or remote.
+
+In general you should be able to just copy the Pine and Pico binaries
+to the place you keep your other local binaries. /usr/local/bin is a
+likely place.
+  
+-----------------------------------------------------------------------
+END OF pine.tar.z README
+-----------------------------------------------------------------------

@@ -1,0 +1,62 @@
+.TH IPOPD 8 "May 18, 2004"
+.UC 5
+.SH NAME
+IPOPd \- Post Office Protocol server
+.SH SYNOPSIS
+.B /usr/etc/ipop2d
+.PP
+.B /usr/etc/ipop3d
+.SH DESCRIPTION
+.I ipop2d
+and
+.I ipop3d
+are servers which support the
+.B POP2
+and
+.B POP3
+remote mail access protocols respectively.
+.I ipop2d
+and
+.I ipop3d
+can also be used by
+.B POP2
+and
+.B POP3
+clients respecitively to access mailboxes on
+.B IMAP
+servers by specifying a login user name in the form <host>:<user>
+e.g.,
+.B SERVER.WASHINGTON.EDU:SMITH.
+.PP
+These daemons contain CRAM-MD5 and APOP support.  See the md5.txt
+documentation file for additional information.
+.PP
+.I ipop2d
+and
+.I ipop3d
+are invoked by the internet server (see
+.IR inetd (8)),
+normally for requests to connect to the
+.B POP
+port as indicated by the
+.I /etc/services
+file (see
+.IR services (5)).
+.SH "SEE ALSO"
+imapd(8)
+.SH BUGS
+The
+.B POP2
+and
+.B POP3
+protocols are intrinsically less flexible than
+.B IMAP
+and do not maintain `read' vs `unread' state on the server.  As a result,
+most
+.B POP
+based software transfers all the mail from the server to the client and
+deletes it from the server.  This necessarily locks the user into using only
+a single client.
+.PP
+.B POP3
+does not allow you to specify an alternate folder from the user's default.

@@ -1,0 +1,94 @@
+;
+; pico.def
+; Linker module definition file for pico editor interface
+;
+LIBRARY PICOLIB INITINSTANCE
+DESCRIPTION 'UW pico editor interface'
+DATA
+  MULTIPLE NONSHARED
+EXPORTS
+  ; pico interface
+  pico
+  pico_get
+  pico_give
+  pico_seek
+  pico_new_mail
+  pico_nbcolor
+  pico_rbcolor
+  pico_nfcolor
+  pico_rfcolor
+  pico_puts
+  pico_readc
+  pico_writec
+  pico_fncomplete
+  pico_file_browse
+  ; pc functions
+  ibmgetc
+  ibmbeep
+  ibmputc
+  ibmeeol
+  ibmeeop
+  ibmmove
+  ibmopen
+  ibmclose
+  ibmrev
+  vidUpdate
+  ; keyboard interface
+  kbd_ready
+  kbd_getkey
+  kbd_flush
+  ; mouse/key functions
+  clear_mfunc
+  register_mfunc
+  init_mouse
+  end_mouse
+  checkmouse
+  mouseon
+  mouseoff
+  register_key
+  mouse_get_last
+  ; utility functions
+  interrupt_ok
+  dont_interrupt
+  win_multiplex
+  enter_text_mode
+  exit_text_mode
+  normalize_cmd
+  rebindfunc
+  time_to_check
+  wquit
+  readin
+  update
+  edinit
+  mpresf
+  vtinit
+  movecursor
+  GetKey
+  mouse_in_content
+  mlerase
+  execute
+  makename
+  forwdel
+  forwline
+  emlwrite
+  bindtokey
+  quickexit
+  fixpath
+  set_browser_title
+  gethomedir
+  FileBrowse
+  ; exported global data
+  timeout
+  userfillcol
+  alt_speller
+  sup_keyhelp
+  term
+  peeol
+  gmode
+  curbp
+  curwp
+  Pmaster
+  lastflag
+  opertree
+  km_popped
+  os2_fflush

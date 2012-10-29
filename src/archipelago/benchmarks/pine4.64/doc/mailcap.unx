@@ -1,0 +1,131 @@
+# This is a sample mailcap file based on the sample mailcap file
+# contained in the metamail distribution (version 2.7) from Bellcore.
+# This sample is for a Unix system.  Look at the original sample from
+# the metamail distribution for more ideas.  This is a simplified version
+# to explain how it works with Pine.  As of October, 1994, metamail was
+# available via anonymous ftp from the host thumper.bellcore.com in the
+# file /pub/nsb/mm2.7.tar.Z.
+#
+# Metamail is:
+# Copyright (c) 1991 Bell Communications Research, Inc. (Bellcore)
+# 
+# Permission to use, copy, modify, and distribute this material 
+# for any purpose and without fee is hereby granted, provided 
+# that the above copyright notice and this permission notice 
+# appear in all copies, and that the name of Bellcore not be 
+# used in advertising or publicity pertaining to this 
+# material without the specific, prior written permission 
+# of an authorized representative of Bellcore.  BELLCORE 
+# MAKES NO REPRESENTATIONS ABOUT THE ACCURACY OR SUITABILITY 
+# OF THIS MATERIAL FOR ANY PURPOSE.  IT IS PROVIDED "AS IS", 
+# WITHOUT ANY EXPRESS OR IMPLIED WARRANTIES.
+#
+# The mailcap viewers are used by Pine when viewing pieces of a message
+# from within the attachment viewer.  That is, you type the "V" command
+# when already viewing a message.
+#
+# Pine expects the mailcap file to be in /etc/mailcap on Unix systems.
+# Users may override or extend this with a .mailcap file in their home
+# directory.  The contents of that will be combined with /etc/mailcap.
+# Users may override this standard Pine mailcap path
+# ("~/.mailcap:/etc/mailcap") by defining the environment variable
+# MAILCAPS to be equal to the colon separated path.
+#
+# On PC's (DOS or Windows) the file MAILCAP is searched for first in the
+# same directory where the user's PINERC is located and then in the same
+# directory where PINE.EXE is located.  The first would be the user's personal
+# override file and the second the common file used by all users.   Users
+# may override this location by defining the environment variable MAILCAPS
+# to be equal to the *semicolon* separated path.
+#
+# Pine does not use the "compose=" portion of mailcap entries (and doesn't
+# provide a general method of composing different types of messages).
+# Pine doesn't pay attention to "copiousoutput", but always pipes the output
+# to its standard scrolling text window if "needsterminal" is not set.
+# If "needsterminal" is set, then Pine sets the terminal or terminal window
+# back to the state it was in when Pine was started and lets the viewer run.
+# When the viewer finishes, Pine resets the terminal and redraws the screen.
+# If any user interaction with the viewer is required and the viewer runs
+# in the same terminal window as Pine, then "needsterminal" should be set.
+# The "test=" commands are used as defined in RFC1524, except that the
+# data file is not available to the test command.
+#
+# Since mailcap is only used from the attachment viewer, the message being
+# viewed will always be a single part, so "multipart" entries in mailcap have
+# no effect on Pine.  Type "text/plain" with "charset=usascii" or charset
+# matching the character-set variable are intercepted and displayed by Pine
+# in the normal way, not displayed by a mailcap viewer.  Besides those
+# exceptions just listed, all other types and subtypes are subject to
+# being displayed by a mailcap viewer.  If no match is found for types text
+# or message, Pine will display them in its usual way.
+#
+# As a special case, the "image-viewer" variable from the pinerc file is
+# supported as if an extra entry for type image/* came first in the
+# personal mailcap file.  That's for backwards compatibility.
+#
+#
+# The following line causes the xv program to be used to display all
+# image types if the DISPLAY variable is set (indicating the user is
+# using X).  (xv is written by John Bradley, bradley@cis.upenn.edu.  There
+# are also other X image viewer programs you could use, such as xloadimage.)
+image/*; xv %s; test=test -n "$DISPLAY"
+
+# The effect of the following is to send ALL audio subtypes to the 
+# showaudio program.  If possible, it would be desirable to also include
+# a test command that could decide whether or not the user could play audio.
+# That would be something like "test=can_do_audio %t".  (Showaudio is a shell
+# script included in the metamail distribution.)
+audio/*; showaudio %s
+
+# (Showexternal is a shell script included in the metamail distribution.)
+message/external-body; showexternal %s %{access-type} %{name} \
+	%{site} %{directory} %{mode} %{server}; \
+	needsterminal; composetyped = extcompose %s; \
+	description="A reference to data stored in an external location"
+
+# If you have an interactive Postscript interpreter, you should think carefully 
+# before replacing lpr with it in the following line, because PostScript
+# can be an enormous security hole.  It is RELATIVELY harmless
+# when sent to the printer...
+application/postscript ; lpr %s \; echo SENT FILE TO PRINTER ;\
+    description="A Postscript File";
+# unsafe alternative
+#application/postscript; gspreview %s ;  test=test -n "$DISPLAY"
+
+# The following gives rudimentary capability for receiving 
+# text mail in the ISO-8859-1 character set, which covers many European 
+# languages, and the ISO-8859-8 character set, which includes Hebrew
+# Note that the pipe to tr ensures that the "ISO" is case-insensitive.
+# (This is also from metamail.)
+#
+#### However, they are commented out here as they use a "test" method
+#### that can cause malicious data in the message's charset parameter
+#### to get executed.  A better alternative would be to replace the "test"
+#### command with a script that does a safer case-insensitive comparison.
+#text/plain; shownonascii iso-8859-8 %s; test=test "`echo %{charset} | tr '[A-Z]' '[a-z]'`" = iso-8859-8 -a -n "$DISPLAY" ; copiousoutput
+#text/plain; shownonascii iso-8859-8 %s | more ; test=test "`echo %{charset} | tr '[A-Z]' '[a-z]'`" = iso-8859-8; needsterminal
+#text/plain; shownonascii iso-8859-1 %s; test=test "`echo %{charset} | tr '[A-Z]' '[a-z]'`" = iso-8859-1 -a -n "$DISPLAY" ; copiousoutput
+#text/plain; shownonascii iso-8859-1 %s | more ; test=test "`echo %{charset} | tr '[A-Z]' '[a-z]'`" = iso-8859-1 ; needsterminal
+
+# The following displays Japanese text at sites where
+# the "kterm" program is installed:
+#text/plain; kterm -geometry +0+0 -e more %s /dev/null; \
+	test=test "`echo %{charset} | tr '[A-Z]' '[a-z]'`" = iso-2022-jp
+
+# This maps MPEG video data to the viewer 'mpeg_play'.
+# (Mpeg_play is part of the MPEG distribution from The Berkeley Plateau
+# Research Group and is available via anonymous ftp from toe.cs.berkeley.edu.)
+video/mpeg; mpeg_play %s ; test=test -n "$DISPLAY"
+
+# This maps all other types of video to the xanim viewer.  (Xanim is written
+# by Mark Podlipec, podlipec@wellfleet.com.)
+video/*; xanim %s ; test=test -n "$DISPLAY"
+
+# The xdvi program display TeX dvi files on an X server.
+application/x-dvi; xdvi %s ;  test=test -n "$DISPLAY"
+
+# Type octet-stream (binary) data can be displayed as a hex dump before
+# you decide whether or not you want to save it to a file.  (Hd is just
+# a standard hex dump program.  You could use "od" if you don't have an
+# "hd".  Naive users may find the output from this entry confusing.)
+application/octet-stream; hd; copiousoutput; description="Hex dump of data"

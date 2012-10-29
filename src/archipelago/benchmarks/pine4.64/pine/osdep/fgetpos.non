@@ -1,0 +1,22 @@
+/*----------------------------------------------------------------------
+   This is an emulation of the ANSI C fgetpos function.
+  ----*/
+fget_pos(stream, ptr)
+FILE *stream;
+fpos_t *ptr;
+{
+    *ptr = (fpos_t)ftell(stream);
+    return (*ptr == -1L ? -1 : 0);
+}
+
+/*----------------------------------------------------------------------
+   This is an emulation of the ANSI C fsetpos function.
+  ----*/
+fset_pos(stream, ptr)
+FILE *stream;
+fpos_t *ptr;
+{
+    return fseek(stream, *ptr, 0);
+}
+
+

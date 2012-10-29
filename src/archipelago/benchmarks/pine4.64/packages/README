@@ -1,0 +1,76 @@
+Last changed: 05 May 2004
+
+Building packages for Pine
+
+Files in this directory:
+  pine.spec - spec file for building RPMs on RedHat and Fedora
+  pine-mdk.spec - spec file for building RPMs on Mandrakelinux
+  debian/* - files containing instructions for building .deb files
+             for use with dpkg
+  README - this file.
+
+
+Most Linux distributions include a package management system to
+simplify the installing and uninstalling of programs.  There are two
+types of these systems commonly used; RPM is the system used by
+default on RedHat, Fedora, Mandrake, and SuSE, and dpkg is a system
+used by default on Debian and Mac OS X's fink.
+
+
+Why build your own packages?
+
+An RPM and a .deb file are already provided on the Pine Information
+Center (http://www.washington.edu/pine).  Additionally, many
+distributions roll their own pine packages.  The files provided here
+will allow people to build their own versions of the same package in
+the event that the provided packages fail to install due to
+compatibility issues, or in the case where one would want to have a
+modified pine package.  Unlike the pine packages provided by the
+various distributions, the packages built with these scripts are built
+directly from source, and will be released concurrently with every
+pine release.  It may be preferable to use the distributions' pine
+packages, as they do tend to add value which is intended to enhance
+their users' experience.
+
+
+Building RPMs:
+
+For building RPMs, first find the directory where RPMs are built on
+your system.  On Redhat 9, this directory is /usr/src/redhat.  You can
+change this directory by editing your .rpmmacros file.  Also, you need
+not be root to build an rpm.  To build the RPM, place the
+pine{version}.tar.gz file in the SOURCES directory, and place the
+pine.spec file contained here in the SPECS directory.  Then, you need
+only issue the command:
+
+rpmbuild -ba pine.spec
+
+The RPM file will be placed in the RPMS directory, and a source RPM
+will be placed in the SRPMS directory.  Installing an RPM is done with
+the command:
+
+rpm -ivh pine-{version}-1.i386.rpm
+
+
+Building .deb files:
+
+For building .deb files, dpkg, the program that builds them, looks in 
+the "debian" directory for various control files and build scripts.  This
+directory should reside in the top level of the pine directory, in the
+same directory as the "build" file.  This requires copying the
+debian directory contained here to the next level up, which can be
+done via the command:
+
+cp -pr debian ../
+
+Then, from pine's root directory, you would issue the command:
+
+dpkg-buildpackage
+
+Note that you must be root in order to build .deb packages.  After
+running the above command, the .deb will have been built in the
+directory above the pine root directory, and it would be of the form
+pine_{version}_i386.deb.  You can then install this package by
+running the command:
+
+dpkg -i pine_{version}_i386.deb

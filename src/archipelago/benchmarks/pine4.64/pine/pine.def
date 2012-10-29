@@ -1,0 +1,834 @@
+;
+; Module definition file for pcpine 3.xx
+;
+; mikes, 920822
+;
+;
+; Here we're just specifying obvious functions to place in 
+; overlays:
+;
+NAME pine
+
+;
+; arg parsing...
+;
+FUNCTIONS:1 _pine_args _decode_sort _args_help _dump_new_pinerc
+            _pinerc_cmdline_opt
+
+;
+; main menu functions...
+;
+FUNCTIONS:2 _main_menu_screen _show_main_screen _do_menu _quit_screen
+            _goodnight_gracey _free_pinerc_lines _review_messages
+
+;
+; mail index functions
+;
+FUNCTIONS:3 _mail_index_screen _index_lister
+            _index_scroll_down _index_scroll_up
+FUNCTIONS:4 _do_index_border _redraw_index_body _top_ent_calc 
+            _update_index _init_index_format
+            _parse_index_format _check_need_format_setup
+            _set_need_format_setup _clear_need_format_setup
+FUNCTIONS:5 _build_header_line _clear_index_cache _clear_index_cache_ent
+            _get_index_cache _i_cache_size _i_cache_hit _icread _icwrite
+            _i_cache_width _build_header_cache _flush_index_cache
+            _status_string _line_hash _set_index_addr
+            _setup_header_widths
+FUNCTIONS:6 _compare_subjects
+            _second_subject_sort _seconds_since_epoch
+            _compare_to _compare_from
+            _compare_cc _compare_message_dates _convert_to_gmt _days_in_month
+            _compare_size _sort_current_folder _sort_name _compare_arrival
+            _compare_dates _compare_subject_2
+FUNCTIONS:7 _get_sub _subject_cache_add _subject_cache_slot
+            _clear_subject_cache _init_subject_cache
+            _subject_cache_ent
+
+;
+; main menu functions...
+;
+FUNCTIONS:8 _mail_view_screen _decode_text
+FUNCTIONS:9 _format_message _zero_atmts 
+            _find_field _xmail_fetchheader_lines _xmail_fetchheader_lines_not
+FUNCTIONS:10 _describe_mime _format_mime_size _mime_show _type_desc _part_desc
+FUNCTIONS:11 _body_type_names  _format_envelope 
+             _format_addr_string _format_env_hdr _format_header_text
+             _format_newsgroup_string _format_raw_hdr_string
+             _format_raw_header _delineate_this_header
+
+FUNCTIONS:12 _display_parameters
+FUNCTIONS:13 _scrolltool _set_scroll_text _redraw_scroll_text 
+	     _scroll_scroll_text _BeginScroll _update_titlebar_lpercent
+             _zero_scroll_text _update_titlebar_percent _forward_text
+             _update_scroll_titlebar
+FUNCTIONS:14 _format_scroll_text
+            
+FUNCTIONS:15 _ScrollFile _make_file_index
+             _search_text _search_scroll_text
+
+;
+; Various command functions
+;
+FUNCTIONS:16 _process_cmd _cmd_flag _cmd_delete _cmd_undelete _cmd_flag_prompt
+             _build_sequence _pseudo_selected _any_messages _can_set_flag
+             _dec_lflagged _folder_has_recent _next_folder _restore_selected
+             _cmd_cancelled _currentf_sequence _selected_sequence
+             _zoom_index _unzoom_index
+FUNCTIONS:17 _cmd_save _save _default_save_context _cmd_export
+             _create_for_save _context_copy _flag_string
+             _mail_copy _map_copy _dawz_copy _dawz_copy_messages
+             _nntp_copy _bezrkdos_copy_messages _bezrkdos_copy
+             _tenexdos_copy_messages _tenexdos_copy
+             _dummy_copy _get_uname _bezerk_delimiter
+FUNCTIONS:18 _aggregate_select _select_number _select_text _select_flagged
+             _select_date _apply_command _individual_select
+FUNCTIONS:19 _cmd_take_addr _eliminate_dups_and_us _dup_addrs
+             _takeaddr_screen _process_special_abook_attachments
+             _ta_take_marked_addrs _getaltcharset _detach_abook_att
+             _grab_addrs_from_body _get_line_of_message
+             _ta_take_single_addr _ta_unmark_all _ta_mark_all
+             _fill_in_ta _copyaddr _copyaddrlist
+             _first_taline _next_taline
+             _new_taline _free_taline
+             _is_talist_of_one
+             _list_of_checked _update_takeaddr_screen
+             _edit_nickname _nickname_check
+             _takeaddr_screen_redrawer_list _takeaddr_screen_redrawer_single
+             _take_to_addrbooks _take_to_addrbooks_frontend
+             _cancel_warning _first_sel_taline _pre_sel_taline _pre_taline
+             _whereis_taline _next_sel_taline
+FUNCTIONS:20 _jump_to
+FUNCTIONS:21 _broach_folder _folder_complete _do_broach_folder _visit_folder
+             _msgno_exclude _msgno_include
+FUNCTIONS:22 _expunge_and_close _move_read_incoming _move_read_msgs
+             _mail_close _map_close _dawz_close
+             _nntp_close _bezrkdos_close _tenexdos_close _dummy_close
+
+FUNCTIONS:23 _search_headers
+FUNCTIONS:24 _cmd_print
+FUNCTIONS:25 _select_sort
+; attachment screen code
+FUNCTIONS:26 _attachment_screen _attachment_screen_updater _first_attline
+             _new_attline _free_attline _attachment_screen_redrawer
+             _save_attachment _display_attachment _run_viewer _exec_mailcap_cmd
+             _display_text_att _display_msg_att
+
+;
+; folder management functions...
+;
+FUNCTIONS:27 _folder_screen _folders_for_fcc _folder_lister
+             _redraw_folder_screen _display_folder _paint_folder_name
+             _off_folder_display _create_folder_display
+             _folder_scroll_down _folder_scroll_up
+FUNCTIONS:29 _find_folders_in_context _free_folders_in_context 
+             _context_mailbox _mm_mailbox _context_bboard _mm_bboard
+             _context_fqn_to_an _folder_delete _folder_insert
+             _folder_insert_index _folder_entry _folder_is_nick
+             _folder_total _free_folder_list _folder_index 
+             _free_folders _free_context _sort_folder_list
+             _folder_exists _folder_list_entry _new_folder_list
+FUNCTIONS:30 _compare_folders _compare_sizes 
+             _compare_names _group_subscription
+             _search_folder_list
+            
+FUNCTIONS:31 _add_new_folder _context_create _mail_create _map_create
+             _dawz_create _nntp_create _bezrkdos_create 
+             _tenexdos_create _dummy_create
+FUNCTIONS:32 _rename_folder _context_rename _mail_rename _map_rename 
+             _dawz_rename _nntp_rename 
+             _bezrkdos_rename _tenexdos_rename _dummy_rename
+FUNCTIONS:33 _delete_folder _context_delete _mail_delete _map_delete
+             _dawz_delete _nntp_delete _bezrkdos_delete
+             _tenexdos_delete _dummy_delete
+FUNCTIONS:34 _print_folders
+FUNCTIONS:35 _search_folders
+
+;
+; address book management functions...
+; !!!! separate view from lookup text !!!!
+FUNCTIONS:36 _dlc_mgr _dlc_next _dlc_prev _dlcs_from_same_abe
+             _done_with_dlc_cache _flush_dlc_from_cache _funny_compare_dlcs
+             _get_global_bottom_dlc _get_global_top_dlc _initialize_dlc_cache
+             _matching_dlcs _warp_to_beginning _warp_to_dlc _warp_to_end
+             _listmem _free_cache_array
+             _get_bottom_dl_of_adrbk _get_first_dl_of_adrbk
+FUNCTIONS:37 _addr_book _display_book
+             _redraw_addr_screen _readonly_warning
+             _any_addrs_avail _clickable_warning
+             _calculate_field_widths _cur_addr_book _get_dlc _dlc_from_listmem
+             _paint_line _entry_is_clickable _just_update_lookup_file
+             _dump_a_dlc_to_debug _dump_some_debugging
+             _parse_format _empty_warning
+             _prev_selectable_line _next_selectable_line
+FUNCTIONS:38 _adrbk_count _end_adrbks
+             _edit_entry _encode_fullname_of_addrstring _free_list
+             _first_line _pico_cancelexit_for_adrbk
+             _pico_cancel_for_adrbk_edit _pico_cancel_for_adrbk_take
+             _pico_sendexit_for_adrbk
+             _verify_addr _verify_nick
+FUNCTIONS:39 _expand_address _addr_list_string _addr_string _build_address
+             _build_addr_lcc _build_ondisk_hash_from_abook
+             _address_is_us _build_address_internal _our_build_address
+             _est_size
+FUNCTIONS:40 _init_abook _adrbk_open _adrbk_close _get_timestamp_from_disk
+             _adrbk_partial_close _init_ab_if_needed _init_addrbooks
+             _first_selectable_line
+             _line_is_selectable
+             _skip_to_next_addr _skip_to_next_nickname _valid_hfile
+             _ok_to_blast_it
+             _fp_file_mtime _fp_file_size
+FUNCTIONS:41 _adrbk_write _write_hash_header _write_single_abook_entry
+             _write_hash_table _write_hash_trailer _hashtable_size
+             _write_single_entryref _init_adrhash_array
+             _bld_hash_from_ondisk_hash _file_attrib_copy
+             _fix_sort_rule_in_hash _percent_abook_saved
+FUNCTIONS:42 _adrbk_listadd _adrbk_listdel _adrbk_delete _adrbk_add
+             _re_sort_particular_entryref
+FUNCTIONS:43 _adrbk_formatname _adrbk_newentry _adrbk_clearrefs
+FUNCTIONS:44 _ab_compose_to_addr _ab_goto_folder _ab_hash _ab_print
+             _ab_resize _ab_uid _ab_whereis _add_abook_entry _addr_to_abe
+             _addrbook_reset _adrbk_access _adrbk_get_ae _adrbk_get_entryref
+             _get_entryref_line_from_disk
+             _init_ae_entry _length_of_entry _parse_addrlist
+             _copy_ae
+FUNCTIONS:45 _adrbk_lookup_by_addr _completely_done_with_adrbks
+             _adrbk_lookup_by_nick _adrbk_lookup_with_opens_by_nick
+             _adrbk_nlistadd _adrbk_num_from_lineno
+             _adrbk_set_nominal_cachesize
+FUNCTIONS:46 _cmp_addr _sort_addr_list
+FUNCTIONS:47 _adrbk_sort _cmp_cntr_by_full _cmp_cntr_by_full_lists_last
+             _cmp_cntr_by_nick _cmp_cntr_by_nick_lists_last
+             _get_sort_rule_from_disk
+             _adrbk_is_in_sort_order
+             _adrbk_get_nominal_cachesize _set_inserted_entryref
+            
+FUNCTIONS:48 _addr_book_delete
+             _find_in_book _search_book
+             _addr_lookup
+             _fill_in_dl_field
+             _search_in_one_line
+FUNCTIONS:49 _set_moved_entryref _init_entryref_cache _clear_entryref_cache
+             _clearrefs_in_cached_aes
+             _cmp_ae_by_full _cmp_ae_by_full_lists_last _cmp_ae_by_nick
+             _cmp_ae_by_nick_lists_last
+             _ae _free_ae _free_ab_adrhash _free_ab_entryref
+             _dlist
+FUNCTIONS:50 _address_is_same 
+             _check_for_addrbook _use_this_addrbook _setup_for_addrbook_add
+
+;
+; help functions...
+;
+FUNCTIONS:51 _helper _get_help_text _free_help_text _copy_fix_keys
+             _gripe _gripe_tool _dump_config _dump_pine_struct
+             _att_cur_drawer _one_try_want_to
+FUNCTIONS:52 _print_all_help
+
+;
+; composer functions...
+;
+FUNCTIONS:53 _InitMailHeader _InitEntryText _sgetline
+             _ArrangeHeader _edinit _func_init _breplace
+             _first_hline _next_hline _prev_hline _first_requested_hline
+FUNCTIONS:54 _ResizeHeader _HeaderOffset _HeaderFocus
+FUNCTIONS:55 _AskAttach _SyncAttach _ParseAttach _NewAttach _ZotAttach
+             _intag _fixpath _AppendAttachment _AttachCancel
+             _AttachUpload
+;FUNCTIONS:55 _HeaderEditor _LineEdit
+FUNCTIONS:56 _HeaderEditor _LineEdit _call_builder _valid_subject
+             _FormatLines _physical_line
+             _PaintHeader _PaintBody _ShowPrompt
+             _ToggleHeader _HeaderLen _break_point
+             _UpdateHeader _header_downline _header_upline
+             _NewTop _display_delimiter _InvertPrompt _partial_entries
+             _HeaderEditorWork _picosigs
+;FUNCTIONS:56 _LineEdit _pinsert
+;FUNCTIONS:57 _FormatLines _PaintHeader _PaintBody _ShowPrompt
+;             _ToggleHeader _HeaderLen _break_point
+;FUNCTIONS:58 _UpdateHeader
+;	     _NewTop _display_delimiter _InvertPrompt _partial_entries
+FUNCTIONS:58 _ComposerHelp _strend _strqchr _KillHeaderLine
+             _SaveHeaderLines _hldelete _zotcomma
+FUNCTIONS:59 _packbuf _packheader _zotheader _zotentry _zotedit
+             _zotdisplay _any_header_changes
+             _quickexit _wquit _suspend_composer _abort_composer
+             _AttachError _swapimark
+
+;
+; searching functions
+;
+FUNCTIONS:60 _forwsearch _readpattern _forscan _expandp
+
+;
+; browser functions
+;
+FUNCTIONS:61 _FileBrowse _file_lister _pico_file_browse
+FUNCTIONS:62 _PaintCell _PaintBrowser _BrowserKeys
+             _PlaceCell _layoutcells _BrowserAnchor
+             _ClearBrowserScreen
+FUNCTIONS:63 _FindCell _sisin _compresspath
+FUNCTIONS:64 _getfcells _zotfcells _zotmaster _ResizeBrowser _getfnames
+             _homeless _sstrcasecmp _percdircells
+
+;
+; file i/o functions
+;
+FUNCTIONS:65 _fileread _insfile _readin _ifile _pico_fncomplete
+             _upload_msg_to_pico
+FUNCTIONS:66 _filewrite _filesave _writeout _writetmp
+
+;
+; composer display functions
+;
+FUNCTIONS:67 _vtinit _vttidy _vtmove _vtputc _vtpute _movecursor
+FUNCTIONS:68 _execute _update _updateline _updext _modeline _showCompTitle
+             _entry_line
+FUNCTIONS:69 _mlerase _mlyesno _mlreply _mlreplyd _emlwrite _mlwrite 
+             _ctrlg _dumblroot _dumbroot
+FUNCTIONS:70 _mlputi _mlputli _resize_pico _wkeyhelp _wstripe
+             _worthit _doton _chkptinit
+
+;
+; c-client functions
+;
+FUNCTIONS:71 _context_open _mail_open _map_open _dawz_open
+             _nntp_mopen _nntp_open
+             _bezrkdos_open _tenexdos_open _dummy_open
+             _mm_login _imap_user _imap_get_passwd _imap_set_passwd
+             _imap_flush_passwd_cache _xlate_in _xlate_out _passfile_name
+             _read_passfile _write_passfile _get_passfile_passwd
+             _set_passfile_passwd _cached_user_name
+             _mail_link
+FUNCTIONS:72 _mail_fetchfast _map_fetchfast _dawz_fetchfast _nntp_fetchfast
+             _bezrkdos_fetchfast _tenexdos_fetchfast _dummy_fetchfast
+             _mail_fetchstructure _map_fetchstructure _dawz_fetchstructure
+             _nntp_fetchstructure
+             _bezrkdos_fetchstructure
+             _tenexdos_fetchstructure _tenexdos_822size
+             _dummy_fetchstructure 
+FUNCTIONS:73 _mail_gc _map_gc _dawz_gc _nntp_gc _map_gc_body
+             _bezrkdos_gc _tenexdos_gc _dummy_gc
+             _mail_parameters _map_parameters _dawz_parameters _nntp_parameters
+             _bezrkdos_parameters _tenexdos_parameters _dummy_parameters
+FUNCTIONS:74 _mail_fetchbody _map_fetchbody _dawz_fetchbody _nntp_fetchbody
+             _tenexdos_fetchbody _bezrkdos_fetchbody  _dummy_fetchbody
+             _mail_fetchheader _map_fetchheader _dawz_fetchheader
+             _nntp_fetchheader _nntp_fetchheader_work
+             _bezrkdos_fetchheader _tenexdos_fetchheader
+             _dummy_fetchheader _dawz_header
+             _mail_fetchtext _map_fetchtext _dawz_fetchtext
+             _nntp_fetchtext _nntp_fetchtext_work _nntp_read _nntp_fopen
+             _bezrkdos_fetchtext _tenexdos_fetchtext _dummy_fetchtext
+             
+FUNCTIONS:75 _mail_search _map_search _dawz_search _nntp_search
+             _bezrkdos_search _tenexdos_search _dummy_search
+             _count_flagged _first_sorted_flagged _next_sorted_flagged
+             _get_lflag _set_lflag _any_lflagged
+             _mail_searched _mail_sequence
+FUNCTIONS:76 _mail_expunge _map_expunge _dawz_expunge _nntp_expunge 
+             _bezrkdos_expunge _tenexdos_expunge _dummy_expunge
+
+             _context_append_full _mail_append_full
+             _context_append _mail_append _map_append _dawz_append _nntp_append
+             _tenexdos_append _bezrkdos_append
+             _bezrkdos_append_putc _dummy_append
+             _mail_move _map_move _dawz_move _nntp_move _bezrkdos_move
+             _tenexdos_move _dummy_move
+             _dawz_string_init _dawz_string_next _dawz_string_setpos
+
+FUNCTIONS:77 _expand_foldername _fnexpand _mime_can_display
+             _mailcap_can_display _mailcap_build_command
+             _exec_mailcap_test_cmd
+
+FUNCTIONS:78 _init_vars _init_init_vars _expand_variables _init_username
+             _queue_init_errors
+             _init_hostname _read_pinerc _write_pinerc _process_feature_list
+             _process_init_cmds _parse_list _set_variable_list
+             _read_xtable _dos_codepage _dos_version
+             _set_current_val _set_feature_list_current_val
+             _set_old_growth_bits _test_old_growth_bits _get_user_info
+
+FUNCTIONS:79 _dump_global_conf _set_variable _init_mail_dir _is_writable_dir
+FUNCTIONS:80 _compare_sm_files _context_string
+             _expire_sent_mail _prune_folders
+             _delete_old_mail _get_mail_list
+
+; generic filter routines.  first overlay maintenance code
+FUNCTIONS:81 _gf_filter_init _gf_link_filter _so_get _so_give
+             _create_tmpfile _so_seek _so_release _so_reaquire _so_text
+             _gf_set_so_readc _gf_set_so_writec _gf_set_readc _gf_set_writec
+             _gf_set_terminal _fget_pos _gf_terminal
+             
+; second overlay contains all the action while pipe running
+FUNCTIONS:82 _detach _gf_error _detach_writec
+             _gf_freadc _gf_fwritec _gf_so_readc _gf_so_writec _gf_sreadc
+             _gf_swritec
+             _gf_8bit_qp
+             _gf_b64_binary _gf_binary_b64 _gf_enriched2plain
+             _gf_enriched2plain_opt _gf_local_nvtnl _gf_nvtnl_local
+             _gf_prefix _gf_prefix_opt _gf_qp_8bit
+             _gf_rich2plain _gf_rich2plain_opt _gf_translate _gf_translate_opt
+             _gf_wrap _gf_wrap_filter_opt _gf_busy
+
+FUNCTIONS:83 _setup_mini_menu _do_setup_task _lock_keyboard
+             _change_passwd _signature_edit
+             _redraw_kl_body _redraw_klocked_body _draw_klocked_body
+             
+
+;
+; string functions
+;
+FUNCTIONS:84 _rplstr _sqzspaces _strucmp _struncmp _srchstr _strindex
+             _strrindex _sstrcpy _month_abbrev
+             _month_num _sinserts _removing_leading_white_space
+             _removing_trailing_white_space _last_cmpnt
+FUNCTIONS:85 _parse_date
+;FUNCTIONS:85 _rplstr _sqzspaces _strucmp _struncmp _srchstr _strindex
+;FUNCTIONS:86 _strrindex _sstrcpy _month_abbrev
+;             _month_num
+FUNCTIONS:86 _pretty_command _comatose _byte_string 
+             _enth_string _repeat_char _long2string _int2string _prettysz
+
+;
+; imap functions
+;
+FUNCTIONS:87 _mm_log _mm_dlog _mm_notify _mm_exists _mm_expunged
+FUNCTIONS:88 _mm_diskerror
+
+;
+; status functions
+;
+FUNCTIONS:89 _display_message _messages_queued _output_message _Centerline
+             _pause_for_current_message _delay_cmd_cue
+             _status_message_write _messages_in_queue
+FUNCTIONS:90 _d_q_status_message _q_status_message _q_status_message1
+             _q_status_message2 _q_status_message3 _q_status_message4
+             _q_status_message7 _q_status_message8
+             _flush_status_messages _mark_status_dirty
+             _pretty_fn
+FUNCTIONS:91 _want_to _radio_buttons _radio_help _draw_radio_prompt
+             _flush_input
+
+FUNCTIONS:92 _dawz_search_all _dawz_search_answered _dawz_search_bcc
+             _dawz_search_before _dawz_search_body _dawz_search_cc
+             _dawz_search_date _dawz_search_deleted _dawz_search_flag
+             _dawz_search_flagged _dawz_search_from _dawz_search_keyword
+             _bezrkdos_search_all _bezrkdos_search_answered
+             _bezrkdos_search_bcc _bezrkdos_search_before _bezrkdos_search_body
+             _bezrkdos_search_cc _bezrkdos_search_date _bezrkdos_search_deleted
+             _bezrkdos_search_flag _bezrkdos_search_flagged
+             _bezrkdos_search_from _bezrkdos_search_keyword
+             _bezrkdos_search_new _bezrkdos_search_old _bezrkdos_search_on
+             _bezrkdos_search_recent _bezrkdos_search_seen
+             _bezrkdos_search_since _bezrkdos_search_string
+             _bezrkdos_search_subject _bezrkdos_search_text
+             _bezrkdos_search_to _bezrkdos_search_unanswered
+             _bezrkdos_search_undeleted _bezrkdos_search_unflagged
+             _bezrkdos_search_unkeyword _bezrkdos_search_unseen
+FUNCTIONS:93 _dawz_search_new _dawz_search_old _dawz_search_on
+             _dawz_search_recent _dawz_search_seen _dawz_search_since
+             _dawz_search_string _dawz_search_subject _dawz_search_text
+             _dawz_search_to _dawz_search_unanswered _dawz_search_undeleted
+             _dawz_search_unflagged _dawz_search_unkeyword _dawz_search_unseen
+             _tenexdos_search_all _tenexdos_search_answered
+             _tenexdos_search_bcc _tenexdos_search_before _tenexdos_search_body
+             _tenexdos_search_cc _tenexdos_search_date _tenexdos_search_deleted
+             _tenexdos_search_flag _tenexdos_search_flagged
+             _tenexdos_search_from _tenexdos_search_keyword
+             _tenexdos_search_new _tenexdos_search_old _tenexdos_search_on
+             _tenexdos_search_recent _tenexdos_search_seen
+             _tenexdos_search_since _tenexdos_search_string
+             _tenexdos_search_subject _tenexdos_search_text _tenexdos_search_to
+             _tenexdos_search_unanswered _tenexdos_search_undeleted
+             _tenexdos_search_unflagged _tenexdos_search_unkeyword
+             _tenexdos_search_unseen
+
+;
+; send related functions
+;
+FUNCTIONS:94 _pine_send _call_mailer _check_addresses _outgoing2strings
+             _strings2outgoing _resolve_encoded_entries _create_message_body
+             _tidy_smtp_mess _pine_simple_send _mime_stats _mime_recur
+             _encode_bits _set_body_size _troll_8bit
+             _update_message_id _write_fcc _open_fcc
+             _post_handoff _generate_message_id _nntp_mail
+             _free_customs _free_attachment_list _generate_from
+             _view_as_rich _is_a_forbidden_hdr _set_last_fcc
+             _set_default_hdrval
+FUNCTIONS:95 _compose_screen _compose_mail _redraft _simple_header_parse
+             _customized_hdr_setup _get_dflt_custom_hdrs _is_a_std_hdr
+             _count_custom_hdrs _redraft_cleanup
+FUNCTIONS:96 _cmd_forward _forward _get_signature _signature_path
+             _cmd_reply _reply _copy_parameters
+             _fetch_contents _partno
+             _get_body_part_text _copy_body _copy_envelope
+             _reply_delimiter _forward_delimiter
+             _week_abbrev _bounce_mask_header
+             _cmd_bounce _bounce _generate_in_reply_to
+             _eliminate_dups_and_maybe_us _eliminate_dups_but_not_us
+             _first_addr 
+             _reply_forward_header _reply_poster_followup
+FUNCTIONS:97 _reply_quote_str _removing_quotes
+             _reply_subject _forward_subject _sqznewlines
+             _reply_build_refs _reply_cp_addr _reply_fish_personal
+
+;
+; new mail notification
+;
+FUNCTIONS:98 _new_mail _new_mail_mess _check_point _reset_check_point
+             _zero_new_mail_count _streams_died _pico_new_mail
+             _time_to_check _mail_ping _dawz_ping _map_ping _nntp_ping
+             _bezrkdos_ping _tenexdos_ping _dummy_ping
+             _mail_check _dawz_check _map_check _nntp_check
+             _bezrkdos_check _tenexdos_check _dummy_check _dawz_parse
+             _fixup_flags
+
+;
+; OS dependent stuff
+;
+FUNCTIONS:99 _create_mail_dir
+              _rename_file _build_path _can_access
+              _filter_filename
+;FUNCTIONS:100
+FUNCTIONS:101 _read_file
+FUNCTIONS:102 _dos_gets
+FUNCTIONS:103 _error_description
+
+;
+; Printer related stuff
+;
+FUNCTIONS:104 _have_printer _printer_ready _p_printer_error _send_printer
+              _open_printer _close_printer _print_char _print_text
+              _print_text1 _print_text2 _print_text3
+
+;
+; Titlebar and Keymenu routines
+;
+FUNCTIONS:105 _format_titlebar _redraw_titlebar _set_titlebar
+              _update_titlebar_message _update_titlebar_status
+              _update_titlebar_page _push_titlebar_state _pop_titlebar_state
+              _savebits _equalbits
+FUNCTIONS:106 _output_keymenu _blank_keymenu _format_keymenu
+              _redraw_keymenu _draw_keymenu
+
+;
+; MORE composer functions
+;
+FUNCTIONS:107 _gotobol _gotoeol _backchar _forwchar _gotobob _gotoeob
+              _forwline _backline _getgoal 
+FUNCTIONS:108 _forwpage _backpage _setmark _swapmark
+FUNCTIONS:109 _lalloc _lfree _lchange _insspace _linsert _lnewline _geninsert
+              _ldelete _ldelnewline
+FUNCTIONS:110 _kdelete _kinsert _kremove _yank _killtext
+              _fdelete _finsert _fremove
+              _pkbufdel _pkbufinsert _pkbufremove _pkchunkdel
+              _ksize
+FUNCTIONS:111 _pico_help _whelp _wscrollw _rebindfunc
+FUNCTIONS:112 _showcpos _getccol _tab _newline _forwdel
+              _backdel _getregion _markregion _killregion _copyregion
+FUNCTIONS:113 _wrapword _forwword _backword _inword
+              _fillpara _gotobop _gotoeop
+
+;
+; Yet more pico related functions
+;
+FUNCTIONS:114 _anycb _bfind _bclear
+FUNCTIONS:115 _copy _makename
+FUNCTIONS:116 _ffropen _ffputline _ffgetline _ffwopen _ffclose
+
+;
+; C-Client SMTP related functions
+;
+FUNCTIONS:117 _smtp_open _smtp_close _smtp_mail _smtp_rcpt _smtp_send
+              _smtp_reply _smtp_fake _smtp_soutr _pine_rfc822_header
+              _pine_address_line _prune_personal _pine_header_line
+              _pine_encode_body _pine_rfc822_output _smtp_command
+              _smtp_greeting _bitstrip
+              _l_flush_net _l_putc  _pine_rfc822_output_body
+              _pine_write_body_header _pine_free_body _pine_free_body_data
+              _pine_free_body_part _smtp_nodebug _smtp_debug
+              _pine_pipe_close _pine_pipe_getline _pine_pipe_soutr
+              _pine_smtp_verbose _pine_smtp_verbose_out
+              _post_rfc822_output
+
+FUNCTIONS:118 _rfc822_output _rfc822_output_body
+;             _rfc822_header _rfc822_header_line _rfc822_address_line
+              _rfc822_header_line _rfc822_address_line
+              _rfc822_8bit _rfc822_binary 
+             
+
+FUNCTIONS:119 _context_find _mail_find _map_find _dawz_find _nntp_find
+              _bezrkdos_find _tenexdos_find _dummy_find
+              _context_find_all _mail_find_all _map_find_all _dawz_find_all
+              _nntp_find_all _tenexdos_find_all
+              _bezrkdos_find_all _dummy_find_all
+              _context_find_bboards _mail_find_bboards _map_find_bboards 
+              _dawz_find_bboards _nntp_find_bboards
+              _pmatch
+              _bezrkdos_find_bboards _dummy_find_bboards
+              _context_find_all_bboard _dummy_find_all_bboards
+              _mail_find_all_bboard _map_find_all_bboards 
+              _tenexdos_find_bboards _dummy_badname
+              _nntp_find_all_bboards
+
+FUNCTIONS:120 _sm_subscribe _sm_unsubscribe _sm_read
+              _context_subscribe _mail_subscribe _map_subscribe
+              _dawz_subscribe _nntp_subscribe
+              _bezrkdos_subscribe _tenexdos_subscribe _dummy_subscribe
+              _context_unsubscribe _mail_unsubscribe _map_unsubscribe
+              _dawz_unsubscribe _nntp_unsubscribe
+              _bezrkdos_unsubscribe _tenexdos_unsubscribe _dummy_unsubscribe
+              _mail_subscribe_bboard _map_subscribe_bboard
+              _dawz_subscribe_bboard _nntp_subscribe_bboard 
+              _bezrkdos_subscribe_bboard _dummy_subscribe_bboard
+              _mail_unsubscribe_bboard _map_unsubscribe_bboard
+              _nntp_unsubscribe_bboard
+              _tenexdos_subscribe_bboard _dummy_unsubscribe_bboard
+             
+              _news_group_selector _news_build _get_post_list
+
+FUNCTIONS:121 _context_isambig _context_digest _context_apply
+              _context_same_stream _same_stream _canonical_name
+              _context_same_driver
+
+FUNCTIONS:122 _ttopen _ttclose _bktoshell _ttflush _init_mouse
+              _ibmopen _ibmclose _enter_text_mode _exit_text_mode
+              _end_keyboard _end_signals _end_screen _end_tty_driver
+              _alt_editor _end_keymenu _end_mouse _end_titlebar
+
+
+FUNCTIONS:123 _GetKey _ttgetc _checkmouse _ctrlkey _specialkey
+              _fallowc _normalize_cmd _mouse_get_last
+
+FUNCTIONS:124 _register_mfunc _clear_mfunc _register_key
+
+FUNCTIONS:125 _nntp_search_all _nntp_search_answered _nntp_search_deleted
+              _nntp_search_flagged _nntp_search_keyword _nntp_search_new
+              _nntp_search_old _nntp_search_recent _nntp_search_seen
+              _nntp_search_unanswered _nntp_search_undeleted 
+              _nntp_search_unflagged _nntp_search_unkeyword _nntp_search_unseen
+              _nntp_search_before _nntp_search_on _nntp_search_since 
+              _nntp_msgdate _nntp_search_body _nntp_search_subject
+              _nntp_search_text _nntp_search_bcc _nntp_search_cc
+              _nntp_search_from _nntp_search_to _nntp_search_date
+              _nntp_search_flag _nntp_search_string
+
+FUNCTIONS:126 _mail_fetchflags _dawz_fetchflags _nntp_fetchflags
+              _tenexdos_fetchflags _dummy_fetchflags _bezrkdos_fetchflags
+              _map_fetchflags _mail_fetchfrom
+              _mail_fetchsubject _mail_free_body _mail_free_body_data
+              _mail_free_body_part _mail_free_address
+              _mail_free_envelope
+
+FUNCTIONS:127 _conf_scroll_screen _config_scroll_up  _config_scroll_down
+
+FUNCTIONS:128 _init_screen _init_signals _init_save_defaults _init_keyboard
+              _init_tty_driver _init_folders _new_context
+              _config_screen _set_ftype
+              _get_pair _exclude_config_var
+              _enhanced_keybrd _strclean _init_inbox_mapping
+              _fix_side_effects
+              _config_exit_cmd _screen_exit_cmd
+              
+FUNCTIONS:129 _rfc822_header _rfc822_write_address _rfc822_address _rfc822_cat
+              _rfc822_write_body_header _rfc822_default_subtype 
+              _rfc822_parse_msg _rfc822_parse_content
+              _rfc822_parse_content_header _rfc822_parse_adrlist
+              _rfc822_parse_address _rfc822_parse_routeaddr 
+              _rfc822_parse_addrspec _rfc822_parse_phrase _rfc822_parse_word
+              _rfc822_cpy _rfc822_quote _rfc822_cpy_adr _rfc822_skipws
+              _rfc822_date
+
+FUNCTIONS:130 _imap_expunged _imap_fake _imap_host _imap_OK _imap_parse_address
+              _imap_parse_adrlist _imap_parse_body _imap_parse_body_structure
+              _imap_parse_data _imap_parse_envelope _imap_parse_flaglst
+              _imap_parse_flags _imap_parse_number _imap_parse_prop
+              _imap_parse_reply _imap_parse_string _imap_parse_unsolicited
+              _imap_parse_user_flag _imap_reply _imap_searched _imap_send
+             
+
+FUNCTIONS:131 _dcreadb _dcwriteb _dchit _dcget _dos_cache _dumpmetacache
+
+FUNCTIONS:132 _read_command _read_char _extended_code _optionally_enter
+              _line_paint _validatekeys _bogus_command
+              _process_config_input
+FUNCTIONS:133 _mail_string_init _mail_string_next _mail_string_setpos
+              _strcrlfcpy _strcrlflen _warn_other_cmds
+
+FUNCTIONS:134 _mail_valid _mail_valid_net _mail_valid_net_parse _dawz_valid
+              _dawz_isvalid _bezrkdos_isvalid _tenexdos_isvalid
+              _dos_valid_from _map_valid _nntp_valid _dummy_valid
+              _bezrkdos_parse _bezrkdos_valid _bezrkdos_valid_line
+              _tenexdos_valid _tenexdos_parse
+
+FUNCTIONS:135 _update_news_prefix
+
+FUNCTIONS:136 _mail_newaddr _mail_newbody _mail_newbody_parameter
+              _mail_newbody_part _mail_newenvelope _mail_initbody
+
+FUNCTIONS:137 _mail_clearflag _map_clearflag _dawz_clearflag _nntp_clearflag
+              _bezrkdos_clearflag _tenexdos_clearflag _dummy_clearflag
+              _mail_setflag _map_setflag _dawz_setflag
+              _nntp_setflag _bezrkdos_setflag _tenexdos_setflag
+              _dummy_setflag
+              _bezrkdos_getflags _tenexdos_getflags _dawz_getflags
+              _nntp_getflags
+
+FUNCTIONS:138
+              _mm_searched
+
+FUNCTIONS:139 _cmd_pipe _pipe_attachment _open_system_pipe
+              _close_system_pipe _cmd_pipe_open
+
+FUNCTIONS:140 _msgno_init _msgno_add_raw _msgno_flush_raw _msgno_in_select
+              _msgno_in_sort
+              _msgno_inc _msgno_dec
+
+; config screen code
+FUNCTIONS:141 _option_screen _update_option_screen _option_screen_redrawer
+              _pretty_value _config_help _new_confline _first_confline
+              _free_confline _text_tool _config_add_list _config_del_list_item
+              _yesno_tool _checkbox_tool _toggle_feature_bit _test_feature
+              _clear_feature _set_feature _radiobutton_tool
+              _first_sel_confline
+              _save_config_vars _free_saved_config _revert_to_saved_config
+              _offer_to_fix_pinerc
+
+; new user/version screen code
+FUNCTIONS:142 _new_user_or_version _phone_home _phone_home_blurb
+              _truncated_listvars_warning _upgrade_old_postponed
+              _var_in_pinerc
+
+; cursor postition text output functions
+FUNCTIONS:143 _MoveCursor
+              _Write_to_screen _Writechar _InsertChar _DeleteChar
+              _PutLine0 _PutLine0n8b _PutLine1 _PutLine2 _PutLine3 _PutLine4
+              _PutLine5 _Raw
+              _StartBold _EndBold _StartInverse _EndInverse
+              _StartUnderline _EndUnderline _CleartoEOS
+              _ScrollRegion _EndScroll _ClearScreen _CleartoEOLN
+
+FUNCTIONS:144 _bezrkdos_size _bezrkdos_slurp
+              _bezrkdos_string_init _bezrkdos_string_next
+              _bezrkdos_string_setpos
+              _tenexdos_size _tenexdos_slurp
+              _tenexdos_string_init _tenexdos_string_next
+              _tenexdos_string_setpos
+              _dawz_update_status _tenexdos_update_status
+              _dawz_read _bezrkdos_read _tenexdos_read
+             
+              _dawz_badname _bezrkdos_badname _tenexdos_badname
+              _bezrkdos_header _tenexdos_header
+
+FUNCTIONS:145 _feature_list _save_msg_rules _ab_sort_rules _fcc_rules
+
+; c-client support functions
+FUNCTIONS:146 _mail_cdate _mail_date _mail_free_body_parameter
+              _mail_debug _mail_elt _mail_exists _mail_expunged
+              _mail_free_cache _mail_free_elt _mail_free_handle _mail_free_lelt
+              _mail_lelt _mail_lock _mail_makehandle _mail_nodebug
+              _mail_parse_date _mail_recent 
+
+FUNCTIONS:147 _do_suspend _suspend_notice
+
+;;; unreferenced pine/c-client/pico functions
+FUNCTIONS:148 _rfc822_base64 _rfc822_contents _rfc822_qprint
+              _term_signal _stop_process _pfnexpand _P_close _P_open
+              _coredump _fast_clean_up _first_checked _gotoline
+              _lowerregion _upperregion _read_binary_file _readbuf 
+
+FUNCTIONS:150 _ab_export _ab_forward
+              _addr_book_bounce _addr_book_change_list _addr_book_compose
+              _addr_book_compose_lcc _addr_book_nick_for_edit
+              _addr_book_seladdr _addr_book_selnick
+              _addr_book_takeaddr
+
+FUNCTIONS:151 _addr_lists_same _add_addresses_to_talist
+              _add_forced_entries _add_newsgrp_cache _add_review_message
+              _adrbk_listdel_all _chk_newsgrp_cache
+
+FUNCTIONS:152 _dfilter _df_static_trigger _df_trigger_cmp _df_trigger_cmp_lwsp
+              _df_trigger_cmp_start _df_trigger_cmp_text _df_valid_command
+              _build_trigger_list _expand_filter_tokens _simple_addr_string
+              _filter_data_file _filter_message_text _filter_session_key
+              _blast_trigger_list
+FUNCTIONS:153 _display_abook_att _display_attach_info _display_for_send
+              _display_message_for_pico _display_output_file
+              _decode_fullname_of_addrstring
+
+; pico support functions
+FUNCTIONS:154 _checkpoint_dir_for_pico _expand_addrs_for_pico
+              _flags_for_pico _message_format_for_pico _mime_type_for_pico
+              _new_mail_for_pico _resize_for_pico _send_exit_for_pico
+              _sigedit_exit_for_pico _view_message_for_pico
+
+FUNCTIONS:155 _mc_addtolist _mc_bld_test_cmd _mc_cmd_bldr _mc_ctype_match
+              _mc_get_command _mc_get_entry _mc_get_next_piece
+              _mc_init _mc_passes_test _mc_process_file
+
+FUNCTIONS:156 _set_mime_type_by_extension _set_mime_type_by_grope
+
+FUNCTIONS:157 _bindtokey
+
+FUNCTIONS:158 _BrowserRunChild _build_updown_cmd
+
+FUNCTIONS:159 _busy_alarm _cancel_busy_alarm _fake_alarm_blip
+              _resume_busy_alarm _suspend_busy_alarm
+
+FUNCTIONS:160 _exp_add_nth _exp_del_nth _exp_free _exp_get_next
+              _exp_is_expanded _exp_set_expanded _exp_unset_expanded
+
+FUNCTIONS:161 _rfc1522_8bit _rfc1522_binary _rfc1522_decode _rfc1522_encode
+              _rfc1522_encoded_word _rfc1522_token _rfc1522_valenc
+              _rfc1522_valid _rfc1522_valtok
+
+FUNCTIONS:162 _rfc822_encode_body_7bit _rfc822_encode_body_8bit
+              _rfc822_parse_group _rfc822_parse_mailbox _rfc822_skip_comment
+              _rfc822_write_address_decode
+
+FUNCTIONS:163 _mt_browse_types_file _mt_get_file_ext _mt_translate_type
+              _mt_traverse_types_file _mt_use_mime_type
+
+FUNCTIONS:164 _flag_exit_cmd _flag_maintenance_screen _flush_ordered_messages
+              _flag_checkbox_tool
+
+FUNCTIONS:165 _print_inverted_label _print_option_screen _print_select_tool
+              _parse_printer
+
+FUNCTIONS:166 _get_adj_fp_file_mtime _get_adj_name_file_mtime
+              _get_adj_time _get_fcc _get_fcc_based_on_to _get_fcc_from_addr
+              _get_nickname_from_addr
+
+FUNCTIONS:167 _cstring_to_hexstring _string_to_cstring _read_octal _read_hex
+              _char_to_hex_pair _char_to_octal_triple
+
+FUNCTIONS:168 _read_stdin_char
+
+FUNCTIONS:169 _coreleft
+
+FUNCTIONS:170 _pico_get _pico_give _pico_puts _pico_readc _pico_seek
+              _pico_writec
+
+FUNCTIONS:171 _setcolor _pico_nbcolor _pico_nfcolor _pico_rbcolor _pico_rfcolor
+
+FUNCTIONS:172 _tcp_abort _tcp_aopen _tcp_close _tcp_getbuffer _tcp_getdata
+              _tcp_getline _tcp_host _tcp_localhost _tcp_open _tcp_parameters
+              _tcp_port _tcp_sout _tcp_soutr _pine_tcptimeout
+
+FUNCTIONS:173 _tmpname _temp_nam
+
+FUNCTIONS:174 _cntxt_allowed
+
+FUNCTIONS:175 _draw_cancel_keymenu _intr_handling_off _intr_handling_on
+              _intr_proc
+
+FUNCTIONS:176 _newsrc_find _newsrc_read _newsrc_update _newsrc_write
+
+
+
+; Uncomment below when the static array assignments are
+; installed
+;; SEGMENTS CNFT OVL:200
+
+FUNCTIONS:201 _printer_name _set_def_printer_value

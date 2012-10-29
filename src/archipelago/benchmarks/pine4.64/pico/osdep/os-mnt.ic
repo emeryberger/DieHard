@@ -1,0 +1,15 @@
+;
+; MiNT os-mnt.ic file for building os-mnt.c.
+;
+; Boilerplate header.
+include(header)
+
+include(unix)
+
+include(spell.unx)
+
+include(read.sel)
+
+include(raw.brk)
+
+include(term.cap)

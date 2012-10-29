@@ -1,0 +1,77 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<HTML>
+<HEAD>
+ <META NAME="GENERATOR" CONTENT="LinuxDoc-Tools 0.9.21">
+ <TITLE>bftpd documentation: FAQ</TITLE>
+ <LINK HREF="bftpddoc-en-5.html" REL=next>
+ <LINK HREF="bftpddoc-en-3.html" REL=previous>
+ <LINK HREF="bftpddoc-en.html#toc4" REL=contents>
+</HEAD>
+<BODY>
+<A HREF="bftpddoc-en-5.html">Next</A>
+<A HREF="bftpddoc-en-3.html">Previous</A>
+<A HREF="bftpddoc-en.html#toc4">Contents</A>
+<HR>
+<H2><A NAME="s4">4.</A> <A HREF="bftpddoc-en.html#toc4">FAQ</A></H2>
+
+<H2><A NAME="ss4.1">4.1</A> <A HREF="bftpddoc-en.html#toc4.1">Problems while compiling</A>
+</H2>
+
+<H3>I can't compile bftpd</H3>
+
+<P>Let me know. Please tell me what architecture and operating system you are using, and give me the output of the complete compilation process (configure and make). I don't get a lot of mail, so I'll try to answer your questions. If I don't reply, I have almost certainly forgotten your mail, so please send it again :)</P>
+<H3>There are strange warnings</H3>
+
+<P>It is likely that compiling bftpd on a platform I haven't tested may give you some warnings. Even if it compiles successfully and runs without crashing, please tell me, as compiler warnings <EM>can</EM> cause problems which are not obvious.</P>
+<H3>Make tells me I can't use wtmp</H3>
+
+<P>You are probably running Solaris. As I don't have access to a Solaris computer, I have never been able to test the wtmp functions in it. If you get a warning like this and you don't know what wtmp is, just don't care, else help me to fix the error.</P>
+<H2><A NAME="ss4.2">4.2</A> <A HREF="bftpddoc-en.html#toc4.2">Problems when trying to run it</A>
+</H2>
+
+<H3>I get a warning like &quot;Could not get peer IP address.&quot;</H3>
+
+<P>You have started bftpd on the console. If you want to run it as a standalone server, you have to invoke it with the &quot;-d&quot; option. If you have set it up as an inetd server, you can test it with:
+<BLOCKQUOTE><CODE>
+<PRE>
+hostname:~$ ftp localhost
+</PRE>
+</CODE></BLOCKQUOTE>
+</P>
+<H3>I get an error like &quot;Bind failed: Address already in use.&quot;</H3>
+
+<P>This error means that another process has bound itself to the port you want to run bftpd on. You can set this port in bftpd.conf with the option PORT in the global structure. It defaults to 21. If you have not changed that, you probably forgot to turn off your old FTP server. Look in /etc/inetd.conf and in &quot;ps auxwww | grep ftp&quot;.</P>
+<H2><A NAME="ss4.3">4.3</A> <A HREF="bftpddoc-en.html#toc4.3">Problems during the FTP sessions</A>
+</H2>
+
+<H3>I get an error like &quot;500 Unknown command: 'foo'&quot;</H3>
+
+<P>Your client has sent a command to the server which it didn't understand. This is my fault, unless you have written a really inexistent command. Please check your command for typographic errors and report the error to me if you are sure that the command was right.</P>
+<H3>The session terminates with a 421 error</H3>
+
+<P>If you try to log in with a wrong password, bftpd will terminate the connection. If you already had logged in before the error appeared, or the error appeared before you could log in, it definitely is a bug. Please tell me everything about it.</P>
+<H2><A NAME="ss4.4">4.4</A> <A HREF="bftpddoc-en.html#toc4.4">Miscellaneous</A>
+</H2>
+
+<H3>How does the on-the-fly compression work?</H3>
+
+<P>Let's say you have a directory called foo. Even if there is no file called foo.tar.gz, you can RETR this file over FTP and it will contain the contents of the directory foo, tar-gzipped. You can also RETR the following files:
+<UL>
+<LI>dirname.tar</LI>
+<LI>filename.gz</LI>
+</UL>
+
+If you want to use this, you must compile it in (see the installation section).</P>
+<H3>My options for an anonymous user don't work</H3>
+
+<P>If you have a structure with an ALIAS=... in it, you mustn't put any more options in it. Instead, put them into the structure the alias points to.</P>
+<H3>Why is there so little documentation?</H3>
+
+<P>The answer is simple, nobody has written anything :)<BR>
+I never know what to write, so if you have any idea of how to improve the documentation, please tell me. The same applies to translations of documentation. If you want to contribute something, just do it, but <EM>please</EM> care about typographic errors and grammar.</P>
+<HR>
+<A HREF="bftpddoc-en-5.html">Next</A>
+<A HREF="bftpddoc-en-3.html">Previous</A>
+<A HREF="bftpddoc-en.html#toc4">Contents</A>
+</BODY>
+</HTML>

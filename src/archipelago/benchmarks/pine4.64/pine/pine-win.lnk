@@ -1,0 +1,11 @@
+mswinver+addrbook+adrbklib+args+filter+folder+
+context+help+imap+init+mailcmd+mailindx+mailpart+
+mailview+newmail+os+other+pine+reply+screen+
+send+signals+status+strings+ttyin+ttyout+mailcap+
+bdate
+pine
+pine
+..\c-client\cclient+..\pico\libpico+
+winsock+libw+shell+toolhelp+llibcew+oldnames+commdlg+
+..\spell\spell
+osdep\mswin.def

@@ -1,0 +1,35 @@
+/*======================================================================
+    post_reap
+    
+    Manage exit status collection of a child spawned to handle posting
+ ====*/
+
+
+
+#if	defined(BACKGROUND_POST) && defined(SIGCHLD)
+/*----------------------------------------------------------------------
+    Check to see if we have any posting processes to clean up after
+
+  Args: none
+  Returns: any finished posting process reaped
+ ----*/
+post_reap()
+{
+    WaitType stat;
+    int	     r;
+
+    if(ps_global->post && ps_global->post->pid){
+	r = wait4(ps_global->post->pid, &stat, WNOHANG, NULL);
+	if(r == ps_global->post->pid){
+	    ps_global->post->status = WIFEXITED(stat) ? WEXITSTATUS(stat) : -1;
+	    ps_global->post->pid = 0;
+	    return(1);
+	}
+	else if(r < 0 && errno != EINTR){ /* pid's become bogus?? */
+	    fs_give((void **) &ps_global->post);
+	}
+    }
+
+    return(0);
+}
+#endif

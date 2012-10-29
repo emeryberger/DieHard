@@ -1,0 +1,8 @@
+#!/bin/bash
+BIN=~/work/plasma/diehard-nih/benchmarks/roboop
+
+${BIN}/bench $@ > /dev/null &
+pid=$!
+echo $pid > /tmp/bench.pid
+wait $pid 	
+

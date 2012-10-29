@@ -1,0 +1,10 @@
+#!/bin/bash
+BIN=~/work/plasma/diehard-nih/benchmarks/cfrac
+
+if [[ $1 == -q ]]
+then
+shift
+${BIN}/cfrac $@ > /dev/null
+else
+${BIN}/cfrac $@
+fi

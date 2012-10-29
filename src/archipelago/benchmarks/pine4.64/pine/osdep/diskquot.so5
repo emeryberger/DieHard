@@ -1,0 +1,9 @@
+#if defined(USE_QUOTAS)
+
+#include <sys/fs/ufs_quota.h>
+#define MTABNAME "/etc/mnttab"
+
+include(solquota)
+#endif /* USE_QUOTAS */
+
+

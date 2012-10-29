@@ -1,0 +1,52 @@
+#line 2 "osdep/readfile.dos"
+
+/*----------------------------------------------------------------------
+    Read whole file into memory
+
+  Args: filename -- path name of file to read
+
+  Result: Returns pointer to malloced memory with the contents of the file
+          or NULL
+
+This won't work very well if the file has NULLs in it and is mostly
+intended for fairly small text files.
+ ----*/
+char *
+read_file(filename)
+    char *filename;
+{
+    int         fd;
+    struct stat statbuf;
+    char       *buf;
+    int         nb;
+
+    fd = open(filename, O_RDONLY|O_TEXT);
+    if(fd < 0){
+	if(errno != ENOENT){
+	    sprintf(tmp_20k_buf,
+		    "Weird error opening \"%s\"\nError: %s (%d)\n",
+		    filename, error_description(errno), errno);
+	    fatal(tmp_20k_buf);
+	}
+	else
+	  return((char *)NULL);
+    }
+
+    fstat(fd, &statbuf);
+
+    buf = fs_get((size_t)statbuf.st_size + 1);
+
+    /*
+     * On some systems might have to loop here, if one read isn't guaranteed
+     * to get the whole thing.
+     */
+    if((nb = read(fd, buf, (unsigned)statbuf.st_size)) < 0)
+      fs_give((void **)&buf);		/* NULL's buf */
+    else
+      buf[nb] = '\0';
+
+    close(fd);
+    return(buf);
+}
+
+

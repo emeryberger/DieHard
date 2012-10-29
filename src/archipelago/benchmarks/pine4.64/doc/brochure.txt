@@ -1,0 +1,73 @@
+
+                         The Pine Message System
+
+BACKGROUND
+
+Pine(tm) --a Program for Internet News & Email-- is a tool for reading,
+sending, and managing electronic messages.  It was designed specifically
+with novice computer users in mind, but can be tailored to accommodate the
+needs of "power users" as well.  Pine uses Internet message protocols
+(e.g. RFC-822, SMTP, MIME, IMAP, NNTP) and runs on Unix and PCs.
+
+The guiding principles for Pine's user-interface were:  careful limitation
+of features, one-character mnemonic commands, always-present command
+menus, immediate user feedback, and high tolerance for user mistakes. It
+is intended that Pine can be learned by exploration rather than reading
+manuals.  Feedback from the University of Washington community and many
+thousands of Internet sites around the world has been encouraging.
+
+Pine's message composition editor (Pico) and its file browser (Pilot) are
+also available as separate stand-alone programs.  Pico is a very simple
+and easy-to-use text editor offering paragraph justification, cut/paste,
+and a spelling checker.
+
+FEATURES
+
+   - Online help specific to each screen and context.
+
+   - Message index showing a message summary which includes the status,
+     sender, size, date and subject of messages.
+
+   - Commands to view and process messages:  Forward, Reply, Save,
+     Export, Print, Delete, capture address, and search.
+
+   - Message composer with easy-to-use editor and spelling checker.
+     The message composer also assists entering and formatting
+     addresses and provides direct access to the address book.
+
+   - Address book for saving long complex addresses and personal
+     distribution lists under a nickname.
+
+   - Message attachments via the Multipurpose Internet Mail Extensions
+     (MIME) specification.  MIME allows sending/receiving non-text
+     objects, such as binary files, spreadsheets, graphics, and sound.
+
+   - Folder management commands for creating, deleting, listing, or
+     renaming message folders.  Folders may be local or on remote hosts.
+
+   - Access to remote message folders and archives via the Internet
+     Message Access Protocol version 4.1 (IMAP) as defined in RFC-2060.
+
+   - Internet news support via either NNTP or IMAP.
+
+   - Aggregate operations, e.g. saving a selected set of messages at once.
+
+AVAILABILITY
+
+Pine, Pico, and UW's IMAP server are copyrighted, but freely available.
+The latest version, including source code, can be found on the Internet
+host "ftp.cac.washington.edu" in the file "pine/pine.tar.Z" (accessible
+via anonymous FTP).  To try Pine out from the Internet, you may telnet to
+"demo.cac.washington.edu" and login as "pinedemo".
+
+For further information, visit the Pine Information Center at
+  http://www.washington.edu/pine/
+
+There is also a Pine-specific Internet news group (comp.mail.pine). 
+
+Pine is brought to you by the Office of Computing & Communications at the
+University of Washington.   Pine and Pico are registered trademarks of UW.
+
+98.05.11
+
+

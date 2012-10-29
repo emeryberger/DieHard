@@ -1,0 +1,624 @@
+#line 2 "osdep/dos"
+/*
+ * $Id: dos 13299 2003-11-25 17:35:10Z hubert $
+ *
+ * Program:	Operating system dependent routines - MS DOS
+ *
+ *
+ * Michael Seibel
+ * Networks and Distributed Computing
+ * Computing and Communications
+ * University of Washington
+ * Administration Builiding, AG-44
+ * Seattle, Washington, 98195, USA
+ * Internet: mikes@cac.washington.edu
+ *
+ * Please address all bugs and comments to "pine-bugs@cac.washington.edu"
+ *
+ *
+ * Pine and Pico are registered trademarks of the University of Washington.
+ * No commercial use of these trademarks may be made without prior written
+ * permission of the University of Washington.
+ * 
+ * Pine, Pico, and Pilot software and its included text are Copyright
+ * 1989-1998 by the University of Washington.
+ * 
+ * The full text of our legal notices is contained in the file called
+ * CPYRIGHT, included with this distribution.
+ *
+ *
+ * Notes:
+ *      - mouse support added (mss, 921215)
+ *
+ *  Portions of this code derived from MicroEMACS 3.10:
+ *
+ *	MSDOS.C:	Operating specific I/O and Spawning functions
+ *			under the MS/PCDOS operating system
+ *			for MicroEMACS 3.10
+ *			(C)opyright 1988 by Daniel M. Lawrence
+ *
+ */
+
+#include	<fcntl.h>
+#include	<bios.h>
+#include        "dos_gen.h"
+
+
+/*
+ * Internal functions...
+ */
+int   enhanced_keybrd PROTO((void));
+int   dont_interrupt PROTO((void));
+int   interrupt_ok PROTO((void));
+int   specialkey PROTO((unsigned int));
+char *pfnexpand PROTO((char *, size_t));
+int   ssleep PROTO((long));
+int   sleep PROTO((int));
+
+
+/*
+ * Useful global def's
+ */
+int timeo = 0;
+time_t time_of_last_input;
+int (*pcollator)();
+static int    enhncd = 0;		/* keyboard of enhanced variety? */
+union  REGS   rg;
+struct SREGS  segreg;
+
+static	int oldbut;			/* Previous state of mouse buttons */
+static	unsigned short oldbreak;	/* Original state of break key */
+static	char ptmpfile[128];		/* popen temp file */
+
+
+/*
+ * Include generic DOS/Windows routines
+ */
+/* #include	"dos_gen.c" */
+
+
+/*
+ * DISable ctrl-break interruption
+ */
+dont_interrupt()
+{
+    /* get original value, to be restored later... */
+    rg.h.ah = 0x33;		/* control-break check dos call */
+    rg.h.al = 0;		/* get the current state */
+    rg.h.dl = 0;		/* pre-set it OFF */
+    intdos(&rg, &rg);		/* go for it! */
+    oldbreak = rg.h.dl;
+    /* kill the ctrl-break interupt */
+    rg.h.ah = 0x33;		/* control-break check dos call */
+    rg.h.al = 1;		/* set the current state */
+    rg.h.dl = 0;		/* set it OFF */
+    intdos(&rg, &rg);		/* go for it! */
+}
+
+
+/*
+ * re-enable ctrl-break interruption
+ */
+interrupt_ok()
+{
+    /* restore the ctrl-break interupt */
+    rg.h.ah = 0x33;		/* control-break check dos call */
+    rg.h.al = 1;		/* set to new state */
+    rg.h.dl = oldbreak;		/* set it to its original value */
+    intdos(&rg, &rg);	/* go for it! */
+}
+
+
+/*
+ * return true if an enhanced keyboard is present
+ */
+enhanced_keybrd()
+{
+    /* and check for extended keyboard */
+    rg.h.ah = 0x05;
+    rg.x.cx = 0xffff;
+    int86(BIOS_KEYBRD, &rg, &rg);
+    rg.h.ah = 0x10;
+    int86(BIOS_KEYBRD, &rg, &rg);
+    return(rg.x.ax == 0xffff);
+}
+
+
+/*
+ * This function is called once to set up the terminal device streams.
+ */
+ttopen()
+{
+    dont_interrupt();			/* don't allow interrupt */
+    enhncd = enhanced_keybrd();		/* check for extra keys */
+#if	MOUSE
+    init_mouse();
+#else	/* !MOUSE */
+    mexist = 0;
+#endif	/* MOUSE */
+    return(1);
+}
+
+
+/*
+ * ttresize - recompute the screen dimensions if necessary, and then
+ *	      adjust pico's internal buffers accordingly
+ */
+void
+ttresize ()
+{
+    return;
+}
+
+
+#ifdef	MOUSE
+/* 
+ * init_mouse - check for and initialize mouse driver...
+ */
+init_mouse()
+{
+    long miaddr;		/* mouse interupt routine address */
+
+    if(mexist)
+      return(TRUE);
+
+    /* check if the mouse drive exists first */
+    rg.x.ax = 0x3533;		/* look at the interrupt 33 address */
+    intdosx(&rg, &rg, &segreg);
+    miaddr = (((long)segreg.es) << 16) + (long)rg.x.bx;
+    if (miaddr == 0 || *(char *)miaddr == 0xcf) {
+	mexist = FALSE;
+	return(TRUE);
+    }
+
+    /* and then check for the mouse itself */
+    rg.x.ax = 0;			/* mouse status flag */
+    int86(BIOS_MOUSE, &rg, &rg);	/* check for the mouse interupt */
+    mexist = (rg.x.ax != 0);
+    nbuttons = rg.x.bx;
+
+    if (mexist == FALSE)
+	return(TRUE);
+
+    /* if the mouse exists.. get it in the upper right corner */
+    rg.x.ax = 4;			/* set mouse cursor position */
+    rg.x.cx = (term.t_ncol/2) << 3;	/* Center of display... */
+    rg.x.dx = 1 << 3;			/* Second line down */
+    int86(BIOS_MOUSE, &rg, &rg);
+
+    /* and set its attributes */
+    rg.x.ax = 10;		/* set text cursor */
+    rg.x.bx = 0;		/* software text cursor please */
+    rg.x.cx = 0x77ff;	/* screen mask */
+    rg.x.dx = 0x7700;	/* cursor mask */
+    int86(BIOS_MOUSE, &rg, &rg);
+    return(TRUE);
+}
+
+
+/*
+ * mouseon - call made available for programs calling pico to turn ON the
+ *           mouse cursor.
+ */
+void
+mouseon()
+{
+    rg.x.ax = 1;			/* Show Cursor */
+    int86(BIOS_MOUSE, &rg, &rg); 
+}
+
+
+/*
+ * mouseon - call made available for programs calling pico to turn OFF the
+ *           mouse cursor.
+ */
+void
+mouseoff()
+{
+    rg.x.ax = 2;			/* Hide Cursor */
+    int86(BIOS_MOUSE, &rg, &rg);
+}
+#endif
+
+
+/*
+ * This function gets called just before we go back home to the command
+ * interpreter.
+ */
+ttclose()
+{
+    if(!Pmaster)
+      interrupt_ok();
+
+    return(1);
+}
+
+
+/*
+ * Flush terminal buffer. Does real work where the terminal output is buffered
+ * up. A no-operation on systems where byte at a time terminal I/O is done.
+ */
+ttflush()
+{
+    return(1);
+}
+
+
+/*
+ * specialkey - return special key definition
+ */
+specialkey(kc)
+unsigned  kc;
+{
+    switch(kc){
+	case 0x3b00 : return(F1);
+	case 0x3c00 : return(F2);
+	case 0x3d00 : return(F3);
+	case 0x3e00 : return(F4);
+	case 0x3f00 : return(F5);
+	case 0x4000 : return(F6);
+	case 0x4100 : return(F7);
+	case 0x4200 : return(F8);
+	case 0x4300 : return(F9);
+	case 0x4400 : return(F10);
+	case 0x8500 : return(F11);
+	case 0x8600 : return(F12);
+	case 0x4800 : return(KEY_UP);
+	case 0x5000 : return(KEY_DOWN);
+	case 0x4b00 : return(KEY_LEFT);
+	case 0x4d00 : return(KEY_RIGHT);
+	case 0x4700 : return(KEY_HOME);
+	case 0x4f00 : return(KEY_END);
+	case 0x4900 : return(KEY_PGUP);
+	case 0x5100 : return(KEY_PGDN);
+	case 0x5300 : return(KEY_DEL);
+	case 0x48e0 : return(KEY_UP);			/* grey key version */
+	case 0x50e0 : return(KEY_DOWN);			/* grey key version */
+	case 0x4be0 : return(KEY_LEFT);			/* grey key version */
+	case 0x4de0 : return(KEY_RIGHT);		/* grey key version */
+	case 0x47e0 : return(KEY_HOME);			/* grey key version */
+	case 0x4fe0 : return(KEY_END);			/* grey key version */
+	case 0x49e0 : return(KEY_PGUP);			/* grey key version */
+	case 0x51e0 : return(KEY_PGDN);			/* grey key version */
+	case 0x53e0 : return(KEY_DEL);			/* grey key version */
+	default     : return(NODATA);
+    }
+}
+
+
+/*
+ * Read a character from the terminal, performing no editing and doing no echo
+ * at all. Also mouse events are forced into the input stream here.
+ */
+int
+ttgetc(return_on_intr, recorder, bail_handler)
+    int return_on_intr;
+    int (*recorder)();
+    int (*bail_handler)();
+{
+    return(_bios_keybrd(enhncd ? _NKEYBRD_READ : _KEYBRD_READ));
+}
+
+
+/*
+ * ctrlkey - used to check if the key hit was a control key.
+ */
+ctrlkey()
+{
+    return(_bios_keybrd(enhncd ? _NKEYBRD_SHIFTSTATUS : _KEYBRD_SHIFTSTATUS)
+            & 0x04);
+}
+
+
+/*
+ * win_multiplex - give DOS in a window a shot at the CPU
+ */
+win_multiplex()
+{
+    rg.x.ax = 0x1680;
+    int86(DOS_MULTIPLEX, &rg, &rg);
+}
+
+
+/*
+ * Read in a key.
+ * Do the standard keyboard preprocessing. Convert the keys to the internal
+ * character set.  Resolves escape sequences and returns no-op if global
+ * timeout value exceeded.
+ */
+GetKey()
+{
+    unsigned ch = 0, lch, intrupt = 0;
+    long timein;
+
+    if(mexist || timeo){
+	timein = time(0L);
+#ifdef	MOUSE
+	if(mexist){
+	    rg.x.ax = 1;			/* Show Cursor */
+	    int86(BIOS_MOUSE, &rg, &rg); 
+	}
+#endif
+	while(!_bios_keybrd(enhncd ? _NKEYBRD_READY : _KEYBRD_READY)){
+#if	MOUSE
+	    if(timeo && time(0L) >= timein+timeo){
+		if(mexist){
+		    rg.x.ax = 2;		/* Hide Cursor */
+		    int86(BIOS_MOUSE, &rg, &rg);
+		}
+		return(NODATA);
+	    }
+
+	    if(checkmouse(&ch,0,0,0)){		/* something happen ?? */
+		if(mexist){
+		    rg.x.ax = 2;		/* Hide Cursor */
+		    int86(BIOS_MOUSE, &rg, &rg);
+		}
+		curwp->w_flag |= WFHARD;
+		return(ch);
+	    }
+#else
+	    if(time(0L) >= timein+timeo)
+	      return(NODATA);
+#endif	/* MOUSE */
+
+	    /*
+	     * Surrender the CPU...
+	     */
+	    if(!intrupt++)
+	      win_multiplex();
+        }
+#ifdef	MOUSE
+	if(mexist){
+	    rg.x.ax = 2;			/* Hide Cursor */
+	    int86(BIOS_MOUSE, &rg, &rg);
+	}
+#endif	/* MOUSE */
+    }
+
+    ch  = (*term.t_getchar)(0, NULL, NULL);
+    lch = (ch&0xff);
+
+    if(lch & 0x80 && Pmaster && Pmaster->hibit_entered)
+      *Pmaster->hibit_entered = 1;
+
+    return((lch && (lch != 0xe0 || !(ch & 0xff00))) 
+            ? (lch < ' ') ? (CTRL|(lch + '@')) 
+                          : (lch == ' ' && ctrlkey()) ? (CTRL|'@') : lch
+            : specialkey(ch));
+}
+
+
+#if	MOUSE
+/* 
+ * checkmouse - look for mouse events in key menu and return 
+ *              appropriate value.
+ *   NOTE: "down", "xxx", and "yyy" aren't used under DOS.
+ */
+int
+checkmouse(ch, down, xxx, yyy)
+unsigned *ch;
+int	  down, xxx, yyy;
+{
+    register int k;		/* current bit/button of mouse */
+    int mcol;			/* current mouse column */
+    int mrow;			/* current mouse row */
+    int sstate;			/* current shift key status */
+    int newbut;			/* new state of the mouse buttons */
+    int button;
+    int rv = 0;
+
+    if(!mexist)
+	return(FALSE);
+
+    /* check to see if any mouse buttons are different */
+    rg.x.ax = 3;		/* Get button status and mouse position */
+    int86(BIOS_MOUSE, &rg, &rg);
+    newbut = rg.x.bx;
+    mcol = rg.x.cx >> 3;
+    mrow = (rg.x.dx >> 3);
+
+    /* only notice changes */
+    if (oldbut == newbut)
+	return(FALSE);
+
+    if (mcol < 0)		/* only on screen presses are legit! */
+	mcol = 0;
+    if (mrow < 0)
+	mrow = 0;
+
+    sstate = 0;			/* get the shift key status as well */
+    rg.h.ah = 2;
+    int86(BIOS_KEYBRD, &rg, &rg);
+    sstate = rg.h.al;
+
+    button = M_BUTTON_LEFT;
+    for (k=1; k != (1 << nbuttons); k = k<<1) {
+	/* For each button on the mouse */
+	if ((oldbut&k) != (newbut&k)) {
+	    if(k == 1){
+		static int oindex;
+		int i = 0;
+		MENUITEM *mp;
+
+		if(newbut&k)			/* button down */
+		  oindex = -1;
+
+		for(mp = mfunc; mp; mp = mp->next)
+		  if(mp->action && M_ACTIVE(mrow, mcol, mp))
+		    break;
+
+		if(mp){
+		    unsigned long r;
+
+		    r = (*mp->action)((newbut&k) ? M_EVENT_DOWN : M_EVENT_UP,
+				      mrow, mcol, button, 0);
+		    if(r & 0xffff){
+			*ch = (unsigned)((r>>16)&0xffff);
+			rv  = TRUE;
+		    }
+		}
+		else{
+		    while(1){	/* see if we understand event */
+			if(i >= 12){
+			    i = -1;
+			    break;
+			}
+
+			if(M_ACTIVE(mrow, mcol, &menuitems[i]))
+			  break;
+
+			i++;
+		    }
+
+		    if(newbut&k){			/* button down */
+			oindex = i;			/* remember where */
+			if(i != -1)			/* invert label */
+			  invert_label(1, &menuitems[i]);
+		    }
+		    else{				/* button up */
+			if(oindex != -1){
+			    if(i == oindex){
+				*ch = menuitems[i].val;
+				rv = 1;
+			    }
+			}
+		    }
+		}
+
+		if(!(newbut&k) && oindex != -1)
+		  invert_label(0, &menuitems[oindex]);	/* restore label */
+	    }
+
+	    oldbut = newbut;
+	    return(rv);
+	}
+
+	++button;
+    }
+
+    return(FALSE);
+}
+
+
+/*
+ * invert_label - highlight the label of the given menu item.
+ */
+void
+invert_label(state, m)
+int state;
+MENUITEM *m;
+{
+    int i, j, r, c, p, col_offset;
+    char *lp;
+    int old_state = getrevstate();
+
+    if(m->val == mnoop)
+      return;
+
+    rg.h.ah = 3;				/* get cursor position */
+    int86(BIOS_VIDEO, &rg, &rg);
+    p = rg.h.bh;
+    c = rg.h.dl;
+    r = rg.h.dh;
+    rg.x.ax = 2;				/* Hide Cursor */
+    int86(BIOS_MOUSE, &rg, &rg);
+    /*
+     * Leave the command name bold
+     */
+    col_offset = (state || !(lp=strchr(m->label, ' '))) ? 0 : (lp - m->label);
+    (*term.t_move)(m->tl.r, m->tl.c + col_offset);
+    (*term.t_rev)(state);
+    for(i = m->tl.r; i <= m->br.r; i++)
+      for(j = m->tl.c + col_offset; j <= m->br.c; j++)
+	if(i == m->lbl.r && j == m->lbl.c + col_offset){ /* show label?? */
+	    lp = m->label + col_offset;
+	    while(*lp && j++ < m->br.c)
+	      (*term.t_putchar)(*lp++);
+
+	    continue;
+	}
+	else
+	  (*term.t_putchar)(' ');
+
+    (*term.t_rev)(old_state);
+    rg.h.ah = 2;
+    rg.h.bh = p;
+    rg.h.dh = r;
+    rg.h.dl = c;
+    int86(BIOS_VIDEO, &rg, &rg);		/* restore old position */
+    rg.x.ax = 1;				/* Show Cursor */
+    int86(BIOS_MOUSE, &rg, &rg);
+}
+#endif	/* MOUSE */
+
+
+/*
+ * alt_editor - fork off an alternate editor for mail message composition
+ *
+ *  NOTE: Not yet used under DOS
+ */
+alt_editor(f, n)
+    int f, n;
+{
+    return(-1);
+}
+
+
+/*
+ *  bktoshell - suspend and wait to be woken up
+ */
+int
+bktoshell()		/* suspend MicroEMACS and wait to wake up */
+{
+    int i;
+    char *shell;
+
+    (*term.t_move)(term.t_nrow, 0);
+    if(system((shell = getenv("COMSPEC")) ? shell : "command") == -1)
+      emlwrite("Error loading %s", shell ? shell : "COMMAND.COM");
+    else
+      pico_refresh(0, 1);		/* redraw */
+    
+    return(1);
+}
+
+
+/*
+ * P_open - run the given command in a sub-shell returning a file pointer
+ *	    from which to read the output
+ *
+ * note:
+ *	For OS's other than unix, you will have to rewrite this function.
+ *	Hopefully it'll be easy to exec the command into a temporary file, 
+ *	and return a file pointer to that opened file or something.
+ */
+FILE *P_open(c)
+char *c;
+{
+    char cmdbuf[NLINE];
+    sprintf(ptmpfile, tmpnam(NULL));
+    sprintf(cmdbuf, "%s > %s", c, ptmpfile);
+    if(system(cmdbuf) == -1){
+	unlink(ptmpfile);
+	return(NULL);
+    }
+
+    return(fopen(ptmpfile, "r"));
+}
+
+
+
+/*
+ * P_close - close the given descriptor
+ *
+ */
+void
+P_close(fp)
+FILE *fp;
+{
+    fclose(fp);			/* doesn't handle return codes */
+    unlink(ptmpfile);
+}
+
+

@@ -1,0 +1,150 @@
+#line 2 "osdep/tempnam.dos"
+/*
+ * This routine is derived from BSD4.3 code,
+ * Copyright (c) 1988 Regents of the University of California.
+ * All rights reserved.
+ */
+#if defined(LIBC_SCCS) && !defined(lint)
+static char sccsid[] = "@(#)tmpnam.c	4.5 (Berkeley) 6/27/88";
+#endif /* LIBC_SCCS and not lint */
+
+
+
+/*
+ * Module global.
+ */
+static char *NumTemplate = "XXXXXX";
+
+
+/*----------------------------------------------------------------------
+      Return a unique file name in a given directory.  This is not quite
+      the same as the usual tempnam() function, though it is very similar.
+      We want it to use the TMP environment variable only if dir is NULL,
+      instead of using TMP regardless if it is set.
+
+  Args: dir      -- The directory to create the name in
+        prefix   -- Prefix of the name
+ 
+ Result: Malloc'd string equal to new name is returned.  It must be free'd
+	 by the caller.  Returns the string on success and NULL on failure.
+  ----*/
+static char *
+temp_mkbase (dir, prefix)
+    char *dir, *prefix;
+{
+    struct stat buf;
+    char *f, *name;
+    char *mktemp();
+
+    if (!(name = malloc((unsigned int)MAXPATH)))
+        return(NULL);
+
+    if (!dir && ((f = getenv("TMP")) || (f = getenv("TEMP"))) &&
+			 !stat(f, &buf) && (buf.st_mode&S_IFMT) == S_IFDIR &&
+			 !can_access(f, WRITE_ACCESS)) {
+        (void)strcpy(name, f);
+        goto done;
+    }
+
+    if (dir) {
+	strcpy(name, dir);
+	if(!*dir || (isalpha(*dir) && *(dir+1) == ':' && !*(dir+2)))
+	  strcat(name, "\\");
+
+	if((!stat(name, &buf) && (buf.st_mode&S_IFMT) == S_IFDIR)
+		    && !can_access(name, WRITE_ACCESS)) {
+            (void)strcpy(name, dir);
+            goto done;
+	}
+    }
+
+#ifndef P_tmpdir
+#define	P_tmpdir	"\\tmp"
+#endif
+    if (!stat(P_tmpdir, &buf) &&
+                         (buf.st_mode&S_IFMT) == S_IFDIR &&
+			 !can_access(P_tmpdir, WRITE_ACCESS)) {
+        (void)strcpy(name, P_tmpdir);
+        goto done;
+    }
+
+    free(name);
+    return(NULL);
+
+done:
+    if(name[0] && name[strlen(name)-1] != '\\')
+      (void)strcat(name, "\\");
+
+    if (prefix)
+        (void)strcat(name, prefix);
+    (void)strcat(name, NumTemplate);
+    return(name);
+}
+
+
+
+char *
+temp_nam (dir, prefix)
+    char *dir, *prefix;
+{
+    char *name;
+
+    if ((name = temp_mkbase (dir, prefix)))
+	return (mktemp (name));
+    return (NULL);
+}
+    
+
+/*----------------------------------------------------------------------
+
+      Like temp_nam but create a unique name _with_ an extension.
+
+  Args: dir      -- The directory to create the name in
+        prefix   -- Prefix of the name
+	ext	 -- Extension to append.
+ 
+ Result: Malloc'd string equal to new name is returned.  It must be free'd
+	 by the caller.  Returns the string on success and NULL on failure.
+  ----*/
+char *
+temp_nam_ext (dir, prefix, ext)
+    char *dir, *prefix, *ext;
+{
+    char *name;
+    char *numberpos;
+    int	 tries;
+    int	 pid;
+
+    name = temp_mkbase (dir, prefix);
+
+    if (name == NULL)				/* Failed to make base name? */
+	return (NULL);
+
+    if (ext == NULL || *ext == '\0')		/* No extension required? */
+	return (mktemp(name));
+
+    if ((numberpos = strstr (name, NumTemplate)) == NULL) {
+	free (name);
+	return (NULL);
+    }
+
+    /*
+     * Start with the PID.  Build file names, incrementing the pid
+     * until we encounter a unique file name.  Don't keep trying for ever.
+     */
+    pid = abs (getpid ());
+    tries = 1000;
+    do {
+	if(pid > 999999)
+	  pid = random() % 999999;
+
+	sprintf (numberpos, "%06d.%s", abs(pid++), ext);
+	if (--tries == 0) {
+	    free (name);
+	    return (NULL);
+	}
+    } while (can_access (name, ACCESS_EXISTS) == 0);
+    return (name);
+}
+
+

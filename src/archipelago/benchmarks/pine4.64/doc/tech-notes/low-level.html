@@ -1,0 +1,1428 @@
+<HTML><HEAD><TITLE>Pine Technical Notes:  Behind the Scenes</TITLE></HEAD><BODY>
+<H1>Behind the Scenes</H1>
+
+Many people ask how certain <EM>Pine</EM> features are implemented.  This section 
+outlines some of the details. 
+
+<H2><A NAME="addrbook">Address Books</A></H2>
+
+Beginning with <EM>Pine</EM> 4.00 there are two types of address book storage. There
+are <EM>local</EM> address books, which are the address books that are
+stored in a local file (the address books <EM>Pine</EM> has had all along); and there
+are <EM>remote</EM> address books, which are stored on an IMAP server.
+
+<H4><A NAME="remote-abooks">Information About Remote Address Books</A></H4>
+
+<BLOCKQUOTE>
+NOTE: The remote address book capability does not allow you to access an
+existing local address book from a remote system! That is, you can't set
+the remote address book to something like <CODE>{remote.host}.addressbook</CODE>
+and expect to access the existing <CODE>.addressbook</CODE> <EM>file</EM>
+on remote.host. Instead, you need to create a new remote address book in
+a new, previously unused remote mail <EM>folder</EM>. Then you can use the
+<EM>Select</EM> and <EM>Apply Save</EM> commands in the address book screen to
+<EM>Save</EM> all of the entries from an existing local address book to
+the new remote address book.
+</BLOCKQUOTE>
+<P>
+
+Beginning with <EM>Pine</EM> 4.00 there is a new type of address book called a
+remote address book. 
+A remote address book is stored in a mail folder on an
+IMAP server. A <EM>Pine</EM> remote address book is just like a <EM>Pine</EM> local address book
+in that it is not interoperable with other email clients.
+The folder is a regular folder containing mail messages but
+those messages are special. The first message must be a pine remote
+address book header message which contains the header <EM>x-pine-addrbook</EM>.
+The last message in the folder contains the address book data.
+In between the first
+and the last message are old versions of the address book data. The address
+book data is simply stored in the message as it would be on disk, with no MIME
+encoding. When it is used the data from the last message in the folder is
+copied to a local file and then that file is used exactly like a local
+address book file is used. When a change is made the modified local file
+is appended to the remote folder in a new message. In other words, the
+local file is just a cache copy of the data in the remote folder. Each client
+which uses the remote address book will have its own cache copy of the data.
+Whenever a copy is done the entire address book is copied, not just the
+entries which have changed.
+<P>
+
+<EM>Pine</EM> can tell that the remote data has changed
+by one of several methods.
+If the date contained in the Date header of the last message has changed then
+it knows it has changed. If the UID of the last message has changed, or the
+number of messages in the folder has changed, it knows that it has changed.
+When <EM>Pine</EM> discovers the folder has changed it gets
+a new copy and puts it in the local cache file.
+<P>
+
+There is a new configuration file variable for remote address books called
+<A HREF="config.html#remote-abook-metafile"><EM>remote-abook-metafile</EM></A>.
+The variable is the name of a file in which
+information about remote address books is stored. There is one line in the
+metafile for each remote address book. The information stored there is the
+name of the cache file and information to help figure out when the remote
+folder has changed. If the metafile or any of the cache files is deleted
+then <EM>Pine</EM> will rebuild them the next time it runs.
+<P>
+
+Remote address books have names that look just like regular
+<A HREF="config-notes.html#remote-folders">remote mail folder</A> names.
+For example:
+
+<BLOCKQUOTE>
+          {host.domain}foldername<BR>
+</BLOCKQUOTE>
+
+<EM>Pine</EM> decides whether or not an address book is remote simply by
+looking at the first character of the address book name and comparing
+it to '<EM>{</EM>'.
+
+<H4>Information About All Address Books</H4>
+
+The address book is named, by default, <CODE>.addressbook</CODE> in the
+user's Unix home directory, or in the case of <EM>PC-Pine</EM>,
+<CODE>ADDRBOOK</CODE>, in the same directory as the <CODE>PINERC</CODE> file.
+There may be more than
+one address book, and the default name can be overridden via an entry in
+any of the <EM>Pine</EM> configuration files. The two configuration variables
+<A HREF="config.html#pers-abook"><EM>address-book</EM></A>
+and <A HREF="config.html#glob-abook"><EM>global-address-book</EM></A>
+are used to specify the names of the address books.
+Each of these variables is a list
+variable. The total set of address books for a user is the combination of
+all the address books specified in these two lists. Each entry in the
+list is an optional nickname followed by an address book name. The nickname is
+everything up to the last space before the file name. The
+<EM>global-address-book</EM> list will typically be configured in the
+system-wide configuration file, though a user may override it like most
+other variables. Address books which are listed in the
+<EM>global-address-book</EM> variable are forced read-only, and are
+typically shared among multiple users. <P>
+
+Local address books (or local cache files for remote address books) are
+simple text files with lines in the format: 
+
+<BLOCKQUOTE>
+          &lt;nickname&gt;TAB&lt;fullname&gt;TAB&lt;address&gt;TAB&lt;fcc&gt;TAB&lt;comments&gt;<BR>
+</BLOCKQUOTE>
+
+The last two fields are optional. A "line" may be made up of multiple
+actual lines in the file by using continuation lines, which are lines
+beginning with SPACE characters. The line breaks may be after TABs or in
+between addresses in a distribution list.
+Each <EM>actual</EM> line in the file must
+be less than 1000 characters in length.
+<P>
+
+Nicknames (the first field) are short names that the user types instead of
+typing in the full address. There are several characters which aren't
+allowed in nicknames in order to avoid ambiguity when parsing the address
+(SPACE, COMMA, @, ", ;, :, (, ), [, ], <, >, \).
+Nicknames aren't required. In fact,
+none of the fields is required. <P>
+
+The <EM>fullname</EM> field is usually stored as Last_name, First_name, in order
+that a sort on the fullname field comes out sorted by Last_name.
+If there is an unquoted comma in the fullname,
+<EM>Pine</EM> will flip the first and last name around and get rid of
+the comma when using the entry in a composition. It isn't required that
+there be a comma, that's only useful if the user wants the entries to sort
+on last names. <P>
+
+The <EM>address</EM> field takes one
+of two forms, depending on whether the entry
+is a single (simple) address or a distribution list. For a simple entry,
+the address field is an RFC 822 address. This could be either the
+email-address part of the address, i.e., the part that goes inside the
+brackets (&lt;&gt;), or it could be a full RFC 822 address. The phrase part
+of the address (the fullname) is used unless there is a fullname present
+in the fullname field of the address book entry. In that case, the fullname
+of the address book entry replaces the fullname of the address. For a
+distribution list, the &lt;address&gt; is in the format: 
+
+<BLOCKQUOTE>
+          "(" &lt;address&gt;, &lt;address&gt;, &lt;address&gt;, ... ")"<BR>
+</BLOCKQUOTE>
+<P>
+
+The only purpose for the parentheses around the list of addresses is to
+make it easier for the parsing routines to tell that it is a simple entry
+instead of a list. The two are displayed differently and treated slightly
+differently in some cases, though most of the distinction has disappeared.
+Each of the addresses in a list can be a full RFC 822 address with
+fullname included, or it may be just the simple email-address part of the
+address. This allows the user to have a list which includes the fullnames
+of all the list members. In both the simple and list cases,
+addresses may also be other nicknames which appear in this address book or
+in one of the other address books. (Those nicknames are searched for by
+looking through the address books in the order they appear in the address
+book screen, with the first match winning.) Lists may be nested. If
+addresses refer to each other in a loop (for example, list A includes
+list B which includes list A again) this is detected and flagged. In that
+case, the address will be changed to "**** address loop ****". <P>
+
+The optional <EM>fcc</EM> field is a folder name, just like the fcc field in the
+composer headers. If the first address in the To field of a composition
+comes from an address book entry with an fcc field, then that fcc is
+placed in the fcc header in the composer. <P>
+
+The <EM>comments</EM> field is just a free
+text field for storing comments about an
+entry. By default, neither the fcc nor the comments field is shown on the
+screen in the address book screen. You may make those fields visible by
+configuring the variable
+<A HREF="config.html#abook-formats"><EM>addressbook-formats</EM></A>.
+They are also searched when you use the <EM>WhereIs</EM>
+command in the address book screen and are visible when you
+<EM>View</EM> or <EM>Update</EM> an entry. <P>
+
+The address book is displayed in the order that it is stored. 
+When the user chooses a different sorting criterion, the data is actually
+sorted and stored, as opposed to showing a sorted view of the data. <P>
+
+When the address book is written out, it is first written to a temporary
+file and if that write is successful it is renamed. This guards
+against errors writing the file that might destroy the whole address book. 
+The address book is re-written after each change. If the address book
+is a remote address book, the file is then appended to the remote mail
+folder using IMAP. <P>
+
+The end-of-line character(s) in the address book file are those native to
+the system writing it. So it is &lt;LF&gt; on Unix and
+&lt;CR&gt;&lt;LF&gt; on PC's. However, both Unix and PC versions of <EM>Pine</EM>
+can read either format, so it should be possible to share a read-only
+address book among the two populations (using NFS, for example). The
+end-of-line character for the LookUp file is always just &lt;LF&gt;, even
+on a PC.
+<P>
+
+<HR>
+
+<H3><A NAME="addrbook-lu">Address Book Lookup File</A></H3>
+
+Starting in 3.90 there is an additional file for each address book, called
+the LookUp file. It usually has the same name as the address book file
+with the suffix ".lu" appended. (It might have a different name if a file
+name length restriction prohibited that name.) This file is created and
+maintained by <EM>Pine</EM>. If it is deleted, <EM>Pine</EM> will recreate it next time
+it runs. Its purpose is to speed up lookups for large address
+books and to reduce memory requirements for large address books.
+A fairly detailed description of how it is used is
+given in <CODE>src/pine/adrbklib.h</CODE>. 
+<P>
+
+The lookup file changes whenever the address book itself is changed.
+If it doesn't exist, <EM>Pine</EM> attempts to create it.
+If <EM>Pine</EM> doesn't have permission to create the lookup file with
+the standard name, it will create a temporary version in a temp directory.
+You want to avoid this since it would have to be rebuilt every
+time <EM>Pine</EM> was run, and rebuilding
+takes a significant time for a large address book.
+So, if you're going to have a shared address book in a read-only directory,
+it is highly desirable to create the lookup file so that the users sharing
+it won't have to each create a copy in a temp directory.
+You can do that by running <EM>Pine</EM> and accessing the address book
+under a user id which does have permission to write the
+file or by using the <EM>-create_lu</EM> command line
+argument to <EM>Pine</EM>.
+If users may be using a shared address book that needs updating,
+it is best to <EM>move</EM> the old address book to another name rather than
+copying over it since the file may be opened by running <EM>Pine</EM>s. 
+It is also best to make the lookup file for the new addrbook before moving
+it and the address book file into place, otherwise users may get stuck
+attempting to initialize the new lookup file.
+The lookup file contains a timestamp which records the mtime of the address
+book file when the lookup file was last updated.
+Whenever a user runs <EM>Pine</EM> the current mtime of the address book
+is checked against this timestamp and if they differ, <EM>Pine</EM> will
+want to rebuild the lookup file.
+Because of this, it isn't a good idea to build the lookup file and then
+<EM>copy</EM> the address book and lookup file into place.
+You should move it or copy it in some way which preserves the address book
+file's mtime (e.g., use <EM>mv</EM> or <EM>tar</EM>).
+<P>
+
+<H4>Validity Checking of Address Books</H4>
+
+There is no file locking done on <EM>Pine</EM> address books, however, there
+is considerable validity checking done to make sure that the address book
+hasn't changed unexpectedly. Whenever the address book is about to be changed,
+a check is made to see if the file is newer than when we read it or the
+remote address book folder has changed since we last copied it. If either
+of these is true, the change is aborted.
+<P>
+
+There is an automatic, behind-the-scene check that happens every so often,
+also. For example, if someone else changes one of the address books that
+you have configured, your <EM>Pine</EM>'s copy of the address book will usually
+be updated automatically without you noticing. This checking happens at the
+same time as new mail checking takes place, unless you are actively using
+the address book, in which case it happens more frequently.
+<P>
+
+Another sort of validity check is that the lookup file contains a timestamp
+internally that is supposed to match the time that the address book file
+itself was last modified. If the lookup file timestamp doesn't match the
+date of the address book file, a new lookup file is built. If you are
+having trouble, it is always ok to remove the lookup file and restart.
+<EM>Pine</EM> will automatically rebuild the lookup file.
+<P>
+
+One other validity check happens when looking up an entry in the address
+book file. An entry is looked up by first getting an offset into the
+address book file from the lookup file. A seek to that location is done
+and then the entry is read. An entry should be at the start of a line. If
+it isn't, something is wrong. In that case, the lookup file is rebuilt
+and the operation is repeated if possible.
+<P>
+
+<HR>
+
+<H2><A NAME="remote-config">Remote Configuration</A></H2>
+
+Beginning with <EM>Pine</EM> 4.30, configuration information may be stored
+remotely.
+Remote configuration information is stored in a folder on an IMAP server.
+This should be a folder which is used only for storing the configuration
+information.
+In other words, it should be a folder which didn't exist before.
+<P>
+Remote configuration folders are very similar to remote address book folders.
+They both consist of a header message, which serves to identify the type
+of folder; the last message, which contains the data; and intermediate
+messages, which contain old versions of the data.
+The first message must contain the header <EM>x-pine-pinerc</EM>.
+<P>
+When a remote configuration is being used, the folder is checked to make
+sure it is a remote configuration folder, then the data contained in the
+last message is copied to a temporary file.
+That file is treated just like any regular local configuration file from
+that point on.
+Whenever a configuration change is made, the entire file is copied back
+to the IMAP server and is appended to the folder as a new message.
+<P>
+Because remote configuration folders are so similar to remote address books,
+the configuration variable
+<A HREF="config.html#remote-abook-metafile"><EM>remote-abook-metafile</EM></A>
+is used by both.
+<P>
+Remote configuration folders have names that look just like regular
+<A HREF="config-notes.html#remote-folders">remote mail folder</A> names.
+For example:
+
+<BLOCKQUOTE>
+          {host.domain}mypinerc<BR>
+</BLOCKQUOTE>
+
+<EM>Pine</EM> decides whether or not a configuration file is remote simply by
+looking at the first character of the name and comparing
+it to '<EM>{</EM>'.
+<P>
+
+<HR>
+
+<H2><A NAME="checkpoint">Checkpointing</A></H2>
+
+Periodically <EM>Pine</EM> will save the whole
+mail folder to disk to prevent loss
+of any mail or mail status in the case that it gets interrupted,
+disconnected, or crashes.  The period of time <EM>Pine</EM> waits to do the
+checkpoint is calculated to be minimally intrusive.  The timing can be
+changed (but usually isn't) at compile time.  Folder checkpointing happens
+for both local folders and those being accessed with IMAP.  The delays are
+divided into three categories:  <P>
+
+<DL COMPACT>
+
+<DT> Good Time:
+
+<DD> This occurs when <EM>Pine</EM> has been idle for more than 30 seconds.  In
+this case <EM>Pine</EM> will checkpoint if 12 changes
+to the file have been made or
+at least one change has been made and a checkpoint hasn't been done for
+five minutes.  <P>
+
+<DT> Bad Time:
+
+<DD> This occurs just after <EM>Pine</EM> has
+executed some command.  <EM>Pine</EM> will
+checkpoint if there are 36 outstanding changes to the mail file or at
+least one change and no checkpoint for ten minutes.  <P>
+
+<DT> Very Bad Time:
+
+<DD> Done when composing a message.  In this case, <EM>Pine</EM> will only
+checkpoint if at least 48 changes have been made or at least one change has been
+made in the last twenty minutes with no checkpoint.  <P>
+
+</DL>
+
+<HR>
+
+<H2><A NAME="debug">Debug Files</A></H2>
+
+If Unix <EM>Pine</EM> is compiled with the compiler
+<EM>DEBUG</EM> option on (the default),
+then <EM>Pine</EM> will produce debugging output to a file. The file is
+normally <CODE>.pine-debugX</CODE> in the user's home directory where
+<EM>X</EM> goes from 1 to 4.  Number 1 is always the most recent session
+and 4 the oldest.  Four are saved because often the user has gone in and
+out of <EM>Pine</EM> a few times after a problem has occurred before the expert
+actually gets to look at it.  The amount of output in the debug files
+varies with the debug level set when <EM>Pine</EM> is
+compiled and/or as a command
+line flag.  The default is level 2.  This shows very general things and
+records errors.  Level 9 produces copious amounts of output for each
+keystroke.  <P>
+
+<EM>PC-Pine</EM> creates a single debug file
+named <CODE>PINEDEBG.TXT</CODE> in the
+same directory as the <CODE>PINERC</CODE> file.  <P>
+
+<HR>
+
+<H2><A NAME="filters">Filters</A></H2>
+
+<EM>Pine</EM> is not designed to process email messages as they are delivered; 
+rather <EM>Pine</EM> depends on the fact that some other program (sendmail, etc)
+will deliver messages and <EM>Pine</EM> simply reads the email folders
+which that other program creates.
+For this reason, <EM>Pine</EM> cannot filter incoming
+email into different folders.  It can, however, work alongside most of the
+programs available over the Internet which perform this task.
+<EM>Pine</EM> is known to operate successfully with the <EM>Elm</EM>
+<EM>filter</EM> program and with <EM>procmail</EM>.  <P>
+
+<EM>Pine</EM> allows users to specify a set of
+<A HREF="config.html#inc-fold"><EM>incoming-folders</EM></A>.
+<EM>Pine</EM> will separate out all the folders listed
+as <EM>incoming-folders</EM> and offer convenient access to these.
+We hope that in the future <EM>Pine</EM> will be able to offer new message
+counts for all of the incoming folders, but we haven't done this so
+far because of the performance penalty.  <P>
+
+<HR>
+
+<H2><A NAME="format">Folder Formats and Name Extensions</A></H2>
+
+A folder is a group of messages.
+The default format used by Unix <EM>Pine</EM> is
+the Berkeley mail format.  It is also used by the standard <EM>mail</EM>
+command and by <EM>elm.</EM>
+Unix <EM>Pine</EM> also understands message folders in
+other formats, such as Tenex, MH, MMDF, and Netnews.
+<P>
+
+<EM>PC-Pine</EM> reads and writes local (PC) folders in a special
+format similar to the Tenex format.
+Near as we can tell, <EM>PC-Pine</EM> is the only program to use
+this format.
+Beginning with version 3.90, <EM>PC-Pine</EM> includes a ReadOnly
+driver for the Berkeley mailbox format in addition.  That means that you
+can import Unix mail folders, or mount them via NFS or SMB, and <EM>PC-Pine</EM>
+can read them --but not modify them.  <P>
+
+Extensions.  In the past, file name extensions have been significant in
+both Unix <EM>Pine</EM> and <EM>PC-Pine</EM>,
+but this has caused more problems than it solved.
+Therefore, on Unix <EM>Pine</EM> extensions no longer have any special
+meaning, and this is the trend for <EM>PC-Pine</EM> as well.  <P>
+
+By default, <EM>PC-Pine</EM> adds ".MTX" to the name of any
+local (PC) folders that
+are referenced, and suppresses the extension from the "Folder List" display. 
+Now that <EM>PC-Pine</EM> can read more than one folder format,
+the MTX extension no longer implies a particular format,
+and is largely irrelevant.
+By using the <A HREF="config.html#folder-ext"><EM>folder_extension</EM></A>
+option, you can change this behavior.
+In particular, you may set <EM>folder-extension</EM> to the "null string"
+(a pair of double quotes) which tells <EM>PC-Pine</EM> to
+neither add nor hide-from-view <EM>any</EM> folder name extension.  <P>
+
+The reason you might wish to over-ride the MTX default is that recent
+versions of <EM>PC-Pine</EM> have the ability to open (albeit ReadOnly) normal
+Unix mail folders. Since it might be inconvenient to rename all of them to
+have an MTX extension, it is possible with this option to switch <EM>PC-Pine</EM>'s
+behavior so that such folders can be seen and accessed without changing
+their names. However, doing this means that your existing <EM>PC-Pine</EM> local
+folders will have apparently changed their names.  For example, if you had
+a local folder named "FOO" it will now appear in the "Folder List" as
+"FOO.MTX". If you wish to save additional messages to that folder, you
+will need to enter the full name, "FOO.MTX" at the <EM>Save</EM> prompt.
+Likewise for <EM>GoTo</EM>.  <P>
+
+If you wish to permanently avoid having to deal with folder name
+extensions, you will need to set this option to the null string by
+entering two double- quote marks, and you will need to rename your
+existing local folders to not have an MTX extension.  In DOS this can be
+done in one command, once you have changed to your mail directory:  RENAME
+*.MTX *.  <P>
+
+We don't know why you might wish to, but you could also use this option to
+tell <EM>PC-Pine</EM> to use an extension other than MTX.  In this case, enter the
+three characters you desire to use in lieu of "MTX".  Note that your
+existing folders will need to be renamed to correspond to this new
+extension.  <P>
+
+<DL COMPACT>
+
+<DT> Berkeley Mail Format
+
+<DD> This format comes to us from the ancient UNIX mail program,
+<EM>/bin/mail.</EM> (Note that this doesn't have anything to do with
+Berkeley, but we call it the Berkeley mail file format anyway.) This
+program was actually used to interactively read mail at one time, and is
+still used on many systems as the local delivery agent.  In the Berkeley
+mail format, a folder is a simple text file.  Each message (including the
+first) must start with a separator line which takes approximately the
+form: 
+
+<BLOCKQUOTE>
+	From juser@u.example.edu  Wed Aug 11 14:32:33 1993<BR>
+</BLOCKQUOTE>
+
+<DT>
+
+<DD> Each message ends with two blank lines.  There are actually several
+different variations in the date part of the string, twenty at last count.
+Because of the format of the separators, lines in the mail message
+beginning with "From ", space included, risk being confused as message
+separator lines.  Some mail programs will interpret any line beginning
+with "From " as a message separator,
+while others --including <EM>Pine</EM>-- will
+not be confused unless the line really looks like a message separator,
+complete with address and date.  Such lines will be modified to begin with
+"&gt;From ".  In deference to other mail programs, you may also set the
+<A HREF="config.html#save-will-quote"><EM>save-will-quote-leading-froms</EM></A>
+feature, in which case any line beginning
+with "From " will be modified as above. If you see this occasionally in
+incoming mail messages,
+the culprit is not <EM>Pine</EM> but the message delivery
+program being used at your site.  <P>
+
+You can fool <EM>Pine</EM> into thinking a file is a mail folder by copying a
+suitable message separator from a real folder to the beginning of the file
+and wherever you want message boundaries. The vast majority of <EM>INBOX</EM>es
+<EM>Pine</EM> reads and folders it writes are of this format.  <P>
+
+<DT> Tenex and MTX Formats
+
+<DD> Like the Berkeley format, the Tenex folder format uses a single file
+per folder.  Historically, the name of Tenex-format folders ended with
+<EM>.txt</EM>, but this rule is no longer enforced.  The file format
+consists of a header line followed by the message text for each message. 
+The header is in one of two forms: 
+
+<BLOCKQUOTE>
+	dd-mmm-yy hh:mm:ss-zzz,n;ffffffffffff<BR>
+	dd-mmm-yyyy hh:mm:ss sssss,n;ffffffffffff<BR>
+</BLOCKQUOTE>
+
+<DT>
+
+<DD> and is immediately followed by a newline (and the message text). 
+The fields in the formats are:<BR>
+
+<PRE>
+<P>
+	dd	two-digit day of month (leading space if a single-digit day)<BR>
+	mmm	three-letter English month name (Jan, Feb, etc.)<BR>
+	yy	two-digit year in 20th century (obsolete)<BR>
+	yyyy	four-digit year<BR>
+	hh	two-digit hour in 24-hour clock (leading zero if single-digit)<BR>
+	mm	two-digit minute (leading zero)<BR>
+	ss	two-digit second (leading zero)<BR>
+	zzz	three-letter North American time zone (obsolete)<BR>
+	sssss	signed four-digit international time zone as in RFC 822<BR>
+	n	one or more digits of the size of the following message in<BR>
+		bytes<BR>
+	ffffffffffff<BR>
+		twelve-digit octal flags value<BR>
+</PRE>
+
+Punctuation is as given above.  <P>
+
+<DT>
+
+<DD> The time in the header is the time that message was written to the
+folder.  The flags are interpreted as follows:  the high order 30 bits are
+used to indicate user flags, the next two bits are reserved for future
+usage, the low four bits are used for system flags (010 = answered, 04 =
+flagged urgent, 02 = deleted, 01 = seen). 
+
+<DT>
+
+<DD> If a Tenex-format (or empty) file named <EM>mail.txt</EM> exists in a
+<EM>Pine</EM> user's home directory, this triggers special processing in <EM>Pine</EM>. When
+<EM>INBOX</EM> is opened, mail is automatically moved from <EM>/usr/spool/mail</EM>
+into <EM>mail.txt</EM> in the user's home directory. 
+
+<DT>
+
+<DD> The format used by <EM>PC-Pine</EM> is identical to the Tenex format, with two
+exceptions:  the folder name ends with <EM>.MTX</EM> instead of
+<EM>.txt</EM> (this is a requirement in the MTX format), and DOS-style
+CR/LF newlines are used instead of UNIX-style LF newlines.  <P>
+
+<DT> Netnews Format
+
+<DD> The netnews format is a ReadOnly format which uses directories under
+<CODE>/usr/spool/news</CODE> as folders.
+The <CODE>/usr/spool/news/</CODE> prefix is
+removed and all subsequent ``/'' (slash) characters are changed to ``.''
+(period).  For example, the netnews folder name <EM>comp.mail.misc</EM>
+refers to the directory name <CODE>/usr/spool/news/comp/mail/misc</CODE>.
+In addition, the news folder name must appear in the file
+<CODE>/usr/lib/news/active</CODE> for it to be recognized.
+Individual messages are
+stored as files in that directory, with file names being the ASCII form of
+a number assigned to that message. The default locations above can be
+changed with the config variables
+<A HREF="config.html#news-spool"></EM>news-spool-directory</EM></A>
+and
+<A HREF="config.html#news-active"></EM>news-active-file-path</EM></A>.
+<P>
+
+</DL>
+
+<HR>
+
+<H2><A NAME="locking">Folder Locking</A></H2>
+
+There are two kinds of locking which <EM>Pine</EM> has to worry about.  The first
+might be called program-contention locking.  This affects the times when a
+program is performing actual updates on a folder.  An update might be a
+message delivery program appending a message (<EM>sendmail</EM> delivering
+a message to an <EM>INBOX</EM>), status changes (checkpoints by <EM>Pine</EM> every few
+minutes) or deletion of messages (an expunge in <EM>Pine</EM>).  For moderate sized
+mail messages, these operations should not last for more than a few
+seconds.  The second kind of locking has to do with user-contention
+situations.  This would be the case when one folder is shared by a group
+of people or even when one person starts multiple email sessions all of
+which access the same folders and <EM>INBOX</EM>.  <P>
+
+There are two standard locking mechanisms which handle program-contention
+locking.  To be on the safe side, <EM>Pine</EM> implements both of them.  The older
+mechanism places a file <EM>xxxx.lock</EM> (where <EM>xxxx</EM> is the
+name of the file being locked) in the same directory as the file being
+locked.  This makes use of the fact that directory operations are atomic
+in UNIX and mostly works across NFS.  There are involved algorithms used
+to determine if a lock has been held for an excessive amount of time and
+should be broken.  The second program-contention locking mechanism uses
+the <EM>flock()</EM> system call on the mailbox.  This is much more
+efficient and the locks can't get stuck because they go away when the
+process that created them dies.  This is usually found on 4BSD and related
+machines.  <P>
+
+In addition to these, <EM>Pine</EM>--through the c-client library--provides robust
+locking which prevents several users (or several instances of the same
+user) having a mail file open (for update) at once.  This user-contention
+lock is held the entire time that the folder is in use.  <P>
+
+With IMAPd 7.3(63) and <EM>Pine</EM> 3.84 and higher, the second <EM>Pine</EM> session which
+attempts to open a particular folder
+(usually <EM>INBOX</EM>) with <EM>Pine</EM> will
+``win''. That is to say, the second session will have read/write access
+to the folder.  The first user's folder will become read-only.  (Note that
+this is exactly the opposite of the behavior prior
+to <EM>Pine</EM> 3.84 where the
+second open was read-only.  Having the latest open be read-write seems to
+match more closely with what users would like to have happen in this
+situation.)
+<EM>Pine</EM>'s additional locking is only effective against multiple
+uses of <EM>Pine</EM> or other programs using the c-client library, such as
+<EM>MailManager, ms, IMAPd </EM>and a few others.  Beginning with <EM>Pine</EM>
+3.85, there is a <EM>-o</EM> command line flag to intentionally open a
+mailbox read-only.  <P>
+
+<EM>Pine</EM> locking on UNIX systems works by creating lock files in <EM>/tmp</EM>
+of the form <EM>\usr\spool\mail\joe.  </EM>The system call
+<EM>flock()</EM> is then used on these files; the existence of the file
+alone does not constitute a lock.  This lock is created when the folder is
+opened and destroyed when it is closed.  When the folder is actually being
+written, the standard UNIX locks are also created.  <P>
+
+If a folder is modified by some other program while <EM>Pine</EM> has it open, <EM>Pine</EM>
+will give up on that mail file, concluding it's best not to do any further
+reads or writes.  This can happen if another mailer that doesn't observe
+<EM>Pine</EM>'s user-contention locks (e.g.  <EM>elm</EM> or <EM>mail)</EM> is run
+while <EM>Pine</EM> has the mail folder open.  <EM>Pine</EM> checkpoints files every few
+minutes, so little data can be lost in these situations.  <P>
+
+<EM>PC-Pine</EM> does not do any folder locking.  It depends on IMAP servers to
+handle locking of remote folders.  It is assumed that only one <EM>Pine</EM>
+session can be running on the PC at a time, so there is no contention
+issue around folders on the PC itself.  <P>
+
+<HR>
+
+<H2><A NAME="INBOX">INBOX and Special Folders</A></H2>
+
+The <EM>INBOX</EM> folder is treated specially.  It is normally kept open
+constantly so that the arrival of new mail can be detected.  The name
+<EM>INBOX</EM> refers to wherever new mail is retrieved on the system.  If
+the <A HREF="config.html#inbox-path"><EM>inbox-path</EM></A> variable is set,
+then <EM>INBOX</EM> refers to
+that.  IMAP servers understand the concept of <EM>INBOX</EM>, so
+specifying the folder <EM>{imap.u.example.edu}INBOX</EM> is meaningful. 
+The case of the word <EM>INBOX</EM> is not important,
+but <EM>Pine</EM> tends to display it in all capital letters.  <P>
+
+The folders for <A HREF="config.html#def-fcc">sent mail</A>
+and <A HREF="config.html#def-save">saved messages</A> folders are
+also somewhat special.
+They are automatically created if they are absent and recreated
+if they are deleted.  <P>
+
+<HR>
+
+<H2><A NAME="help">Internal Help Files</A></H2>
+
+The file <CODE>pine.hlp</CODE> in the <CODE>pine</CODE> subdirectory of the
+distribution contains all the help text for <EM>Pine</EM>.
+On UNIX, it is compiled right into the <EM>Pine</EM> binary as strings.
+This is done to simplify installation and configuration.
+The <CODE>pine.hlp</CODE> file is in a
+special format that is documented at the beginning of the file.
+It is divided into sections, each with a name that winds up being referenced as
+a global variable.  This file is processed by two awk scripts and
+turned into C files that are compiled into <EM>Pine</EM>.  <P>
+
+<EM>PC-Pine</EM>, which tries to run on machines with as little as 640k
+of memory, leaves the <EM>Pine</EM> help text out of the executable.
+<CODE>PINE.EXE</CODE>, <CODE>PINE.HLP</CODE>, and <CODE>PINE.NDX</CODE>
+are all needed for <EM>PC-Pine</EM>'s help system.  <P>
+
+<HR>
+
+<H2><A NAME="char-set">International Character Sets</A></H2>
+
+While <EM>Pine</EM> was designed in the U.S.
+and used mostly for English-language
+correspondence, it is a goal for <EM>Pine</EM> to handle email in almost any
+language.  Many sites outside of the U.S. run <EM>Pine</EM> in their native
+language.  The default character set for <EM>Pine</EM> is US-ASCII.  That can be
+changed in the personal or system-wide configuration file with the
+variable <A HREF="config.html#char-set"><EM>character-set</EM></A>.  <P>
+
+When reading incoming email, <EM>Pine</EM> allows all character sets to pass
+through.  <EM>Pine</EM> doesn't actually display the characters but
+simply passes them through;
+it is up to the actual display device to show the characters correctly.
+When composing email, <EM>Pine</EM> will accept input in any language
+and tag the message according to the <EM>character-set</EM> variable. 
+Again, it is up to the input device to generate the correct sequences for
+the character set being used.  <P>
+
+With the exception of UNICODE-1-1-UTF-7, the outgoing message is checked
+to see if it is all US-ASCII text (and contains no escape characters).  In
+that case, the text will be labeled as US-ASCII even if the
+<EM>character-set</EM> variable is set to something else.  The theory is
+that every reasonable character set will have US-ASCII as a subset, and
+that it makes sense to label the text with the lowest-common-denominator
+label so that more mailers will be able to display it.  Text in the
+UNICODE-1-1-UTF-7 character set is never re-labeled as US-ASCII.
+If the outgoing message is not all US-ASCII text, then it will be labeled with
+the <EM>character-set</EM> variable set by the user. If the user has not
+set the <EM>character-set</EM> variable then it will be labeled as
+<EM>X-UNKNOWN</EM>. <P>
+
+<B>BUG</B>:  If you prepare a UNICODE-1-1 document and read it into the
+composer with <EM>^R</EM>,
+<EM>Pine</EM> may mistreat it.  If your document, when misviewed
+as 8-bit bytes, does not contain any individual bytes greater than 0x7f
+base 16, then <EM>Pine</EM> will re-label your outgoing
+message as US-ASCII, even
+if your message is really in Unicode Cyrillic, Arabic, or Thai.  On the
+other hand, if your UNICODE-1-1, when misviewed as 8-bit bytes, does
+contain at least one individual byte greater than 0x7f base 16, as is
+likely for Unicode French/German/Spanish, Greek, Japanese, and Chinese,
+then <EM>Pine</EM> will retain the UNICODE-1-1 label. <P>
+
+The character sets are: 
+
+<BLOCKQUOTE>
+US-ASCII		Standard 7 bit English characters<BR>
+ISO-8859-1		8 bit European "latin 1" character set<BR>
+ISO-8859-2		8 bit European "latin 2" character set<BR>
+ISO-8859-3		8 bit European "latin 3" character set<BR>
+ISO-8859-4		8 bit European "latin 4" character set<BR>
+ISO-8859-5		8 bit Latin and Cyrillic<BR>
+ISO-8859-6		8 bit Latin and Arabic<BR>
+ISO-8859-7		8 bit Latin and Greek   <BR>
+ISO-8859-8		8 bit Latin and Hebrew<BR>
+ISO-8859-9		8 bit European "latin 5" character set<BR>
+ISO-8859-10		8 bit European "latin 6" character set<BR>
+KOI8-R			8 bit Latin and Russian<BR>
+VISCII			8 bit Latin and Vietnamese<BR>
+ISO-2022-JP		Latin and Japanese<BR>
+ISO-2022-KR		Latin and Korean<BR>
+UNICODE-1-1		Unicode<BR>
+UNICODE-1-1-UTF-7	Mail-safe Unicode<BR>
+ISO-2022-JP-2		Multilingual<BR>
+</BLOCKQUOTE>
+<P>
+
+Earlier versions of <EM>Pine</EM> made use of the character set tags associated
+with text in MIME to decide if the text should be displayed or not. 
+Depending on the character set tag and the <EM>character-set</EM> variable
+in <EM>Pine</EM>, the text was either displayed as is, displayed with some
+characters filtered out, or not displayed at all.  The current version
+uses a much simpler algorithm in order to maximize the chance that useful
+contents are readable by the user.  It simply displays
+<STRONG>all</STRONG> messages of type text and makes no attempt to filter
+out characters that may be in the wrong character set.  If the text is
+tagged as something other than US-ASCII and the tag does not match the
+character set that the <EM>character-set</EM> variable is set to,
+then an attempt is made to convert the incoming characters into the character
+set given in the <EM>character-set</EM> variable.
+Characters which are not representable in the character set of the display
+will be converted to question marks.
+The feature
+<A HREF="config.html#disable-charset-conversions"><EM>disable-charset-conversions</EM></A>
+may be used to turn off this automatic conversion.
+A warning is printed at the start of the message and the characters are
+sent to the display.  It is
+possible that the text will be displayed incorrectly.
+<P>
+There is special-case code which attempts to handle Japanese text (ISO-2022-JP).
+Incoming ISO-2022-JP text will be converted to EUC in
+UNIX <EM>Pine</EM> and to Shift-JIS in <EM>PC-Pine</EM>
+before it is sent to the display.
+Conversely, when sending mail UNIX <EM>Pine</EM> will convert EUC into ISO-2022-JP
+and <EM>PC-Pine</EM> will convert Shift-JIS into ISO-2022-JP.
+The feature
+<A HREF="config.html#disable-2022-jp-conversions"><EM>disable-2022-jp-conversions</EM></A>
+may be used to turn off this automatic conversion.
+<P>
+
+There used to be a facility in <EM>PC-Pine</EM> to map between various
+DOS Code Pages and standard character sets.
+That facility, including the <EM>CP_TO_ISO</EM> and <EM>ISO_TO_CP</EM> hooks, was broken
+for several versions of <EM>Pine</EM> and is now entirely removed.
+We hope that the character set conversion that happens automatically
+before displaying a message will handle most of what the Code Page code used
+to do.
+For example, a Russian user would probably set the
+<EM>character-set</EM> variable in the <CODE>PINERC</CODE> file to
+the value <CODE>KOI8-R</CODE>.
+That would cause outgoing messages to be labeled as <CODE>KOI8-R</CODE>.
+If an incoming message was labeled with the <CODE>Windows-1251</CODE> character set,
+<EM>Pine</EM> should be able to convert the <CODE>Windows-1251</CODE> characters to <CODE>KOI8-R</CODE> before
+sending them to the display.
+<P>
+
+<HR>
+
+<H2><A NAME="interrupt">Interrupted and Postponed Messages</A></H2>
+
+If the user is composing mail and is interrupted by being disconnected
+(SIGHUP, SIGTERM or end of file on the standard input), <EM>Pine</EM> will save the
+interrupted composition and allow the user to continue it when he or she
+resumes <EM>Pine</EM>.  As the next <EM>Pine</EM> session starts, a message will be given
+that an interrupted message can be continued.  To continue the interrupted
+message, simply go into the composer.  To get rid of the interrupted
+message, go into the composer and then cancel the message with
+<EM>^C.</EM> <P>
+
+Composition of half-done messages may be postponed to a later time by
+giving the <EM>^O</EM> command.  Other messages can be composed while
+postponed messages wait.  All of the postponed messages are kept in a
+single folder.  Postponing is a good way to quickly reference other
+messages while composing.  <P>
+
+<HR>
+
+<H2><A NAME="status">Message Status</A></H2>
+
+The c-client library allows for several flags or status marks to be set
+for each message.  <EM>Pine</EM> uses four of these flags:  UNSEEN, DELETED,
+ANSWERED, and FLAGGED.  The <CODE>N</CODE> in <EM>Pine</EM>'s
+FOLDER INDEX means that a
+message is unseen-it has not been read from this folder yet.  The <CODE>D</CODE>
+means that a message is marked for deletion.
+Messages marked with <CODE>D</CODE> are
+removed when the user <EM>Expunges</EM> the folder (which usually happens
+when the folder is closed or the user quits <EM>Pine</EM>).
+The <CODE>A</CODE> in <EM>Pine</EM>'s
+FOLDER INDEX means that the message has been replied-to.  The <CODE>*</CODE> in
+<EM>Pine</EM>'s FOLDER INDEX means that the message has been ``flagged'' as
+important.  That is, the user used the <EM>Flag</EM> command to turn the
+FLAGGED flag on.  This flag can mean whatever the user wants it to mean. 
+It is just a way to mark some messages as being different from others.  It
+will usually probably be used to mark a message as somehow being
+``important''. For Berkeley format folders, the message status is written
+into the email folder itself on the header lines marked <CODE>Status:</CODE>
+and <CODE>X-Status</CODE>.
+In Tenex and <EM>PC-Pine</EM>'s MTX folder formats, the
+status goes into the 36-bit octal flags.  <P>
+
+<HR>
+
+<H2><A NAME="MIME-read">MIME:  Reading a Message</A></H2>
+
+<EM>Pine</EM> should be able to handle just about any MIME message.  When a MIME
+message is received, <EM>Pine</EM> will display a list of all the parts, their
+types and sizes.  It will display the attachments when possible and
+appropriate and allow users to <EM>Save</EM> all other attachments.  <P>
+
+Starting with version 3.90, <EM>Pine</EM> honors the "mailcap"
+configuration system for specifying external programs for handling attachments.
+The mailcap file maps MIME attachment types to the external programs
+loaded on your system which can display and/or print the file.
+A sample mailcap file
+comes bundled with the <EM>Pine</EM> distribution.  It includes comments which
+explain the syntax you need to use for mailcap.  With the mailcap file,
+any program (mail readers, newsreaders, WWW clients) can use the same
+configuration for handling MIME-encoded data.  <P>
+
+If a <CODE>MAILCAPS</CODE>environment variable is defined,
+<EM>Pine</EM> will use that to look
+for one or more mailcap files, which are combined.  In the absence of
+<CODE>MAILCAPS</CODE>, Unix <EM>Pine</EM> will look for
+a personal mailcap file in <CODE>~/.mailcap</CODE>
+and combine that with a system-wide file in <CODE>/etc/mailcap</CODE>.
+<EM>PC-Pine</EM> will look for a file named <CODE>MAILCAP</CODE> in the
+same directory as the <CODE>PINERC</CODE> file,
+and/or the directory containing the <CODE>PINE.EXE</CODE> executable.  <P>
+
+Messages which include <EM>rich text</EM> or <EM>enriched text</EM> in the
+main body will be displayed in a very limited way (it will show bold and
+underlining).  <P>
+
+If <EM>Pine</EM> sees a MIME message part tagged as type IMAGE,
+and <EM>Pine</EM>'s
+<A HREF="config.html#image-viewer"><EM>image-viewer</EM></A>
+configuration variable is set, <EM>Pine</EM> will attempt to
+send that attachment to the named image viewing program.  In the case of
+UNIX <EM>Pine</EM>, the <CODE>DISPLAY</CODE> environment variable is
+checked to see if an X-terminal is being used (which can handle the images).
+If the <EM>image-viewer</EM> variable is not set,
+<EM>Pine</EM> uses the <EM>mailcap</EM>
+system to determine what to do with IMAGE types, just as it does for any
+other non-TEXT type, e.g. type APPLICATION.  For MIME's generic "catch
+all" type, APPLICATION/OCTET-STREAM, the <EM>mailcap</EM> file will
+probably not specify any action, but <EM>Pine</EM> users may always
+<EM>Save</EM> any MIME attachment to a file.  <P>
+
+MIME type "text/plain" is handled a little bit differently than the
+other types.  If you are viewing the main body part in the MESSAGE TEXT
+viewing screen, then <EM>Pine</EM> will use its internal viewer to display it.
+This happens even if there is a mailcap description which matches this
+particular type.  If it is labeled as having a character set other than
+the one you are using, it will still be displayed by the internal viewer
+(perhaps incorrectly), though you will get a warning message prepended
+to the message in the viewing screen.  However, if you view a part of
+type "text/plain" from the ATTACHMENT INDEX screen, then <EM>Pine</EM> will check
+the mailcap database for a matching entry and use it in preference to
+its internal viewer.  <P>
+
+Some text attachments, specifically those which are just other email messages
+forwarded as MIME messages, are displayed as part of the main body of the
+message.  This distinction allows easy display when possible (the forward
+as MIME case) and use of an attachment viewer when that is desirable (the
+plain text file attachment case).  <P>
+
+If the parts of a multipart message are alternate versions of the same
+thing <EM>Pine</EM> will select and display the one best suited.
+For parts of type "message/external-body", the parameters showing the
+retrieval method will be displayed, and the retrieval process is automated.
+Messages of type "message/partial" are not currently supported.  <P>
+
+<HR>
+
+<H2><A NAME="MIME-send">MIME:  Sending a Message</A></H2>
+
+There are two important factors when trying to include an attachment in a
+message:  encoding and labeling.
+<EM>Pine</EM> has rules for both of these which
+try to assure that the message goes out in a form that is robust and can
+be handled by other MIME mail readers.  <P>
+
+MIME has two ways of encoding data-Quoted-Printable and Base64. 
+Quoted-Printable leaves the ASCII text alone and only changes 8-bit
+characters to "=" followed by the hex digits.  For example, "=09" is a
+tab.  It has the advantage that it is mostly readable and that it allows
+for end of line conversions between unlike systems.  Base64 encoding is
+similar to <EM>uuencode</EM> or <EM>btoa</EM> and just encodes a raw bit
+stream.  This encoding is designed to get text and binary files through
+even the most improperly implemented and configured gateways intact, even
+those that distort uuencoded data.  <P>
+
+<STRONG>All</STRONG> attachments are encoded using Base64 encoding.  This
+is so that the attachment will arrive at the other end looking exactly
+like it did when it was sent.  Since Base64 is completely unreadable
+except by MIME-capable mailers or programs, there is an obvious tradeoff
+being made here.  We chose to ensure absolutely reliable transport of
+attachments at the cost of requiring a MIME-capable mailer to read them. 
+If the user doesn't want absolute integrity he or she may always
+<EM>include</EM> text (with the <EM>^R</EM> command) in the body of a
+message instead of attaching it.  With this policy, the only time
+quoted-printable encoding is used is when the main body of a message
+includes special foreign language characters.  <P>
+
+When an attachment is to be sent, <EM>Pine</EM> sniffs through it to try to set the
+right label (content-type and subtype).  An attachment with any lines
+longer than 500 characters in it or more than 10% of the characters are
+8-bit it will be considered binary data.  <EM>Pine</EM> will recognize (and
+correctly label) a few special types including GIF, JPEG, PostScript, and
+some audio formats. Another method which can be more robust and flexible for
+determining the content-type and subtype is to base it on the file extension.
+This method uses a <A HREF="config-notes.html#mime.types">MIME.Types File</A>.
+<P>
+
+If it is not binary data (has only a small proportion of 8-bit characters
+in it,) the attachment is considered 8-bit text.  8-bit text attachments
+are labeled "text/plain" with charset set to the value of the user's
+<EM>character-set</EM> variable.  If an attachment is ASCII (no 8-bit
+characters) and contains no <EM>ESCAPE, ^N, </EM>or <EM>^O</EM> characters
+(the characters used by some international character sets), then it is
+considered plain ASCII text.  Such attachments are given the MIME label
+"text/plain;  charset=US-ASCII", regardless of the setting of the user's
+<EM>character-set</EM> variable.  <P>
+
+All other attachments are unrecognized and therefore given the generic
+MIME label "application/octet-stream".  <P>
+
+<HR>
+
+<H2><A NAME="new-mail">New Mail Notification</A></H2>
+
+<EM>Pine</EM> checks for new mail in the <EM>INBOX</EM> and in
+the currently open folder every two and a half minutes by default.
+It used to be 30 seconds
+instead of 150 seconds, but we increased it in order to reduce the load on
+large systems with lots of <EM>Pine</EM> users.  The value can be changed at
+compile-time in the pine/os.h file.  This value can be changed with the
+variable <A HREF="config.html#mail-check"><EM>mail-check-interval</EM></A>.
+A new mail check can be forced by redrawing the screen with a <EM>^L</EM>.  <P>
+
+When there is new mail, the message(s) will appear in the index, the
+screen will beep, and a notice showing the sender and subject will be
+displayed.  If there has been more than one new message since you last
+issued a command to <EM>Pine</EM>, the notice will show the count of new messages
+and the sender of the most recent one.  <P>
+
+Questions have arisen about the interaction between <EM>Pine</EM> and external mail
+notification routines (biff, csh, login).  Firstly and unfortunately, we
+have found no PC based program that will check for email on an IMAP server
+when <EM>PC-Pine</EM> is not running.  If you find one, please tell us.  <P>
+
+The UNIX case is more complicated.  <EM>Pine</EM> sets the modification and access
+time on a file every time it performs a write operation (status change or
+expunge).  You need to see which of these your email notification program
+is looking at to know how it will behave with <EM>Pine</EM>.  <P>
+
+<HR>
+
+<H2><A NAME="NFS">NFS</A></H2>
+
+It is possible to access mail folders on <EM>NFS</EM> mounted volumes with
+<EM>Pine</EM>, but there are some drawbacks to doing this, especially in the case
+of incoming-message folders that may be concurrently updated by <EM>Pine</EM> and
+the system's mail delivery agent.  One concern is that <EM>Pine</EM>'s
+user-contention locks don't work because <EM>/tmp</EM> is usually not
+shared, and even if it was, <EM>flock()</EM> doesn't work across
+<EM>NFS.</EM> <P> The implementation of the standard UNIX ".lock" file
+locking has been modified to work with <EM>NFS</EM> as follows.  Standard
+hitching post locking is used so first a uniquely named file is created,
+usually something like <EM>xxxx.host.time.pid.</EM> Then a link to it is
+created named <EM>xxxx.lock</EM> where the folder being locked is
+<EM>xxxx.</EM> This file constitutes the lock.  This is a standard UNIX
+locking scheme.  After the link returns, a <EM>stat(2)</EM> is done on the
+file.  If the file has two links, it is concluded that the lock succeeded
+and it is safe to proceed.  <P>
+
+In order to minimize the risks of locking failures via <EM>NFS</EM>, we strongly
+recommend using IMAP rather than <EM>NFS</EM> to access remote incoming message
+folders, e.g. your <EM>INBOX</EM>.  However, it is generally safe to access
+personal saved-message folders via <EM>NFS</EM> since it is unlikely that
+more than one process will be updating those folders at any given time. 
+Still, some problems may occur when two <EM>Pine</EM> sessions try to access the
+same mail folder from different hosts without using IMAP.  Imagine the
+scenario:  <EM>Pine</EM>-A performs a write that changes the folder.  <EM>Pine</EM>-B then
+attempts to perform a write on the same folder.  <EM>Pine</EM>-B will get upset
+that the file has been changed from underneath it and abort operations on
+the folder.  <EM>Pine</EM>-B will continue to display mail from the folder that it
+has in its internal cache, but it will not read or write any further data. 
+The only thing that will be lost out of the <EM>Pine</EM>-B session when this
+happens is the last few status changes.  <P>
+
+If other mail readers besides <EM>Pine</EM> are involved, all bets are off. 
+Typically, mailers don't take any precautions against a user opening a
+mailbox more than once and no special precautions are taken to prevent
+<EM>NFS</EM> problems.  <P>
+
+<HR>
+
+<H2><A NAME="print">Printers and Printing</A></H2>
+
+UNIX <EM>Pine</EM> can print to the standard UNIX line printers or to generic
+printers attached to ANSI terminals using the escape sequences to turn the
+printer on and off.  The user has a choice of three printers in the
+configuration.  <P>
+
+The first setting, <EM>attached-to-ansi</EM>, makes use of escape
+sequences on ANSI/VT100 terminals.  It uses "&lt;ESC&gt;[5i" to begin
+directing all output sent to the terminal to the printer and then
+"&lt;ESC&gt;[4i" to return to normal.  <EM>Pine</EM> will send these escape
+sequences if the printer is set to <EM>attached-to-ansi.</EM> This works
+with most ANSI/VT100 emulators on Macs and PCs such as kermit, NCSA
+telnet, VersaTerm Pro, and WinQVT.  Various terminal emulators implement
+the print feature differently.  For example, NCSA telnet requires "capfile
+= PRN" in the <EM>config.tel</EM> file.  Attached-to-ansi printing doesn't
+work at all with the telnet provided with PC-NFS. There is also a closely
+related method called <EM>attached-to-ansi-no-formfeed</EM> which is
+the same except for the lack of formfeed character at the end of the
+print job.
+<P>
+<EM>Attached-to-wyse</EM> and <EM>attached-to-wyse-no-formfeed</EM> are
+very similar to "attached-to-ansi".
+The only difference is in the control characters sent to turn the printer
+on and off.
+The Wyse version uses Ctrl-R for on, and Ctrl-T for off.
+<P>
+
+The second selection is the standard UNIX print command.  The default is
+<EM>lpr</EM>, but it can be changed on a system basis to anything so
+desired in <CODE>/usr/local/lib/pine.conf</CODE>. <P>
+
+The third selection is
+the user's personal choice for a UNIX print command.  The text to be
+printed is piped into the command.  <EM>Enscript</EM> or <EM>lpr</EM> with
+options are popular choices.  The actual command is retained even if one
+of the other print selections is used for a while.  <P>
+
+Both the second and third sections are actually lists of possible commands
+rather than single commands. <P>
+
+If you have a PostScript printer attached to a PC or Macintosh, then you
+will need to use a utility called <EM>ansiprt</EM> to get printouts on
+your printer.  <EM>Ansiprt</EM> source code and details can be found in
+the <CODE>./contrib</CODE> directory of the <EM>Pine</EM> distribution.  <P>
+
+The three printer choices are for UNIX <EM>Pine</EM> only.
+<EM>PC-Pine</EM> can only print to the locally attached printer.
+All printing on <EM>PC-Pine</EM>
+is done via ROM BIOS Print Services (Int 17h).  After verifying the
+existence of a local printer via the BIOS Equipment-List Service (Int 11h),
+it simply sends the message text, character by character, to the
+first printer found using ASCII CR and LF at the end of lines and followed
+by an ASCII FF.  Note, some system adjustments using the PC's "MODE"
+command may be required if the printer is not on the first parallel port. 
+<EM>PC-Pine</EM> cannot generate PostScript,
+so printing to exclusively PostScript printers does not work.  <P>
+
+<EM>PC-Pine</EM> for Winsock uses the MS-Windows printer interface.
+A <EM>Pine</EM> print command will bring up a
+standard MS-Windows printer dialog box.  <P>
+
+<HR>
+
+<H2><A NAME="save">Save and Export</A></H2>
+
+<EM>Pine</EM> users get two options for moving
+messages in <EM>Pine</EM>: <EM>Save</EM> and <EM>Export</EM>.
+<EM>Save</EM> is used when the message should remain ``in the
+<EM>Pine</EM> realm.'' Saved messages include the complete header
+(including header lines normally hidden by <EM>Pine</EM>),
+are placed in a <EM>Pine</EM> folder collection and
+accumulate in a standard folder format which <EM>Pine</EM> can read.
+In contrast, the <EM>Export</EM> command is used to write the contents
+of a message to a file for use outside of <EM>Pine</EM>.
+Messages which have been exported are
+placed in the user's home directory (unless the feature
+<A HREF="config.html#use-current-dir"><EM>use-current-dir</EM></A> is
+turned on), not in a <EM>Pine</EM> folder collection. 
+Unless FullHeaderMode is toggled on, all delivery-oriented headers are
+stripped from the message.  Even with <EM>Export</EM>, <EM>Pine</EM> retains
+message separators so that multiple messages can accumulate in a single
+file and subsequently be accessed as a folder.  On UNIX systems, the
+<EM>Export</EM> command pays attention to the standard <EM>umask</EM> for
+the setting of the file permissions.  <P>
+
+<HR>
+
+<H2><A NAME="sent-mail">Sent Mail</A></H2>
+
+<EM>Pine</EM>'s default behavior is to keep a copy of each outgoing message in a
+special "sent mail" folder.  This folder is also called the fcc for "file
+carbon copy".  The existence, location and name of the sent mail folder
+are all configurable.  Sent mail archiving can be turned off by setting
+the configuration variable
+<A HREF="config.html#def-fcc"><EM>default-fcc=""</EM></A>.  The sent mail folder
+is assumed to be in the default collection for <EM>Save</EM>s,
+which is the first collection named in
+<A HREF="config.html#fold-coll"><EM>folder-collections</EM></A>.
+The name of the folder
+can be chosen by entering a name in <EM>default-fcc</EM>.
+With <EM>PC-Pine</EM>,
+this can be a bit complicated.  If the default collection for <EM>Save</EM>s is
+local (DOS), then the <EM>default-fcc</EM> needs to be <CODE>SENTMAIL</CODE>,
+which is syntax for a DOS file.  However, if the default collection
+for <EM>Save</EM>s is
+remote, then the <EM>default-fcc</EM> needs to be <CODE>sent-mail</CODE>
+to match the UNIX syntax.  <P>
+
+The configuration variable
+<A HREF="config.html#fcc-name-rule"><EM>fcc-name-rule</EM></A>
+also plays a role in selecting the folder to save sent mail in. <P>
+
+A danger here is that the sent mail could grow without bound.  For this
+reason, we thought it useful to encourage the users to periodically prune
+their sent mail folder.  The first time <EM>Pine</EM> is used each month it will
+offer to archive all messages sent from the month before.  <EM>Pine</EM> also
+offers to delete all the sent mail archive folders which are more than 1
+month old.  If the user or system has disabled sent mail archiving (by
+setting the configuration variable <EM>default-fcc=""</EM>)
+there will be no pruning question. 
+<P>
+
+<HR>
+
+<H2><A NAME="spell">Spell Checker</A></H2>
+
+Spell checking is available for UNIX <EM>Pine</EM> only.  We could not find an
+appropriate PC based spell checker to hook into <EM>PC-Pine</EM>.
+Even UNIX <EM>Pine</EM>
+depends on the system for its spell checking and dictionary.  <EM>Pico</EM>, the
+text editor, uses the same spell checking scheme as <EM>Pine</EM>.  <P>
+
+Lines beginning with "&gt;" (usually messages included in replies) are not
+checked.  The message text to be checked is on the standard input and the
+incorrect words are expected on the standard output.  <P>
+
+The default spell checker is UNIX <EM>spell</EM>.  You can replace this
+by setting the <A HREF="config.html#speller"><EM>speller</EM></A> configuration
+variable.
+<EM>Pine</EM> also respects the environment variable <CODE>SPELL</CODE>.
+The spelling checker reads its words from a standard dictionary on the system. 
+Below is a description, contributed by Bob Hurt, of how you can create
+your own personal dictionary with additional ``correct'' words. <P>
+
+<BLOCKQUOTE>
+
+<DL COMPACT>
+
+<DT>
+Step 1:
+
+<DD> Make a file with all the words you want to include in your new
+dictionary. I did mine with one word per line in alphabetical order. Caps
+don't matter at all, as far as I know. 
+
+<DT> Step 2: 
+
+<DD> At the UNIX prompt, type "cat [word file] | spellin /usr/dict/hlista
+&gt; [new dict name]" where [word file] is the file you just created and
+[new dict name] is the name of the new dictionary that <EM>Pine</EM> will look at
+instead of the standard <EM>/usr/dict/hlista.</EM> I named my word file
+<EM>.bobwords</EM> and my dictionary <EM>.bobspell</EM> so I don't have to
+see them when I do a <EM>ls</EM> command (<EM>ls</EM> doesn't list "dot"
+files). I also put the above command into my <EM>.alias</EM> file as the
+command <EM>makedict</EM> so I can add a word to my word file and easily
+recreate my dictionary. NOTE:  the new dictionary is in something called a
+"hashed" format, and can't be read normally. 
+
+<DT> Step 3: 
+
+<DD> Check your new dictionary. At the UNIX prompt, type "cat [word file]
+| spellout [new dict name]" If you did everything correctly, it should
+just give you another prompt. If it lists any of the words in your file,
+something is wrong. I can try to help if all else fails. 
+
+<DT> Step 4: 
+
+<DD> Now you have to tell UNIX to use your dictionary instead of the
+standard one by setting the environment variable <EM>SPELL</EM> to access
+your dictionary. Go into your <EM>.login</EM> or <EM>.cshrc</EM> file in
+your home directory (it doesn't seem to make a difference which one you
+use) and add the line
+
+<BLOCKQUOTE>
+		setenv SPELL "spell -d [new dict name]"<BR>
+<P>
+</BLOCKQUOTE>
+
+<DT>
+
+<DD> I also created an alias for <EM>SPELL</EM> in my <EM>.alias</EM> file
+so I can use the UNIX <EM>spell</EM> command to spell-check a file outside
+of <EM>Pine</EM>.  (The <EM>.alias</EM> line is:  alias spell 'spell -d [new dict
+name]') 
+
+<DT> Step 5: 
+
+<DD> Now you need to logoff and log back on to let UNIX look at your
+<EM>.login</EM> (or <EM>.cshrc</EM>) file. 
+
+</DL>
+
+</BLOCKQUOTE> <P>
+
+Here is an alternative method suggested by Zachary Leber: 
+
+<BLOCKQUOTE>
+
+<DL COMPACT>
+
+<DT>
+
+<DD> Create a list (e.g. <EM>.zachwords</EM>) with the upper case followed
+by lower case words, sorted alphabetically. 
+
+<DT>
+
+<DD> Add this line to <EM>.cshrc</EM>: 
+
+<BLOCKQUOTE>
+setenv SPELL 'spell +/home/ie/rsa/.zachwords'<BR>
+</BLOCKQUOTE>
+
+<DT>
+
+<DD> The limitation here is that the path must be absolute (e.g. 
+<EM>+~/.zachwords</EM> doesn't work). 
+
+<DT>
+
+<DD> My man pages for spell show this + flag to be an easy way to do the
+exception list.  This way you don't have to bother with hash lists or
+rehashing, and it seems to work across several platforms.  <P>
+
+</DL>
+
+</BLOCKQUOTE>
+
+<HR>
+
+<H2><A NAME="terminal">Terminal Emulation and Key Mapping</A></H2>
+
+<EM>Pine</EM> has been designed to require as little as possible from the terminal. 
+At the minimum, <EM>Pine</EM> requires cursor positioning, clear to end of line,
+and inverse video.  Unfortunately, there are terminals that are missing
+some of these such as a vt52.  <EM>Pine</EM> makes no assumptions as to whether the
+terminal wraps or doesn't wrap.  If the terminal has other capabilities it
+may use some of them.  <EM>Pine</EM> won't run well on older terminals that require
+a space on the screen to change video attributes, such as the Televideo
+925.  One can get around this on some terminals by using "protected field"
+mode.  The terminal can be made to go into protected mode for reverse
+video, and then reverse video is assigned to protected mode.  <P>
+
+<EM>Pine</EM> handles screens of most any size and resizing on the fly.  It catches
+SIGWINCH and does the appropriate thing.  A screen one line high will
+display only the new mail notification.  Screens that are less than ten
+columns wide don't format very nicely or work well, but will function fine
+again once resized to something large.  <EM>Pine</EM> sets an internal maximum
+screen size (currently 170x200) and decides to use either <EM>termcap</EM>
+or <EM>terminfo</EM> when it is compiled.  <P>
+
+On the input side of things, <EM>Pine</EM> uses all the standard keys, most of the
+control keys and (in function-key mode) the function keys.  <EM>Pine</EM> avoids
+certain control keys, specifically ^S, ^Q, ^H, and <EM>^\</EM>
+because they have other meanings outside of <EM>Pine</EM> (they control data flow,
+etc.) <EM>^H</EM> is treated the same as the <EM>delete</EM> key, so the
+<EM>backspace</EM> or <EM>delete</EM> keys always works regardless of any
+configuration.  There is a feature <EM>compose-maps-delete-key-to-ctrl-d</EM>
+which makes the delete key behave like ^D rather than ^H (deletes current
+character instead of previous character).  <P>
+
+Sometimes a communications program or communications server in between you
+and the other end will eat certain control characters.  There is a
+work-around when you need it.  If you type two escape characters followed
+by a character that will be interpreted as the character with the control
+key depressed.  For example, <EM>ESC ESC T</EM> is equivalent to
+<EM>^T</EM>.  <P>
+
+When a function key is pressed and <EM>Pine</EM> is in regular (non-function key)
+mode, <EM>Pine</EM> traps escape sequences for a number of common function keys so
+users don't get an error message or have an unexpected command executed
+for each character in the function key's escape sequence.  <EM>Pine</EM> expects
+the following escape sequences from terminals defined as VT100:  <P>
+
+<BLOCKQUOTE>
+        ANSI/VT100<BR>
+F1:     &lt;ESC&gt;OP <BR>
+F2:     &lt;ESC&gt;OQ <BR>
+F3:     &lt;ESC&gt;OR <BR>
+F4:     &lt;ESC&gt;OS <BR>
+F5:     &lt;ESC&gt;Op <BR>
+F6:     &lt;ESC&gt;Oq <BR>
+F7:     &lt;ESC&gt;Or <BR>
+F8:     &lt;ESC&gt;Os <BR>
+F9:     &lt;ESC&gt;Ot <BR>
+F10:    &lt;ESC&gt;Ou <BR>
+F11:    &lt;ESC&gt;Ov <BR>
+</BLOCKQUOTE>
+<P>
+
+Arrow keys are a special case.  <EM>Pine</EM> has the escape sequences for a number
+of conventions for arrow keys hard coded and does not use <EM>termcap</EM>
+to discover them.  This is because <EM>termcap</EM> is sometimes
+incorrect, and because many users have PC's running terminal emulators
+that don't conform exactly to what they claim to emulate.
+In some versions of <EM>Pine</EM> before 4.00 there was a compile-time macro
+called TERMCAP_WINS which could be set to cause the <EM>termcap</EM>
+or <EM>terminfo</EM> definitions to be used instead of the built in definitions.
+Beginning with 4.00 there is a hidden runtime feature which can be turned
+on to accomplish the same thing. The feature is called
+<A HREF="config.html#termdef-takes-precedence"><EM>termdef-takes-precedence</EM></A>
+and it can be set in any of the <EM>Pine</EM> configuration files.
+Some arrow keys on old terminals send single control characters
+like <EM>^K</EM> (one even sends <EM>^\</EM>).
+These arrow keys will not work with <EM>Pine</EM>.
+The most popular escape sequences for arrow keys are:  <P>
+
+<BLOCKQUOTE>
+Up:	&lt;ESC&gt;[A	&lt;ESC&gt;?x	&lt;ESC&gt;A	&lt;ESC&gt;OA<BR>
+Down:	&lt;ESC&gt;[B	&lt;ESC&gt;?r	&lt;ESC&gt;B	&lt;ESC&gt;OB<BR>
+Right:	&lt;ESC&gt;[C	&lt;ESC&gt;?v	&lt;ESC&gt;C	&lt;ESC&gt;OC<BR>
+Left:	&lt;ESC&gt;[D	&lt;ESC&gt;?t	&lt;ESC&gt;D	&lt;ESC&gt;OD<BR>
+</BLOCKQUOTE>
+<P>
+
+It is possible to configure an NCD X-terminal so that some of the special
+keys operate.  Brad Greer contributes these instructions:  <P>
+
+<DL COMPACT>
+
+<DT> 1. 
+
+<DD> In your <EM>.Xdefaults</EM> file, include the following
+"translations", using lower hex values:
+
+<BLOCKQUOTE>
+Pine*VT100.Translations: #override \n\<BR>
+&lt;Key&gt;Delete:	string(0x04)	\n\<BR>
+&lt;Key&gt;End:		string(0x05)	\n\<BR>
+&lt;Key&gt;Escape:	string(0x03)	\n\<BR>
+&lt;Key&gt;Home:	string(0x01)	\n\<BR>
+&lt;Key&gt;Next:	string(0x16)	\n\<BR>
+&lt;Key&gt;Prior:	string(0x19)	\n\<BR>
+&lt;Key&gt;KP_Enter:	string(0x18)	\n\<BR>
+</BLOCKQUOTE>
+<P>
+
+<DT> 2. 
+
+<DD> Start up <EM>Pine</EM> from an <EM>xterm,</EM> and specify a "resource name". 
+This resource name will allow the user to specify resources for <EM>Pine</EM> (that
+deviate from the defaults).  For example, <EM>xterm -name Pine -e pine
+&</EM> (the resource name <EM>Pine</EM> corresponds to the translations
+just added in the <EM>.Xdefaults</EM> file).  <P>
+
+</DL> <P>
+
+<!-- pnuts -->
+
+</a>
+
+
+</a>
+
+
+</BODY>
+</HTML>

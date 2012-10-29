@@ -1,0 +1,13 @@
+#!/bin/sh
+set -e
+if [ -x /usr/bin/update-menus ]; then
+  update-menus
+fi
+
+if [ remove = "$1" ]; then
+    dpkg-divert --quiet --package pine --remove --rename \
+	--divert /usr/bin/clone-editor-moved /usr/bin/pico
+    dpkg-divert --quiet --package pine --remove --rename \
+	--divert /usr/share/man/man1/clone-editor-moved.1.gz \
+	/usr/share/man/man1/pico.1.gz
+fi

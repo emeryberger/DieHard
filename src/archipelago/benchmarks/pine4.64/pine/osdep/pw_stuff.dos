@@ -1,0 +1,46 @@
+#line 2 "osdep/pw_stuff.dos"
+/*----------------------------------------------------------------------
+  This collection of routines looks up the login name and password on the
+system. For things like PC's it's OK for these to return NULL since there
+is no system login. Other code will figure out who the user actually is.
+  ----*/
+
+void
+get_user_info(ui)
+    struct user_info *ui;
+{
+    char buf[_MAX_PATH], *p, *q;
+    int	 len = _MAX_PATH;
+
+#if	WIN32
+    if(GetUserName(p = buf, &len))
+      ui->login = cpystr(p);
+    else
+#endif
+    ui->login = cpystr((p = (char *) getenv("USERNAME")) ? p : "");
+
+    if((p = (char *) getenv("HOMEDRIVE"))
+       && (q = (char *) getenv("HOMEPATH")))
+      sprintf(buf, "%s%s", p, q);
+    else
+      sprintf(buf, "%c:\\", '@' + _getdrive());
+
+    ui->homedir  = cpystr(buf);
+    ui->fullname = cpystr("");
+}
+
+/*----------------------------------------------------------------------
+      Look up a userid on the local system and return rfc822 address
+
+ Args: name  -- possible login name on local system
+
+ Result: returns NULL or pointer to malloc'd string rfc822 address.
+  ----*/
+char *
+local_name_lookup(name)
+     char *name;
+{
+    return(NULL);
+}
+
+

@@ -1,0 +1,1583 @@
+<HTML><HEAD><TITLE>Pine Technical Notes: Notes on Configuration and 
+Preferences</TITLE></HEAD><BODY>
+<H1>Notes on Configuration and Preferences</H1>
+
+<H2><A NAME="fkey">Pine in Function Key Mode</A></H2>
+
+The standard <EM>Pine</EM> uses alphabetic keys for most commands, and control keys
+in the composer.  Despite possible appearances, the current bindings are
+the result of much discussion and thought.  All the commands in the
+composer are single control characters.  This keeps things very neat and
+simple for users.  Two character commands in the composer are a
+possibility, but we're trying to avoid them because of the added
+complexity for the user.  <P>
+
+<EM>Pine</EM> can also operate in a function-key mode.  To go into this mode invoke
+<EM>pine -k</EM> or (on some UNIX systems) <EM>pinef.</EM> On a UNIX
+system, you can link or copy the <EM>Pine</EM> executable to
+<EM>pinef</EM> to install <EM>pinef.</EM> Alternatively, users and systems
+administrators can set the <EM>use-function-keys</EM> feature in the
+personal or system-wide <EM>Pine</EM> configuration file.
+The command menus at the
+bottom of the screen will show <EM>F1-F12 </EM>instead of the alphabetic
+commands.  In addition, the help screens will be written in terms of
+function keys and not alphabetic keys.  <P>
+
+One of the results of using <EM>Pine</EM> in function-key mode is that users can
+only choose from twelve commands at any given time.  In alphabetic-key
+mode, a user can press a key for a command (say, q to quit) and that
+command can be fulfilled.  In function-key mode, the command must be
+visible on the bottom key-menu in order to be used.  There are some
+screens where four screens of commands are operational;
+function-key users can get to all of them, just not all at once.  <P>
+
+<HR>
+
+<H2><A NAME="domain">Domain Settings</A></H2>
+
+<EM>Pine</EM> uses the default domain for a few different tasks.  First, it is
+tacked onto the user-id for outgoing email.  Second, it is tacked onto all
+"local" (unqualified) addresses in the "To:" or "Cc:" fields of messages
+being composed (unless they are found in the address book or on an
+LDAP server). The domain
+name is also used to generate message-id lines for each outgoing message
+and to allow <EM>Pine</EM> to check if an address is that of the current <EM>Pine</EM> user. 
+<P>
+
+<EM>Pine</EM> determines the domain name according
+to whichever of these it finds. 
+The list here is in decreasing order of precedence. 
+
+<OL>
+
+<LI> Value of the variable
+<A HREF="config.html#user-domain"><EM>user-domain</EM></A>
+in the system fixed configuration file
+
+<LI> Value of the variable <EM>user-domain</EM> in the personal
+configuration file
+
+<LI> Value of the variable <EM>user-domain</EM> in the system-wide
+configuration file
+
+<LI> Value from an external database (DNS, <CODE>/etc/hosts</CODE>, NIS) as
+modified by a system fixed configuration file if
+<A HREF="config.html#use-only"><EM>use-only-domain-name</EM></A>
+set to <EM>yes</EM>
+
+<LI> Value from an external database (DNS, <CODE>/etc/hosts</CODE>, NIS) as
+modified by a personal configuration file if <EM>use-only-domain-name</EM>
+set to <EM>yes</EM>
+
+<LI> Value from an external database (DNS, <CODE>/etc/hosts</CODE>, NIS) as
+modified by a system configuration file if <EM>use-only-domain-name</EM>
+set to <EM>yes</EM>
+
+<LI> Unmodified value (host name) from an external database <P>
+
+</OL>
+
+<P> The easiest way for this system to work is for <EM>PC-Pine</EM>
+users and UNIX <EM>Pine</EM> system administrators to
+set the <EM>user-domain</EM> variable.  The
+variable <EM>use-only-domain-name</EM> is helpful if your site
+supports/requires hostless addressing, but for some reason you don't want
+to use the <EM>user-domain</EM> variable.  <P> 
+
+<HR>
+
+<H2><A NAME="collections">Syntax for Collections</A></H2>
+
+In many environments, it is quite common to have collections of archived
+mail on various hosts around the network.  Using the folder collections
+facility in <EM>Pine</EM>, access to these archives is just as simple as access to
+folders on <EM>Pine</EM>'s local disk.  <P>
+
+"Collection" is the word we use in <EM>Pine</EM> to describe a set of folders.  A
+collection corresponds loosely to a "directory" containing mail folders. 
+Folders within a defined collection can be manipulated (opened, saved-to,
+etc) using just their simple name.  Any number of folder collections can
+be defined, and <EM>Pine</EM> will adjust its menus and prompts to help navigate
+them.  <P>
+
+The way collections are defined in <EM>Pine</EM> is with the
+<A HREF="config.html#fold-coll"><EM>folder-collections</EM></A>
+variable in the <EM>Pine</EM> configuration file. 
+<EM>Folder-collections</EM> takes a list of one or more collections, each
+(optionally) preceded by a user-defined logical name (label).  Once
+collections are defined, <EM>Pine</EM> adjusts its menus and behavior to allow
+choosing files by their simple name within the collection.
+<P>
+
+Consider the following: 
+
+<PRE>
+   folder-collections=	Local-Mail	C:\MAIL\[],
+			Remote-Mail	{imap.u.example.edu}mail/[]
+</PRE>
+<P>
+
+The example shows two collections defined (a comma separated list;
+newlines in the list are OK if there's one or more spaces before the next
+entry), one local and one remote.  Each collection is a space-delimited
+pair of elements-first an optional logical-name and second the collection
+specifier.  The logical-name can have spaces if it has quotes around it
+(but keeping the logical name short and descriptive works best).  <EM>Pine</EM>
+will use the logical-name (if provided) to reference all folders in the
+collection, so the user never has to see the ugliness of the collection
+specifier.  <P>
+
+The collection specifier can be thought of as an extended IMAP format (see
+the <A HREF="#remote-folders"><EM>Remote Folders</EM></A> section
+for a description of IMAP format names). 
+Basically, a pair of square-brackets are placed in the fully qualified
+IMAP path where the simple folder name (the part without the host name and
+path) would appear.  Like IMAP, the path can be either fully qualified
+(i.e., with a leading '/') or relative to your home directory.  <P>
+
+An advanced feature of this notation is that a pattern within the square
+brackets allows the user to define a collection to be a subset of a
+directory.  For example, a collection defined with the specifier: 
+
+<PRE>
+	M-Mail		C:MAIL/[m*]<BR>
+</PRE>
+
+will provide a view in the folder lister of all folders in the PC's
+"C:MAIL" directory that start with the letter 'm' (case insensitive under
+DOS, of course).  Further, the wildcard matching will honor characters
+trailing the '*' in the pattern.  <P>
+
+From within <EM>Pine</EM>, the "Folder List" display will be adjusted to allow
+browsing of the folders in any defined collection.  Even more, you'll
+notice in the <EM>Goto</EM> and <EM>Save</EM> commands a pair of
+sub-commands to rotate
+through the list of logical collection names, so only a simple name need
+be input in order to operate on a folder in any collection.  <P>
+
+The first collection specified in the <EM>folder-collections</EM> has
+special significance.  That folder is the "default collection for saves". 
+By default, in cases where the user does not specify which
+collection should be used to <EM>Save</EM> a message,
+the default collection for saves will be used.
+Also, if the <A HREF="config.html#def-fcc"><EM>default-fcc</EM></A>
+is a relative file name, then it is relative
+to the default collection for saves. (See also
+<A HREF="config.html#saved-msg-name"><EM>saved-msg-name-rule</EM></A>. <P>
+
+The notion of collections encompasses both email folders and news reading. 
+The variable <A HREF="config.html#news-coll"><EM>news-collections</EM></A>
+uses nearly the same format as <EM>folder-collections</EM>.
+Newsgroups can be defined for convenient
+access via either IMAP or NNTP. There are advantages and disadvantages to
+both access methods. In the IMAP case, your news environment state is
+maintained on the server and, thus, will be seen by any client.  The
+downside is that, at the moment, you must have an account on the server. 
+In the NNTP case, server access is mostly anonymous and no
+state/accounting need be maintained on it.  The downside is that each
+client, for now, must individually maintain news environment state.  <P>
+
+An example pinerc entry might be: 
+
+<PRE>
+     news-collections=	Remote-State	{news.u.example.edu}#news.[],
+			Local-State	{news.u.example.edu/nntp}#news.[]
+</PRE>
+
+Only newsgroups to which you are subscribed are included in the collection. <P>
+
+The pattern matching facility can be applied so as to define a news 
+collection which is a subset of all the newsgroups you subscribe to.  For 
+example, this could be a valid collection: 
+
+<PRE>
+			Newsfeed-News	{news.u.example.edu/nntp}#news.[clari.*]
+</PRE>
+<P>
+
+Collection handling is a tough problem to solve in a general way, and the
+explanation of the syntax is a bit ugly.  The upside is, hopefully, that
+for a little complexity in the <EM>Pine</EM> configuration file you get simple
+management of multiple folders in diverse locations.  <P>
+
+As of <EM>Pine</EM> 4.00, collection setup is handled by the
+<EM>Setup/collectionList</EM> screen instead of requiring hand editing
+of the configuration file. <P>
+
+<HR>
+
+<H2><A NAME="remote-folders">Syntax for Folder Names</A></H2>
+
+Remote folders are distinguished from local folders by a leading host name
+bracketed by '{' and '}'.  The path and folder name immediately following
+the closing bracket, '}', is interpreted by the remote server and is in a
+form compatible with that server (i.e., path delimiters and naming syntax
+relative to that server).
+<P>
+
+The full syntax for a <EM>Pine</EM> folder name looks like
+
+<P>
+<CENTER><SAMP>[{&lt;remote-specification&gt;}][#&lt;namespace&gt;]&lt;namespace-specific-part&gt;</SAMP></CENTER>
+<P>
+
+The square brackets ([]) mean that the part is optional.
+<P>
+
+If there is no remote-specification, then the folder name is interpreted
+locally on the computer running <EM>Pine</EM>.
+Local folder names depend on the operating system used by the computer 
+running <EM>Pine</EM>, as well as the configuration of that system.  For example,
+&quot;C:&#92;PINE&#92;FOLDERS&#92;OCT-94&quot; might exist on a PC, and
+&quot;~/mail/september-1994&quot; might be a reasonable folder name on a
+system running Unix.
+
+<P>
+<EM>Pine</EM> users have the option of using folders which are stored on some other
+computer.  <EM>Pine</EM> accesses remote folders via IMAP (the Internet Message
+Access Protocol), or in the case of news, via NNTP (the Network News
+Transport Protocol).  To be able to access remote folders in <EM>Pine</EM>, the
+remote host must be running the appropriate server software (imapd or
+nntpd) and you must correctly specify the name of the folder to <EM>Pine</EM>,
+including the domain name of the remote machine. For example,
+<P>
+<CENTER><SAMP>&#123;monet.art.example.com}INBOX</SAMP></CENTER>
+<P>
+could be a remote folder specification, and so could
+<P>
+<CENTER><SAMP>&#123;unixhost.art.example.com}~/mail/september-1994</SAMP></CENTER>
+and
+<P>
+<CENTER><SAMP>&#123;winhost.art.example.com}&#92;mymail&#92;SEP-94</SAMP></CENTER>
+<P>
+Note that in the case of remote folders, the directory/file path in the specification is 
+determined by the operating system of the remote computer, <B>not</B> by
+the operating system of the computer on which you are running <EM>Pine</EM>.
+<P>
+As you can tell, the name of the computer is in &#123;} brackets
+followed immediately by the name of the folder.  (In each of these cases the
+optional namespace is missing.)  If, as in these
+examples, there is no remote access protocol specified, then IMAP is
+assumed.  Check
+<A HREF="#server-name-syntax"><EM>Server Name Syntax</EM></A>
+for a more detailed look at what options can be placed between the brackets.
+If there are no brackets at all, then the folder name is interpreted locally
+on the computer on which you are running <EM>Pine</EM>.
+
+<P>
+To the right of the brackets when a server name is present, or at the
+start of the foldername if no server is present, the sharp sign,
+&quot;#&quot;, holds special meaning.  It indicates a folder name
+outside the area reserved for your personal folders.  In fact, it's
+used to indicate both the name of the folder, and a special phrase
+telling <EM>Pine</EM> how to interpret the name that follows.
+
+<P>
+So, for example, <EM>Pine</EM> can be used to access a newsgroup that might be 
+available on your computer using:
+<P>
+<CENTER><SAMP>#news.comp.mail.pine</SAMP></CENTER>
+<P>
+The sharp sign indicates the folder name is outside your personal
+folder area.  The &quot;news.&quot; phrase after it tells <EM>Pine</EM> to 
+interpret the remainder of the name as a newsgroup.
+
+<P>
+Similarly, to access a newsgroup on your IMAP server, you might
+use something like:
+<P>
+<CENTER><SAMP>&#123;wharhol.art.example.com}#news.comp.mail.misc</SAMP></CENTER>
+
+<P>
+There are a number of such special phrases (or &quot;namespaces&quot;)
+available.  For a more detailed explanation read about
+<A HREF="#folder-namespaces"><EM>Namespaces</EM></A>.
+
+<P>
+Note that &quot;INBOX&quot; has special meaning in both local and remote folder
+names.  The name INBOX refers to your &quot;principal incoming
+message folder&quot; and will be mapped to the actual file name used for your
+INBOX on any given host.  Therefore, a name like
+&quot;&#123;xxx.art.example.com}INBOX&quot; refers to whatever file is used to
+store incoming mail for you on that particular host.
+<P>
+
+<HR>
+
+<H2><A NAME="server-name-syntax">Server Name Syntax</A></H2>
+
+This section describes the syntax which may be used for server names
+which may be associated with remote folders or SMTP servers.
+
+<P>
+A server name is the hostname of the server.
+It's a good idea to use the host's fully-qualified network name.
+
+<P>
+<CENTER><SAMP>foo.example.com</SAMP></CENTER>
+<P>
+
+However, IP addresses are allowed if surrounded
+with square-brackets.
+
+<P>
+<CENTER><SAMP>[127.0.0.1]</SAMP></CENTER>
+<P>
+
+An optional network port number may be supplied by appending
+a colon (:) followed by the port number
+to the server name.
+By default, the IMAP port number, 143, is used.
+
+<P>
+<CENTER><SAMP>foo.example.com:port</SAMP></CENTER>
+<P>
+
+Besides server name and optional port number, various other optional
+parameters may be supplied that alter <EM>Pine</EM>'s interaction with the server.
+A parameter is supplied by appending a slash (/) character followed by
+the parameter's name and,
+depending on the particular parameter, the value assigned to that
+name, to the server name (and optional port number).
+Parameter names are <EM>not</EM> case sensitive.
+Currently supported parameters include:
+
+<DL>
+
+<DT>User</DT>
+<DD>This parameter requires an associated value, and is intended to
+provide the username identifier with which to establish the server
+connection.
+If your SMTP server offers SMTP AUTH authentication, adding this 
+parameter to the
+<A HREF="config.html#smtp-server"><EM>SMTP-Server</EM></A>
+option will cause <EM>Pine</EM> to attempt to authenticate to the server using the
+supplied username.
+Similarly, if your NNTP server offers NNTP &quot;AUTHINFO SASL&quot;
+or &quot;AUTHINFO USER&quot; authentication, adding this parameter to the
+<A HREF="config.html#nntp-server"><EM>NNTP-Server</EM></A>
+option (or to the server name for any folder collection using NNTP)
+will cause <EM>Pine</EM> to attempt
+to authenticate to the server using the supplied username.
+An example might be:
+
+<P>
+<CENTER><SAMP>/user=katie</SAMP></CENTER>
+<P>
+
+</DD>
+
+<DT>TLS</DT>
+<DD>
+Normally, when a new connection is made an attempt is made to 
+negotiate a secure (encrypted) session using Transport Layer Security (TLS).
+If that fails then a non-encrypted connection will be attempted instead.
+This is a unary parameter indicating communication with the server must 
+take place over a TLS connection. If the attempt to use TLS fails then
+this parameter will cause the connection to fail instead of falling
+back to an unsecure connection.
+
+<P>
+<CENTER><SAMP>/tls</SAMP></CENTER>
+<P>
+
+</DD>
+
+<DT>SSL</DT>
+<DD>
+This is a unary parameter indicating communication with the server should 
+take place over a Secure Socket Layer connection.  The server must support
+this method, and be prepared to accept connections on the appropriate
+port (993 by default).
+<EM>Pine</EM> must be linked with an SSL library for this option to be operational.
+
+<P>
+<CENTER><SAMP>/ssl</SAMP></CENTER>
+<P>
+
+</DD>
+
+<DT>NoValidate-Cert</DT>
+<DD>Do not validate certificates (for TLS or SSL connections) from the server.
+This is needed if the server uses self-signed certificates or if <EM>Pine</EM>
+cannot validate the certificate for some other known reason.
+<P>
+</DD>
+
+<DT>Anonymous</DT>
+<DD>This is a unary parameter (that means it does not have a value)
+indicating that the connection be logged in as
+&quot;anonymous&quot; rather than a specific user.
+Not all servers offer anonymous
+access; those which do generally only offer read-only access to certain
+&quot;public&quot; folders.
+
+<P>
+<CENTER><SAMP>/anonymous</SAMP></CENTER>
+<P>
+
+</DD>
+
+<DT>Secure</DT>
+<DD>This is a unary parameter indicating that the connection use the
+most secure authentication method mutually supported by <EM>Pine</EM> and the
+server.
+<EM>Pine</EM> is capable of authenticating connections to 
+the server using several methods.
+By default, <EM>Pine</EM> will attempt each
+method until either a connection is established or the
+list of methods is exhausted.
+This parameter causes <EM>Pine</EM> to instead fail 
+the connection if the first (generally most &quot;secure&quot;) method fails.
+
+<P>
+<CENTER><SAMP>/secure</SAMP></CENTER>
+<P>
+
+</DD>
+
+<DT>Submit</DT>
+<DD>This is a unary parameter for use with the
+&quot;SMTP-Server&quot; option.
+It indicates that the connection should be made to the Submit server
+(<A HREF="http://www.ietf.org/rfc/rfc2476.txt">RFC 3676</A>)
+(port 587) instead of the SMTP port (25).
+At the time this help was written the submit option was equivalent to
+specifying port 587.
+
+<P>
+<CENTER><SAMP>/submit</SAMP></CENTER>
+<P>
+or
+<P>
+<CENTER><SAMP>host:587</SAMP></CENTER>
+<P>
+
+</DD>
+
+<DT>Debug</DT>
+<DD>This is a unary parameter indicating that the connection be established
+in a verbose mode.  Basically, it causes <EM>Pine</EM> to log the communication with
+the server in <EM>Pine</EM>'s debug file.
+Normally, the pine -d command-line flag would be used instead.
+<P>
+</DD>
+
+<DT>NoRsh</DT>
+<DD>By default, <EM>Pine</EM> attempts to login using &quot;rsh&quot;,
+the UNIX remote shell program.
+Including &quot;NoRsh&quot; will cause connections to this server to skip
+the &quot;rsh&quot; attempt.
+This might be useful to avoid long timeouts caused by rsh firewalls, for
+example.
+<P>
+</DD>
+
+<DT>Service</DT>
+<DD>This parameter requires an associated value.  The default value is
+&quot;IMAP&quot; which indicates communication with the server based
+on the IMAP4rev1 protocol (defined in RFC 3501 -- see 
+<A HREF="http://www.imap.org/docs/rfc3501.html">http://www.imap.org/docs/rfc3501.html</A>).</DD>
+
+Other service values include:
+ <DL>
+ <DT>NNTP</DT>
+ <DD>This value indicates communication with the server takes place via
+the Network News Transfer Protocol.  Use this to define a collection
+of newsgroups on a remote news server.  So
+
+<P>
+<CENTER><SAMP>/service=NNTP</SAMP></CENTER>
+<P>
+or just
+<P>
+<CENTER><SAMP>/NNTP</SAMP></CENTER>
+<P>
+
+is the way to specify NNTP access.
+<P>
+ </DD>
+
+ <DT>POP3</DT>
+ <DD>This value indicates communication with the server takes place via the
+Post Office Protocol 3 protocol.
+
+<P>
+<CENTER><SAMP>/service=POP3</SAMP></CENTER>
+<P>
+or just
+<P>
+<CENTER><SAMP>/POP3</SAMP></CENTER>
+<P>
+
+Note that there are several important issues
+to consider when selecting this option:
+<OL>
+ <LI> POP3 provides access to only your INBOX.  In other words,
+secondary folders such as your &quot;saved-messages&quot; are inaccessible.
+ <LI> <EM>Pine</EM>'s implementation of POP3 does not follow the traditional POP
+model and will leave your mail on the server. Refer to the
+<A HREF="#maildrop"><EM>Mail Drop</EM></A>
+functionality for a possible way around this problem.
+ <LI> See the discussion about new-mail checking in <A HREF="config.html#reopen-rule"><EM>Folder-Reopen-Rule</EM></A>.
+</OL>
+</DD>
+</DL>
+
+<DT>Loser</DT>
+<DD>This is intended for use with defective servers that do not implement the
+protocol specification correctly.
+It should be used only as a last resort since it is likely that it
+will seriously degrade performance.
+Setting this parameter will cause <EM>Pine</EM> to disable various protocol features
+and perform client-side workarounds instead.
+For example, it disables the IMAP SEARCH, SORT, and THREAD commands
+and does client-side searching, sorting, and threading instead.
+If set for the <A HREF="h_config_smtp_server">&quot;SMTP-Server&quot;</A>
+option, it causes <EM>Pine</EM> to not use the EHLO command and so not
+to attempt to use any SMTP extensions.
+The precise measures taken when &quot;loser&quot; is set depend on the
+protocol and are subject to change over time.
+
+<P>
+<CENTER><SAMP>/loser</SAMP></CENTER>
+<P>
+</DD>
+</DL>
+
+<P>
+Note that it is possible to include more than one parameter in a server
+specification by concatenating the parameters. For example:
+
+<P>
+<CENTER><SAMP>foo.example.com:port/user=katie/novalidate-cert/debug</SAMP></CENTER>
+<P>
+
+<HR>
+
+<H2><A NAME="folder-namespaces">Folder Namespaces</A></H2>
+
+A <EM>Pine</EM> folder name looks like
+
+<P>
+<CENTER><SAMP>[{&lt;remote-specification&gt;}][#&lt;namespace&gt;][&lt;namespace-specific-part&gt;]</SAMP></CENTER>
+<P>
+
+The local part of a folder name has an optional &quot;Namespace&quot; which
+tells <EM>Pine</EM> how to interpret the rest of the name.
+
+<P> 
+By default the folder name is interpreted as defining a section of your personal
+folder area.  This area and how you specify it are defined by the
+server, if one is specified, or, typically, the home
+directory, if no server is defined.
+
+<P>
+If a namespace is specified, it begins with the
+sharp, &quot;#&quot;, character followed by the name of the namespace
+and then the namespace's path-element-delimiter.  Aside from the
+path's format, namespaces can also imply access rights, content
+policy, audience, location, and, occasionally, access methods.
+
+<P>
+Each server exports its own set (possibly of size one) of 
+namespaces.  Hence, it's likely communication with your server's
+administrator will be required for specific configurations.  Some of
+the more common namespaces, however, include:
+
+<DL>
+<DT>#news.</DT>
+<DD>This specifies a set of folders in the newsgroup namespace.  Newsgroup
+names are hierarchically defined with each level delimited by a period.
+<P>
+<CENTER><SAMP>#news.comp.mail.pine</SAMP></CENTER>
+<P>
+</DD>
+<DT>#public/</DT>
+<DD>This specifies a folder area that the server may export to the general
+public.
+</DD>
+<DT>#shared/</DT>
+<DD>This specifies a folder area that the folder may export to groups
+of users.
+</DD>
+<DT>#ftp/</DT>
+<DD>This specifies a folder area that is the same as that it may have 
+exported via the &quot;File Transfer Protocol&quot;.
+</DD>
+<DT>#mh/</DT>
+<DD>This specifies the personal folder area associated with folders
+and directories that were created using the MH message handling system.
+</DD>
+<DT>#move/</DT>
+<DD>This namespace is interpreted locally by <EM>Pine</EM>. It has an unusual interpretation and format.
+<P>
+<CENTER><SAMP>#move&lt;DELIM&gt;&lt;MailDropFolder&gt;&lt;DELIM&gt;&lt;DestinationFolder&gt;</SAMP></CENTER>
+<P>
+The <CODE>#move</CODE> namespace is followed by two folder names separated by a delimiter
+character.
+The delimiter character may be any character which does not appear in
+the <CODE>MailDropFolder</CODE> name.
+The meaning of <CODE>#move</CODE> is that mail will be copied from the <CODE>MailDropFolder</CODE> to
+the <CODE>DestinationFolder</CODE> and then deleted (if possible) from the <CODE>MailDropFolder</CODE>.
+Periodic checks at frequency
+<A HREF="config.html#mail-check"><EM>Mail-Check-Interval</EM></A>, but with a minimum time between checks set by
+<A HREF="config.html#maildrop-check-minimum"><EM>MailDrop-Check-Minimum</EM></A>,
+are made for new mail arriving in the <CODE>MailDropFolder</CODE>.
+An example which copies mail from a POP inbox to a local folder follows
+<P>
+<CENTER><SAMP>#move+{popserver.example.com/pop3/ssl}inbox+local folder</SAMP></CENTER>
+<P>
+To you it appears that mail is being delivered to the local folder when it
+is copied from the <CODE>MailDropFolder</CODE>, and you read mail from the local folder.
+<P>
+Note that if the <CODE>DestinationFolder</CODE> does not exist then the messages are not
+copied from the <CODE>MailDropFolder</CODE>.
+A <CODE>#move</CODE> folder may only be used as an
+<A HREF="config.html#enable-incoming-folders"><EM>Incoming folder</EM></A> or
+an Inbox.
+When you are in the FOLDER LIST of Incoming Message Folders (after turning
+on the enable-incoming-folders option)
+the Add command has a subcommand &quot;Use Mail Drop&quot;
+which may be helpful for defining the folder in your <EM>Pine</EM> configuration.
+The same is true when you edit the
+<A HREF="config.html#inbox-path"><EM>Inbox-Path</EM></A>
+option in Setup/Config.
+Each of these configuration methods will also create the <CODE>DestinationFolder</CODE>
+if it doesn't already exist.
+If you are having problems, make sure the <CODE>DestinationFolder</CODE> exists.
+</DD>
+</DL>
+<P>
+
+In addition, the server may support access to other user's folders,
+provided you have suitable permissions.  Common methods use a prefix
+of either &quot;~<VAR>user</VAR>/&quot;, or &quot;/<VAR>user</VAR>/&quot; to
+indicate the root of the other user's folder area.
+<P>
+
+<HR>
+
+<H2><A NAME="maildrop">What is a Mail Drop?</A></H2>
+
+In some situaions it may make sense to have your mail delivered to one
+folder (the Mail Drop) and then when you want to read mail that has been
+delivered to the Mail Drop folder <EM>Pine</EM> will move it to another
+destination folder.
+Often the Mail Drop will be a remote folder and messages will be moved from
+there to a local destination folder.
+
+<P>
+One example where this might make sense is if the Mail Drop folder is accessible
+only with the POP protocol.
+You could designate your POP inbox as the Mail Drop folder and have <EM>Pine</EM> move
+mail from there to a local (on the same machine <EM>Pine</EM> is running on)
+destination folder, where you'll read it.
+
+<P>
+A Mail Drop may only be used as your Inbox or as an
+<A HREF="config.html#enable-incoming-folders"><EM>Incoming folder</EM></A>.
+
+<P>
+There is no attempt to synchronize the contents of the destination folder
+with the contents of the Mail Drop folder.
+All that happens is that all of the messages in the Mail Drop folder are
+copied to the destination folder and then they are deleted and expunged (if possible)
+from the Mail Drop folder.
+The next time a check for new mail is made, any messages in the Mail 
+Drop folder are once again copied to the destination folder and deleted
+and expunged from the Mail Drop folder.
+(If the Mail Drop folder is a news group, then the messages can't be
+expunged from the newsgroup. Instead, only Recent messages are copied from
+the newsgroup to the destination folder.)
+
+<P>
+Configuration of a Mail Drop is a little different from configuration of
+a folder which does not use a Mail Drop because you have to specify two
+folder names instead of one.
+The two folders may be any types of folders that <EM>Pine</EM> can normally use.
+They don't have to be a remote folder and a local folder, that is
+simply the most common usage.
+When you use a Mail Drop folder <EM>Pine</EM> will periodically re-open the Mail
+Drop to check for new mail.
+The new-mail checks will happen at the frequency set with the
+<A HREF="config.html#mail-check"><EM>Mail-Check-Interval</EM></A> option,
+but with a minimum time
+(<A HREF="config.html#maildrop-check-minimum"><EM>MailDrop-Check-Minimum</EM></A>)
+between checks.
+Because of this minimum you may notice that new mail does not
+appear promptly when you expect it.
+The reason for this is to protect the server from over-zealous opening and
+closing of the Mail Drop folder.
+If the user initiates the check by typing ^L (Ctrl-L) or the Next command when at
+the end of the folder index, then the check will happen, regardless of how
+long it has been since the previous check.
+<P>
+If there is new mail, that mail will be copied to the destination folder
+and then will be deleted from the Mail Drop.
+Note that using a Mail Drop with a local destination folder does not make
+sense if you read mail from more than one machine, because the mail is
+downloaded to the destination folder (which is accessible from only one
+machine) and deleted from the Mail Drop.
+<P>
+The feature <A HREF="config.html#maildrops-preserve-state"><EM>Maildrops-Preserve-State</EM></A>
+modifies the operation of Mail Drops.
+
+<P>
+The actual syntax used by <EM>Pine</EM> for a folder that uses a Mail Drop is:
+
+<P>
+<CENTER><SAMP>#move&lt;DELIM&gt;&lt;MailDropFolder&gt;&lt;DELIM&gt;&lt;DestinationFolder&gt;</SAMP></CENTER>
+<P>
+The brackets are not literal.
+<P>
+<CENTER><SAMP>&lt;DELIM&gt;</SAMP></CENTER>
+<P>
+is a single character which does not appear in the <CODE>MailDropFolder</CODE> name.
+If the name doesn't contain spaces then it can be a space character.
+The two folder names are full technical
+<A HREF="#server-name-syntax"><EM>folder names</EM></A>
+as used by <EM>Pine</EM>.
+Here are a couple examples to give you an idea what is being talked about:
+
+<P>
+<CENTER><SAMP>#move&nbsp;{popserver.example.com/pop3}inbox&nbsp;localfolder</SAMP></CENTER>
+<P>
+<CENTER><SAMP>#move+{nntpserver.example.com/nntp}#news.comp.mail.pine+local&nbsp;folder</SAMP></CENTER>
+<P>
+
+A #move folder may only be used as an
+<A HREF="config.html#enable-incoming-folders"><EM>Incoming folder</EM></A> or
+an Inbox.
+When you are in the FOLDER LIST of Incoming Message Folders (after turning
+on the Enable-Incoming-Folders option)
+the Add command has a subcommand &quot;Use Mail Drop&quot;
+which may be helpful for defining the folder in your <EM>Pine</EM> configuration.
+The same is true when you edit the
+<A HREF="config.html#inbox-path"><EM>Inbox-Path</EM></A>
+option in Setup/Config.
+</CODE>
+if it doesn't already exist.
+If you are having problems, make sure the <CODE>DestinationFolder</CODE> exists.
+<P>
+
+<HR>
+
+<H2><A NAME="sorting">Sorting a Folder</A></H2>
+
+The mail index may be sorted by arrival, date, subject,
+from, size, score, to, or cc order.
+Each sort order can also be reversed.  The <EM>$</EM> command will
+prompt the user for the sort order.  The sort order can also be specified
+on the command line with the <EM>-sort</EM> flag or (equivalently) with
+the <A HREF="config.html#sort-key"><EM>sort-key</EM></A> variable in
+the <EM>pinerc</EM> file.
+When a user changes folders, the sort order will go back to the original
+sort order. 
+The command line (<EM>-sort</EM>) or configuration file sort specification
+(<EM>sort-key</EM>) changes the original sort order.  <P>
+
+When a folder is sorted and new mail arrives in the folder it will be
+inserted in its properly sorted place.  This can be a little odd when the
+folder is sorted by something like the subject.  It can also be a little
+slow if you are viewing a large, sorted <EM>INBOX</EM>,
+since the <EM>INBOX</EM> will have
+to be re-sorted whenever new mail arrives.  <P>
+
+The sorts are all independent of case and ignore leading or trailing white
+space.  There are actually two forms of subject sort.  One called
+<EM>Subject</EM> and the other called <EM>OrderedSubj</EM>.
+They both ignore "Re:" at
+the beginning and "(fwd)" at the end of the subjects.
+<EM>Subject</EM> sorts all the subjects alphabetically.
+<EM>OrderedSubj</EM> sorts by subjects alphabetically,
+groups messages with the same subject (pseudo-threads),
+then sorts the groups by the date of the first message of the group.
+Sorting by <EM>Thread</EM> was added after <EM>OrderedSubj</EM>
+and is usually a better method.
+Thread sorting uses information in the message headers References,
+Message-ID, and Subject.
+It is possible the sort will be slightly slower with a Thread sort than
+with an OrderedSubj sort.
+The
+sort by sender sorts by the user-id (part before the "@"), not the full name.
+The arrival sort is no sort at all and the date
+sort depends on the format of the date.
+Some dates are in strange formats and are unparsable.
+The time zone is also taken into account.  <P>
+
+Sorting large mail folders can be very slow since it requires fetching all
+the headers of the mail messages.
+With UNIX <EM>Pine</EM>, only the first sort is slow since <EM>Pine</EM>
+keeps a copy of all the headers.  One exception is sorting
+in reverse arrival order.  This is fast because no headers have to be
+examined.  <EM>Pine</EM> will show progress as it is sorting.  <P>
+
+<HR>
+
+<H2><A NAME="alt-ed">Alternate Editor</A></H2>
+
+In the <EM>Pine</EM> composer you can use any text editor,
+such as <EM>vi</EM> or <EM>emacs,</EM> for composing the message text.
+The addresses and subject still must be edited using the standard
+<EM>Pine</EM> composer.
+If you include the feature
+<A HREF="config.html#enable-alt-ed"><EM>enable-alternate-editor-cmd</EM></A>
+in your <EM>pinerc</EM> you can type <EM>^_</EM> while in the body of
+the message in the composer and be prompted for the editor.
+If you also set the <A HREF="config.html#editor"><EM>editor</EM></A> variable
+in your <EM>pinerc</EM> then <EM>^_</EM> will invoke the configured
+editor when you type it.  <P>
+
+Turning on the feature
+<A HREF="config.html#enable-alt-imp"><EM>enable-alternate-editor-implicitly</EM></A>
+will automatically invoke the editor you have defined with the <EM>editor</EM>
+variable whenever you enter the body of a message you are composing.  For
+example, when you move out of the last header line and into the body of
+the message, the alternate editor will be automatically invoked.  <P>
+
+We know that many people would like to use the alternate editor to edit
+the mail header as well.  We considered several designs for this and
+didn't come up with one that we liked and that was easy to implement.  One
+of the main problems is that you lose access to the address book.  <P>
+
+<HR>
+
+<H2><A NAME="signature">Signatures and Signature Placement</A></H2>
+
+If the file <EM>~/.signature</EM> (UNIX) or
+<EM>&lt;PINERC</EM>directory&gt;\PINE.SIG (PC) exists, it will be included
+in all outgoing messages.  It is included before composition starts so
+that the user has a chance to edit it out if he or she likes.  The file
+name for the signature can be changed by setting the
+<A HREF="config.html#sig-file"><EM>signature-file</EM></A>
+variable in the <EM>pinerc</EM>.
+If the feature <A HREF="config.html#sig-dash"><EM>enable-sigdashes</EM></A>
+is turned on then the line consisting of the
+three characters "<CODE>-- "</CODE> is prepended to the signature file.
+When Replying or Forwarding a message different signatures my be automatically
+included by configuring them in the
+<A HREF="config.html#role-config"><EM>Roles</EM></A>
+setup screen.
+It's easy to include different signatures by hand, by having multiple
+signature files (<EM>.sig1, .sig2, .sig3, etc</EM>) and choosing to
+include (^R in the composer) the correct one for the message being sent. 
+<P>
+
+<EM>Pine</EM>'s default behavior encourages
+a user to put his or her contribution
+before the inclusion of the original text of the message being forwarded
+or replied to, This is contrary to some conventions, but makes the
+conversation more readable when a long original message is included in a
+reply for context.  The reader doesn't have to scroll through the original
+text that he or she has probably already seen to find the new text.  If
+the reader wishes to see the old message(s), the reader can scroll further
+into the message.  Users who prefer to add their input at the end of a
+message should set
+the <A HREF="config.html#sig-at-bot"><EM>signature-at-bottom</EM></A> feature.
+The signature will then be appended to the end of
+the message after any included text.
+This feature applies when <EM>Reply</EM>ing, not when <EM>Forward</EM>ing.  <P>
+
+<HR>
+
+<H2><A NAME="feature-list">Feature List Variable</A></H2>
+
+<EM>Pine</EM> used to have <EM>feature levels</EM> for
+users with different amounts of experience.
+We found that this was too restrictive.  <EM>Pine</EM> now has a
+<A HREF="config.html#feat-list"><EM>feature-list</EM></A> instead.
+Each user may pick and choose which
+features they would like enabled (simple to do in the <EM>Setup/Config</EM>
+screen).  There is a short description of each in <A HREF="config.html#features-conf"><EM>Configuration Features</EM></A>. There is also a short on-line
+help explaining the effect of each of
+the features in the <EM>Setup/Config</EM> screen.
+When the cursor is highlighting
+a feature, the <EM>?</EM> command will show the help text for that feature. 
+Features don't have values, they are just turned on or off.  They are all
+off by default.  <P>
+
+The <EM>feature-list</EM> variable is different from all other
+configuration variables in that its value is additive.  That is, the
+system-wide configuration file can have some features turned on by
+default.  The user can select other features in their personal
+configuration file and those features will be <STRONG>added</STRONG> to
+the set of features turned on in the system-wide configuration file. 
+(With all other configuration variables, the user's values
+<STRONG>replace</STRONG> the system-wide values.) Likewise, additional
+features may be set on the command-line with the argument
+"-feature-list=".  These will be added to the others.  <P>
+
+The treatment of <EM>feature-list</EM> in the system-wide <EM>fixed</EM>
+configuration file is also different from other variables.  The system
+management can fix the value of individual features by placing them in the
+fixed configuration file.  Users will not be able to alter those features,
+but will still be able to set the other non-restricted features the way
+they like.  <P>
+
+Because <EM>feature-list</EM> is additive, there is a way to turn features
+off as well as on.  Prepending the prefix "no-" to any feature sets it to
+off.  This is useful for over-riding the system-wide default in the
+personal configuration file or for over-riding the system-wide default or
+the personal configuration value on the command line.  For example, if the
+system-wide default configuration has the <EM>quit-without-confirm</EM>
+feature set, the user can over-ride that (and turn it off) by including
+<EM>no-quit-without-confirm</EM> in the personal configuration file or by
+giving the command line argument
+<EM>-feature-list=no-quit-without-confirm.</EM> More features (options)
+will no doubt continue to be added.  <P>
+
+<HR>
+
+<H2><A NAME="config-inheritance">Configuration Inheritance</A></H2>
+
+We start with an explanation of how configuration works in hopes of making
+it easier to describe how inheritance works.
+<P>
+<EM>Pine</EM> uses a hierarchy of configuration values from different locations.
+There are five ways in which each configuration option (configuration
+variable) can be set.
+In increasing order of precedence they are:
+<P>
+<OL>
+<LI> the system-wide configuration file.
+
+<LI> the personal configuration file
+
+<LI> the personal exceptions file
+
+<LI> a command line argument
+
+<LI> the system-wide <EM>fixed</EM> configuration file (Unix <EM>Pine</EM> only)
+</OL>
+<P>
+The fixed configuration file is normally
+<CODE>/usr/local/lib/pine.conf.fixed</CODE>.
+<P>
+The system-wide configuration file is normally
+<CODE>/usr/local/lib/pine.conf</CODE> for Unix <EM>Pine</EM> and is normally not
+set for <EM>PC-Pine</EM>.
+For <EM>PC-Pine</EM>, if the environment variable <EM>$PINECONF</EM> is set, that
+is used for the system-wide configuration.
+This location can be set or changed on the command line with the -P flag.
+The system-wide configuration file can be either a local file or a
+remote configuration folder.
+<P>
+For Unix <EM>Pine</EM>, the personal configuration file is normally the file
+<CODE>.pinerc</CODE> in the user's home directory.
+This can be changed with the -p command line flag.
+For <EM>PC-Pine</EM>, the personal configuration file is in
+<CODE>$PINERC</CODE> or <CODE>&lt;PineRC registry value&gt;</CODE> or 
+<CODE>${HOME}&#92;PINE&#92;PINERC</CODE> or
+<CODE>&lt;PINE.EXE </CODE>dir<CODE>&gt;&#92;PINERC</CODE>.
+This can be changed with the -p command line flag.
+If -p or <CODE>$PINERC</CODE> is used, the configuration data may be in
+a local file or a remote config folder.
+<P>
+For Unix <EM>Pine</EM>, the personal exceptions configuration file is
+specified with the &quot;-x exceptions_config&quot; command line argument.
+&quot;Exceptions_config&quot; may be either a local file or a remote
+configuration folder.
+If there is no &quot;-x&quot; command line option,
+<EM>Pine</EM> will look for the file &quot;<CODE>.pinercex</CODE>&quot;
+in the same local directory that the regular config file is located in.
+If the regular config file is remote then Unix <EM>Pine</EM> looks in the home
+directory for &quot;<CODE>.pinercex</CODE>&quot;.
+<P>
+For <EM>PC-Pine</EM>, the personal exceptions configuration file is
+specified with the &quot;-x exceptions_config&quot; command line argument.
+If there is no &quot;-x&quot; command line argument the environment
+variable <CODE>$PINERCEX</CODE> may be set to the name of the
+&quot;exceptions_config&quot; instead.
+&quot;Exceptions_config&quot; may be either a local file or a remote
+configuration folder.
+If there is no &quot;-x&quot; command line option and <CODE>$PINERCEX</CODE>
+is not set,
+<EM>PC-Pine</EM> will look for the file &quot;<CODE>PINERCEX</CODE>&quot;
+in the same local directory that the regular config file is located in.
+If the regular config file is remote then <EM>PC-Pine</EM> looks in the
+local directory specified by the &quot;-aux local_directory&quot; command
+line argument, or the directory <CODE>${HOME}&#92;PINE</CODE>, or
+in <CODE>&lt;PINE.EXE </CODE>directory<CODE>&gt;</CODE> for a file named
+&quot;<CODE>PINERCEX</CODE>&quot;.
+<P>
+To reiterate, the value of a configuration option is taken from the
+last location in the list above in which it is set.
+Or, thinking about it slightly differently, a default value for an option
+is established in the system-wide configuration file (or in the source
+code if there is no value in the system-wide file).
+That default remains in effect until and unless it is overridden by a value in a
+location further down the list, in which case a new &quot;default&quot;
+value is established.
+As we continue down the list of locations we either retain the
+value at each step or establish a new value.
+The value that is still set after going through the whole list of
+configuration locations is the one that is used.
+<P>
+So, for example, if an option is set in the system-wide configuration
+file and in the personal configuration file, but is not set in the
+exceptions, on the command line, or in the fixed file; then the value
+from the personal configuration file is the one that is used.
+Or, if it is set in the system-wide config, in the personal config, not
+in the exceptions, but is set on the command line; then the value
+on the command line is used.
+<P>
+Finally we get to inheritance.
+For configuration options which are lists, like &quot;smtp-server&quot; or
+&quot;incoming-folders&quot;,
+the inheritance mechanism makes it possible to <EM>combine</EM>
+the values from different locations instead of <EM>replacing</EM> the value.
+This is true of all configuration lists other than the &quot;feature-list&quot;,
+for which you may already set whatever you want at
+any configuration location (by using the &quot;no-&quot; prefix if
+necessary).
+<P>
+To use inheritance, set the first item in a configuration list to the
+token &quot;INHERIT&quot;.
+If the first item is &quot;INHERIT&quot;,
+then instead of replacing the default value established so far, the rest of
+the list is appended to the default value established so far and that is
+the new value.
+<P>
+Here is an example which may make it clearer. Suppose we have:
+<P>
+<PRE>
+ System-wide config :   smtp-server = smtp1.corp.com, smtp2.corp.com
+ Personal config    :   smtp-server = INHERIT, mysmtp.home
+ Exceptions config  :   smtp-server = &lt;No Value Set&gt;
+ Command line       :   smtp-server = &lt;No Value Set&gt;
+ Fixed config       :   smtp-server = &lt;No Value Set&gt;
+</PRE>
+<P>
+
+This would result in an effective smtp-server option of
+<P>
+<PRE>
+ smtp-server = smtp1.corp.com, smtp2.corp.com, mysmtp.home
+</PRE>
+<P>
+The &quot;INHERIT&quot; token can be used in any of the configuration files
+and the effect cascades.
+For example, if we change the above example to:
+<P>
+<PRE>
+ System-wide config :   smtp-server = smtp1.corp.com, smtp2.corp.com
+ Personal config    :   smtp-server = INHERIT, mysmtp.home
+ Exceptions config  :   smtp-server = INHERIT, yoursmtp.org
+ Command line       :   smtp-server = &lt;No Value Set&gt;
+ Fixed config       :   smtp-server = &lt;No Value Set&gt;
+</PRE>
+<P>
+
+This would result in:
+<P>
+<PRE>
+ smtp-server = smtp1.corp.com, smtp2.corp.com, mysmtp.home, yoursmtp.org
+</PRE>
+<P>
+Unset variables are skipped over (the default value is carried forward) so
+that, for example:
+<P>
+<PRE>
+ System-wide config :   smtp-server = smtp1.corp.com, smtp2.corp.com
+ Personal config    :   smtp-server = &lt;No Value Set&gt;
+ Exceptions config  :   smtp-server = INHERIT, yoursmtp.org
+ Command line       :   smtp-server = &lt;No Value Set&gt;
+ Fixed config       :   smtp-server = &lt;No Value Set&gt;
+</PRE>
+<P>
+
+produces:
+<P>
+<PRE>
+ smtp-server = smtp1.corp.com, smtp2.corp.com, yoursmtp.org
+</PRE>
+<P>
+
+If any later configuration location has a value set (for a particular list
+option) which does <EM>not</EM> begin with &quot;INHERIT&quot;,
+then that value replaces whatever value has been defined up to that point.
+In other words, that cancels out any previous inheritance.
+<P>
+<PRE>
+ System-wide config :   smtp-server = smtp1.corp.com, smtp2.corp.com
+ Personal config    :   smtp-server = INHERIT, mysmtp.org
+ Exceptions config  :   smtp-server = yoursmtp.org
+ Command line       :   smtp-server = &lt;No Value Set&gt;
+ Fixed config       :   smtp-server = &lt;No Value Set&gt;
+</PRE>
+<P>
+
+results in:
+<P>
+<PRE>
+ smtp-server = yoursmtp.org
+</PRE>
+<P>
+
+For some configuration options, like &quot;viewer-hdr-colors&quot; or
+&quot;patterns-roles&quot;, it is
+difficult to insert the value &quot;INHERIT&quot; into the list of values
+for the option using the normal Setup tools.
+In other words, the color setting screen (for example) does not
+provide a way to input the text &quot;INHERIT&quot; as the first
+item in the viewer-hdr-colors option.
+The way to do this is to either edit the pinerc file directly and manually
+insert it, or turn on the &quot;expose-hidden-config&quot; feature and insert it
+using the Setup/Config screen.
+<P>
+
+<HR>
+
+<H2><A NAME="env-variables">Using Environment Variables</A></H2>
+
+The values of <EM>Pine</EM> configuration options may include environment variables
+which are replaced by the value of the variable at the time <EM>Pine</EM> is run
+(and also at the time the config option is changed).
+The syntax to use environment variables is a subset of the common Unix
+shell dollar-syntax.
+For example, if
+
+<P><CENTER><SAMP>$VAR</SAMP></CENTER><P>
+
+appears in the value of a <EM>Pine</EM> configuration option it is looked up in the
+environent (using getenv(&quot;VAR&quot;)) and its
+looked-up value replaces the <SAMP>$VAR</SAMP> part of the option value.
+To include a literal dollar sign you may precede the dollar sign with another
+dollar sign.
+In other words, if the text
+
+<P><CENTER><SAMP>$$text</SAMP></CENTER><P>
+
+is the value of a configuration option, it will be expanded to
+
+<P><CENTER><SAMP>$text</SAMP></CENTER><P>
+
+and no environment lookup will be done.
+For Unix <EM>Pine</EM> it will also work to use a backslash character to
+escape the special meaning of the dollar sign, but $$ is preferable since
+it works for both <EM>PC-Pine</EM> and Unix <EM>Pine</EM>, allowing the configuration option
+to be in a shared configuration file.
+<P>
+
+This all sounds more complicated than it actually is.
+An example may make it clearer.
+Unfortunately, the way in which environment variables are set is OS-dependent 
+and command shell-dependent.
+In some Unix command shells you may use
+
+<P><CENTER><SAMP>PERSNAME="Fred Flintstone"</SAMP></CENTER><P>
+   <CENTER><SAMP>export PERSNAME</SAMP></CENTER><P>
+
+Now, if you use <EM>Pine</EM>'s Setup/Config screen to set
+
+<P><CENTER><SAMP>personal-name=$PERSNAME</SAMP></CENTER><P>
+
+the <SAMP>$PERSNAME</SAMP> would be replaced by <SAMP>Fred Flintstone</SAMP>
+so that this would be equivalent to
+
+<P><CENTER><SAMP>personal-name=Fred Flintstone</SAMP></CENTER><P>
+
+Note, environment variable substitution happens after configuration
+options which are lists are split into the separate elements of the list,
+so a single environment variable can't contain a list of values.
+
+<P>
+The environment variable doesn't have to be the only thing
+after the equal sign.
+However, if the name of the variable is not at the end of the line or
+followed by a space (so that you can tell where the variable name ends),
+it must be enclosed in curly braces like
+
+<P><CENTER><SAMP>${VAR}</SAMP></CENTER><P>
+
+It is always ok to use the braces even if you don't need to.
+<P>
+It is also possible to set a default value for an environment variable.
+This default value will be used if the environment variable is not
+set (that is, if getenv(&quot;VAR&quot;) returns NULL).
+The syntax used to set a default value is
+
+<P><CENTER><SAMP>${VAR:-default value}</SAMP></CENTER><P>
+
+If the config file contains
+
+<P><CENTER><SAMP>personal-name=${VAR:-Fred Flintstone}</SAMP></CENTER><P>
+
+then when <EM>Pine</EM> is run <SAMP>VAR</SAMP> will be looked up in the environment.
+If <SAMP>VAR</SAMP> is found then <SAMP>personal-name</SAMP> will have
+the value that <SAMP>VAR</SAMP> was set to, otherwise,
+<SAMP>personal-name</SAMP> will be set to <SAMP>Fred Flintstone</SAMP>,
+the default value.
+
+<P>
+An example where an environment variable might be useful is the
+variable <SAMP>inbox-path</SAMP> in the global configuration file.
+Suppose most users used the server
+
+<P><CENTER><SAMP>imapserver.example.com</SAMP></CENTER><P>
+
+but that there were some exceptions who used
+
+<P><CENTER><SAMP>altimapserver.example.com</SAMP></CENTER><P>
+
+In this case, the system manager might include the following line in
+the systemwide default <EM>Pine</EM> configuration file
+
+<P><CENTER><SAMP>inbox-path=${IMAPSERVER:-imapserver.example.com}</SAMP></CENTER><P>
+
+For the exceptional users adding
+
+<P><CENTER><SAMP>IMAPSERVER=altimapserver.example.com</SAMP></CENTER><P>
+
+to their environment should work.
+<P>
+Another example might be the case where a user has to use a different
+SMTP server from work and from home.
+The setup might be something as simple as
+
+<P><CENTER><SAMP>smtp-server=$SMTP</SAMP></CENTER><P>
+
+or perhaps a default value could be given.
+Note that, as mentioned above, the variable <SAMP>SMTP</SAMP> cannot contain
+a list of SMTP servers.
+<P>
+
+<HR>
+
+<H2><A NAME="smtp-server">SMTP Servers</A></H2>
+
+It is sometimes desirable to set <CODE>smtp-server=localhost</CODE>
+instead of setting
+<A HREF="config.html#sendmail-path"><EM>sendmail-path</EM></A>
+to overcome the inability to
+negotiate ESMTP options when <EM>sendmail</EM> is invoked with the
+<EM>-t</EM> option.  Sendmail can also be subject to unacceptable delays
+due to slow DNS lookups and other problems. <P>
+
+It is sometimes desirable to configure an SMTP server on a port other
+than the default port 25.  This may be used to provide an alternate
+service that is optimized for a particular environment or provides
+different features from the port 25 server.  An example would be a program
+that negotiates ESMTP options and queues a message, but does not attempt
+to deliver messages.  This would avoid delays frequently encountered when
+invoking <EM>sendmail</EM> directly. <P>
+
+A typical configuration would consist of
+
+<UL>
+
+<LI> A program that implements the SMTP or ESMTP protocol via stdio.
+
+<LI> An entry in <CODE>/etc/services</CODE> for the alternate service.
+
+<LI> An entry in <CODE>/etc/inetd.conf</CODE> for the alternate service.
+
+<LI> An entry in <CODE>/usr/local/lib/pine.conf</CODE>,
+<CODE>/usr/local/lib/pine.conf.fixed</CODE> or <CODE>~/.pinerc</CODE>. 
+
+</UL>
+
+<HR>
+
+<H2><A NAME="mime.types">MIME.Types file</A></H2>
+
+<EM>Pine</EM>'s MIME-TYPE support is based on code contributed by Hans Drexler
+&LT;drexler@mpi.nl&GT;.  <EM>Pine</EM> assigns MIME Content-Types according
+to file name extensions found in the system-wide files
+<CODE>/usr/local/lib/mime.types</CODE> and <CODE>/etc/mime.types</CODE>,
+and a user specific <CODE>~/.mime.types</CODE> file.  <P>
+
+In DOS and OS/2,
+<EM>Pine</EM> looks in the same directory as the PINERC file and
+the same dir as PINE.EXE.  This is similar to the UNIX situation with
+personal config info coming before potentially shared config data.  An
+alternate search path can be specified by setting the
+<A HREF="config.html#mimetype-search-path"><EM>mimetype-search-path</EM></A>
+variable in the user or system-wide
+configuration or by setting the <CODE>MIMETYPES</CODE> environment
+variable. <P>
+
+These files specify file extensions that will be connected to a mime type. 
+Lines beginning with a '<CODE>#</CODE>' character are treated as comments
+and ignored.  All other lines are treated as a mime type definition.  The
+first word is a <EM>type/subtype</EM> specification.  All following words
+are file <EM>extensions</EM> belonging to that type/subtype. Words are
+separated by whitespace characters.  If a file extension occurs more than
+once, then the first definition determines the file type and subtype.
+A couple sample lines from a mime.types file follow: <P>
+
+<PRE>
+image/gif         gif
+text/html         html htm
+video/mpeg        mpeg mpg mpe<BR>
+</PRE>
+
+<HR>
+
+<H2><A NAME="color-config-notes">Color Details</A></H2>
+
+UNIX <EM>Pine</EM> may display color if the terminal or terminal emulator you
+are using is capable of displaying colors.
+If the terminal supports ANSI color escape sequences you will be able to
+turn color on using the <A HREF="config.html#color-style">color-style</A>
+option and setting it to the value <EM>force-ansi-8color</EM> or
+<EM>force-ansi-16color</EM>.
+If instead you'd like <EM>Pine</EM> to automatically detect whether or not
+you are on a color terminal, set <EM>color-style</EM> to <EM>use-termdef</EM>
+<EM>and</EM> configure the termcap entry to describe your terminal's
+color capabilities.
+<P>
+
+If the <EM>color-style</EM> option is set to <EM>use-termdef</EM>,
+<EM>Pine</EM> looks in
+the terminal capabilities database, TERMINFO or TERMCAP, depending on
+how <EM>Pine</EM> was compiled, to decide whether or not your terminal is
+capable of color.
+For TERMINFO compiled <EM>Pine</EM>s, the capabilities that are used for
+color are
+&quot;colors&quot;, &quot;setaf&quot;, &quot;setab&quot;,
+&quot;op&quot;, and &quot;bce&quot;.
+If you have a terminal with color capabilities described by
+the &quot;scp&quot; capability, <EM>Pine</EM> does not support it.
+The capabilities
+&quot;setf&quot; and &quot;setb&quot; may be used instead of
+&quot;setaf&quot; and &quot;setab&quot;.
+The capability &quot;bce&quot; is optional and is used as an optimization,
+the other capabilities are required.
+For TERMCAP compiled <EM>Pine</EM>s, the capabilities that are used for
+color are
+&quot;Co&quot;, &quot;AF&quot;, &quot;AB&quot;, &quot;op&quot;,
+and &quot;ut&quot;.
+The capabilities
+&quot;Sf&quot; and &quot;Sb&quot; may be used instead of
+&quot;AF&quot; and &quot;AB&quot;, though this isn't a useful feature.
+<P>
+
+Here are some short descriptions of the capabilities listed
+above.
+The TERMINFO name is listed, followed by the TERMCAP name in parentheses.
+<DL COMPACT>
+
+<DT> <EM>colors</EM> (<EM>Co</EM>)
+
+<DD> The number of different colors.
+<P>
+
+<DT> <EM>setaf</EM> (<EM>AF</EM>)
+
+<DD> Set ANSI foreground color.
+<P>
+
+<DT> <EM>setab</EM> (<EM>AB</EM>)
+
+<DD> Set ANSI background color.
+<P>
+
+<DT> <EM>setf</EM> (<EM>Sf</EM>)
+
+<DD> Set foreground color. Alternate form of <EM>setaf</EM>.
+<P>
+
+<DT> <EM>setb</EM> (<EM>Sb</EM>)
+
+<DD> Set background color. Alternate form of <EM>setab</EM>.
+<P>
+
+<DT> <EM>op</EM> (<EM>op</EM>)
+
+<DD> Set default pair to its original value.
+<P>
+
+<DT> <EM>bce</EM> (<EM>ut</EM>)
+
+<DD> Screen is erased with current background color instead
+of default background.
+<P>
+
+<P>
+</DL>
+<P>
+A standard ANSI terminal which supports color will have
+a TERMINFO entry which contains:
+<PRE>
+  colors#8
+  setaf=\E[3%p1%dm
+  setab=\E[4%p1%dm
+  op=\E[39;49m
+  bce
+</PRE>
+<P>
+or the TERMCAP equivalent:
+<PRE>
+  Co#8
+  AF=\E[3%dm
+  AB=\E[4%dm
+  op=\E[39;49m
+  ut
+</PRE>
+<P>
+
+If there are eight colors, the program uses colors 0, 1, ..., 7.
+For an ANSI terminal, the foreground color is set by sending the escape
+sequence &quot;Escape LeftBracket 3 color_number m&quot; to the terminal.
+The background color is set by sending the sequence
+&quot;Escape LeftBracket 4 color_number m&quot;.
+ANSI colors zero through seven are defined to be &quot;black&quot;,
+&quot;red&quot;, &quot;green&quot;, &quot;yellow&quot;, &quot;blue&quot;,
+&quot;magenta&quot;, &quot;cyan&quot;, and &quot;white&quot;.
+Some terminal emulators will swap blue and red and swap yellow and cyan.
+The capabilities &quot;setf&quot; and &quot;setb&quot; are usually designed
+for those terminals so that they will flip the color numbers 1 and 4 and
+the numbers 3 and 6 to compensate for this.
+<EM>Pine</EM> will use the ANSI versions of the capabilities if they exist,
+and will use the non-ANSI versions (setf and setb) if the ANSI versions
+don't exist.
+Here's a version which does the flipping.
+This can only be used with TERMINFO <EM>Pine</EM>s, because of the arithmetic,
+which is not supported by TERMCAP.
+<PRE>
+  colors#8
+  setf=\E[3%?%p1%{1}%=%t4%e%p1%{3}%=%t6%e%p1%{4}%=%t1%e%p1%{6}%=%t3%e%p1%d%;m
+  setb=\E[4%?%p1%{1}%=%t4%e%p1%{3}%=%t6%e%p1%{4}%=%t1%e%p1%{6}%=%t3%e%p1%d%;m
+  op=\E[39;49m
+  bce
+</PRE>
+<P>
+
+Some terminal emulators are capable of displaying eight more colors when
+the foreground colors 30-37 are replaced with 90-97 and the background
+colors 40-47 are replaced with 100-107.
+These terminals require a fancy termcap entry which can take foreground
+colors 0, 1, ..., 15 and map that into 30, 31, ..., 37, 90, 91, ..., 97,
+and similarly for the background colors.
+Here is a terminfo entry which will do just that:
+<PRE>
+  colors#16
+  setaf=%p1%{8}%/%{6}%*%{3}%+\E[%d%p1%{8}%m%dm
+  setab=%p1%{8}%/%{6}%*%{4}%+\E[%d%p1%{8}%m%dm
+  op=\E[39;49m
+  bce
+</PRE>
+and here is the termcap equivalent:
+<PRE>
+  Co#16
+  AF=\E[%i%i%>\001\034%>\045\064%dm
+  AB=\E[%i%i%>\001\046%>\057\064%dm
+  op=\E[39;49m
+  ut
+</PRE>
+<P>
+This is a terminfo entry for 16 colors that also does the color flipping:
+<PRE>
+  colors#16
+  setf=%p1%{8}%/%{6}%*%{3}%+\E[%d%p1%{8}%m%Pa%?%ga%{1}%=%t4%e%ga%{3}%=%t6%e%ga%{4}%=%t1%e%ga%{6}%=%t3%e%ga%d%;m
+  setb=%p1%{8}%/%{6}%*%{4}%+\E[%d%p1%{8}%m%Pa%?%ga%{1}%=%t4%e%ga%{3}%=%t6%e%ga%{4}%=%t1%e%ga%{6}%=%t3%e%ga%d%;m
+  op=\E[39;49m
+  bce
+</PRE>
+<P>
+
+If you are always using the same display it probably won't matter to you
+if the color pairs red/blue and cyan/yellow are flipped, since you'll
+always be seeing them flipped.
+You will get different defaults than on a display with them not flipped,
+but that's about all.
+If you are trying to use the same pinerc file from displays with different
+color characteristics, or from <EM>Pine</EM> and <EM>PC-Pine</EM>, you will
+have to be more careful.
+The colors numbered 0 through 7 may be used portably between different
+systems if you are careful to make them correspond to the ANSI order mentioned
+above.
+You can check this by looking at a color configuration screen for one of the
+colors.
+The first eight colors should be in the order above.
+If they aren't, you could fix that by modifying your termcap entry on
+the UNIX system.
+This is not possible if your system uses TERMCAP instead of TERMINFO.
+
+<HR>
+
+<H2><A NAME="pc-notes">Additional Notes on PC-Pine</A></H2>
+
+Below are a few odds and ends worth mentioning about <EM>PC-Pine</EM>.  They have
+to do with DOS-specific behavior that is either necessary or useful (and
+sometimes both!).  <P>
+
+As <EM>PC-Pine</EM> runs in an environment with limited access control, accounting
+or auditing, an additional line is automatically inserted into the header
+of mail messages generated by <EM>PC-Pine</EM>: 
+
+<PRE>
+	X-Sender: &lt;userid&gt;@&lt;imap.host&gt;<BR>
+</PRE>
+<P>
+
+By popular demand of system administrators, <EM>PC-Pine</EM> has been modified to
+prevent sending messages until the user has successfully logged into a
+remote mail server.  Even though <EM>PC-Pine</EM> cannot prevent users from
+changing the apparent identity of the sender of a message, the IMAP server
+login name and host name included in the <EM>X-Sender</EM> line
+provide some level of traceability by the recipient.
+However, this should not be considered a
+rigorous form of authentication.  It is extremely lightweight, and is not
+a replacement for true authentication.  <P>
+
+Hand in hand with authentication and accounting is user information. 
+Since <EM>PC-Pine</EM> has no user database to consult for <EM>user-id</EM>,
+<EM>personal-name</EM>, etc., necessary information must be provided by
+the user/installer before <EM>PC-Pine</EM> can properly construct the "From"
+address required for outbound messages.  <EM>PC-Pine</EM> will, by default, prompt
+for the requisite pieces as they are needed.  This information corresponds
+to the <EM>PINERC</EM> variables
+<A HREF="config.html#user-id"><EM>user-id</EM></A>,
+<A HREF="config.html#personal-name"><EM>personal-name</EM></A>,
+<A HREF="config.html#user-domain"><EM>user-domain</EM></A>,
+and <A HREF="config.html#smtp-server"><EM>smtp-server</EM></A>.  <P>
+
+The user is then asked whether or not this information should
+automatically be saved to the <EM>PINERC</EM>.  This is useful behavior in
+general, but can lead to problems in a lab or other shared environment. 
+Hence, these prompts and automatic saving of configuration can be turned
+off on an entry by entry basis by setting any of the above values in the
+<EM>PINERC</EM> to the null string (i.e., a pair of double quotes).  This
+means that the user will be prompted for the information once during each
+<EM>Pine</EM> session, and no opportunity to save them in the <EM>PINERC</EM> will
+be offered.  <P>
+
+Along similar lines, a feature allowing automatic login to the imap-server
+containing the user's <EM>INBOX</EM> has also been requested.  This
+feature is not enabled by default, but requires the existence of the file
+named <EM>PINE.PWD</EM> in the same directory as the <EM>PINERC</EM>. 
+Even with the existence of this file, the user must still acknowledge a
+prompt before the password is saved to the file.  If <EM>PC-Pine</EM> is configured
+to access several different IMAP servers, each password entered will be
+kept (associated with the corresponding host name) in memory during the
+current session, and optionally, in the <EM>PINE.PWD</EM> file for use in
+subsequent sessions.  <P>
+
+<EM>WARNING</EM>!  Use this feature with caution!  It effectively makes
+the user's mail no more secure than the physical security of the machine
+running <EM>PC-Pine</EM>.  What's more, while the password is cloaked by a mild
+(some might say, feeble) encryption scheme, it is nonetheless sitting in a
+file on the PC's disk and subject to cracking by anyone with access to it. 
+<EM>BEWARE</EM>!  <P>
+
+Another feature of DOS is the lack of standard scratch area for temporary
+files.  During the course of a session, <EM>PC-Pine</EM> may require numerous
+temporary files (large message texts, various caches, etc.).  Where to
+create them can be a problem, particularly when running under certain
+network operating systems.  <EM>PC-Pine</EM> observes the
+<EM>TMPDIR</EM>, <EM>TMP</EM>, and
+<EM>TEMP</EM> environment variables, and creates temporary files in the
+directory specified by either. In their absence, <EM>PC-Pine</EM> creates these
+files in the root of the current working drive.
+Some temporary files have to be created in the same directory as the file
+they are a temporary copy of. For example, a pinerc file or a address book
+file.
+<P>
+ 
+<!-- pnuts -->
+
+</BODY>
+</HTML>

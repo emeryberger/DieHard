@@ -1,0 +1,14 @@
+#!/bin/bash
+BIN=.
+LIB=../../../diehard/src
+
+
+
+if [[ $1 == -q ]]
+then 
+shift
+LD_PRELOAD=${LIB}/libdiehard.so ${BIN}/espresso $@ > /dev/null 
+else
+LD_PRELOAD=${LIB}/libdiehard.so ${BIN}/espresso $@
+fi
+

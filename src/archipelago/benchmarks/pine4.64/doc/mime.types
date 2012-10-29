@@ -1,0 +1,28 @@
+# Sample Pine mime.types file.
+#
+# This file illustrates the format of data Pine
+# uses to map MIME type and subtype information
+# to the file name extension of attachments it sends.
+# Pine first looks for "~/.mime.types", then adds
+# any unbound MIME types found in "/etc/mime.types"
+# and "/usr/local/lib/mime.types".
+
+application/postscript         ai eps ps
+application/rtf                rtf
+application/x-tex              tex
+application/x-texinfo          texinfo texi
+application/x-troff            t tr roff
+audio/basic                    au snd
+audio/x-aiff                   aif aiff aifc
+audio/x-wav                    wav
+image/gif                      gif
+image/ief                      ief
+image/jpeg                     jpeg jpg jpe
+image/tiff                     tiff tif
+image/x-xwindowdump            xwd
+text/html                      html
+text/plain                     txt c cc h
+video/mpeg                     mpeg mpg mpe
+video/quicktime                qt mov
+video/x-msvideo                avi
+video/x-sgi-movie              movie

@@ -1,0 +1,76 @@
+#!/bin/bash
+
+BASEDIR=`dirname ${0}`
+
+if [[ ${BASEDIR:0:1} != / ]]
+    then
+    BASEDIR=`pwd`/${BASEDIR}
+fi
+
+timestamp=`date +%F_%T`
+NUM_CLIENTS=50
+NUM_REQUESTS=100
+CLIENT="${BASEDIR}/http_client.py ${NUM_CLIENTS} ${NUM_REQUESTS} 0 8080 >>"
+START="${BASEDIR}/start_server -o"
+STOP="${BASEDIR}/stop_server"
+LIBC=
+DIEHARD2=-d2
+DIEHARD1024=-d1024
+ARCHIPELAGO=-a
+MTRACE=-m
+EFENCE=-e
+
+#libc
+#echo Running experiments with libc...
+
+#$START $BASEDIR/thttpd_libc_${timestamp}.mem $LIBC
+
+#eval $CLIENT $BASEDIR/http_libc_${timestamp}.time
+
+#$STOP
+
+#archipelago
+
+#echo Running experiments with Archipelago...
+
+#$START $BASEDIR/thttpd_arch_${timestamp}.mem $ARCHIPELAGO
+
+#eval $CLIENT $BASEDIR/http_arch_${timestamp}.time
+
+#$STOP
+
+#diehard1024
+
+#echo Running experiments with DieHard-1024...
+
+#$START $BASEDIR/thttpd_dh1024_${timestamp}.mem $DIEHARD1024
+
+#eval $CLIENT $BASEDIR/http_dh1024_${timestamp}.time
+
+#$STOP
+
+#diehard2
+
+#echo Running experiments with DieHard-2...
+
+#$START $BASEDIR/thttpd_dh2_${timestamp}.mem $DIEHARD2
+
+#eval $CLIENT $BASEDIR/http_dh2_${timestamp}.time
+
+#$STOP
+
+echo Running experiments with mtrace...
+
+$START $BASEDIR/thttpd_mt_${timestamp}.mem $MTRACE
+
+eval $CLIENT $BASEDIR/http_mt_${timestamp}.time
+
+$STOP
+
+#echo Running experiments with Electric Fence...
+
+#$START $BASEDIR/thttpd_ef_${timestamp}.mem $EFENCE
+
+#eval $CLIENT $BASEDIR/http_ef_${timestamp}.time
+
+#$STOP

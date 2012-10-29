@@ -1,0 +1,58 @@
+# Don't edit makefile, edit makefile.bas instead.
+#
+
+CC=	gcc
+RM=	rm -f
+
+ALL=	os-os2.c
+
+.SUFFIXES: .c .ic
+
+.ic.c:
+	includer.exe $*.ic $*.c
+
+all:	includer.exe $(ALL)
+
+includer.exe:	includer.c
+	$(CC) -Zcrtdll -O2 -o includer.exe includer.c
+
+clean:
+	$(RM) $(ALL) includer.exe
+
+# You don't have to run this unless you change a .ic file.
+depend:
+	echo Dependencies must be built under Unix
+
+os-os2.c: \
+	header.os2 \
+	canacces.os2 \
+	filesize \
+	writ_dir \
+	creatdir.os2 \
+	rename.dos \
+	bld_path.dos \
+	lstcmpnt.dos \
+	expnfldr.dos \
+	fnexpand.os2 \
+	fltrname.os2 \
+	diskquot.non \
+	readfile.os2 \
+	tempfile \
+	coredump \
+	hostname \
+	domnames \
+	canonicl.dos \
+	jobcntrl.dos \
+	err_desc \
+	pw_stuff.dos \
+	chnge_pw.dos \
+	mimedisp \
+	fgetpos \
+	dosextra \
+	pipe.os2 \
+	sendmail.dos \
+	execview.os2 \
+	print.os2 \
+	debuging.os2 \
+	os-os2.ic
+	.\includer os-os2.ic os-os2.c

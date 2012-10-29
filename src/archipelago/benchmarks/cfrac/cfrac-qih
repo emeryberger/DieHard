@@ -1,0 +1,12 @@
+#!/bin/bash
+BIN=~/work/plasma/sparseheaps/benchmarks/cfrac
+LIB=~/work/plasma/sparseheaps
+
+#ulimit -c unlimited
+if [[ $1 == -q ]]
+then
+shift
+LD_PRELOAD=${LIB}/libsparseheaps.so ${BIN}/cfrac $@ > /dev/null
+else
+LD_PRELOAD=${LIB}/libsparseheaps.so ${BIN}/cfrac $@
+fi
