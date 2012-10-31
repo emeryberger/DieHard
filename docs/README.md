@@ -50,6 +50,28 @@ This directory contains several technical papers describing DieHard and related 
      address = {New York, NY, USA},  
    }  
 
+### Archipelago ###
+
+   * Archipelago: an *extremely* error-tolerant runtime system for 64-bit platforms
+
+   @inproceedings{Lvin:2008:ATA:1346281.1346296,
+     author = {Lvin, Vitaliy B. and Novark, Gene and Berger, Emery D. and Zorn, Benjamin G.},
+     title = {Archipelago: trading address space for reliability and security},
+     booktitle = {Proceedings of the 13th international conference on Architectural support for programming languages and operating systems},
+     series = {ASPLOS XIII},
+     year = {2008},
+     isbn = {978-1-59593-958-6},
+     location = {Seattle, WA, USA},
+     pages = {115--124},
+     numpages = {10},
+     url = {http://doi.acm.org/10.1145/1346281.1346296},
+     doi = {10.1145/1346281.1346296},
+     acmid = {1346296},
+     publisher = {ACM},
+     address = {New York, NY, USA},
+     keywords = {Archipelago, buffer overflow, dynamic memory allocation, memory errors, probabilistic memory safety, randomized algorithms, virtual memory},
+   }
+
 ### DieHarder ###
 
    * DieHarder: a system that improves SECURITY by protecting programs
