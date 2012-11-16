@@ -47,8 +47,7 @@ public:
     // Round up the number of elements.
     _elements = WORDBITS * ((nelts + WORDBITS - 1) / WORDBITS);
     // Allocate the right number of bytes.
-    unsigned int nbytes = _elements / WORDBYTES;
-    void * buf = Heap::malloc ((size_t) nbytes);
+    void * buf = Heap::malloc (_elements / 8);
     _bitarray = (WORD *) buf;
     clear();
   }
@@ -56,47 +55,50 @@ public:
   /// Clears out the bitmap array.
   void clear (void) {
     if (_bitarray != NULL) {
-      unsigned int nbytes = _elements / WORDBYTES;
-      memset (_bitarray, 0, (size_t) nbytes); // 0 = false
+      memset (_bitarray, 0, _elements / 8); // 0 = false
     }
   }
 
   /// @return true iff the bit was not set (but it is now).
   inline bool tryToSet (unsigned long long index) {
-    assert (index < _elements);
-    const unsigned int item = index >> WORDBITSHIFT;
-    const unsigned int position = index & (WORDBITS - 1);
-    assert (item < _elements / WORDBYTES);
-    unsigned long oldvalue;
+    unsigned int item, position;
+    computeItemPosition (index, item, position);
     const WORD mask = getMask(position);
-    oldvalue = _bitarray[item];
+    unsigned long oldvalue = _bitarray[item];
     _bitarray[item] |= mask;
     return !(oldvalue & mask);
   }
 
   /// Clears the bit at the given index.
   inline bool reset (unsigned long long index) {
-    assert (index < _elements);
-    const unsigned int item = index >> WORDBITSHIFT;
-    const unsigned int position = index & (WORDBITS - 1);
-    assert (item < _elements / WORDBYTES);
-    unsigned long oldvalue;
-    oldvalue = _bitarray[item];
+    unsigned int item, position;
+    computeItemPosition (index, item, position);
+    unsigned long oldvalue = _bitarray[item];
     WORD newvalue = oldvalue &  ~(getMask(position));
     _bitarray[item] = newvalue;
     return (oldvalue != newvalue);
   }
 
   inline bool isSet (unsigned long long index) const {
-    assert (index < _elements);
-    const unsigned int item = index >> WORDBITSHIFT;
-    const unsigned int position = index - (item << WORDBITSHIFT);
-    assert (item < _elements / WORDBYTES);
-    bool result = _bitarray[item] & (getMask(position));
+    unsigned int item, position;
+    computeItemPosition (index, item, position);
+    bool result = _bitarray[item] & getMask(position);
     return result;
   }
 
 private:
+
+  /// Given an index, compute its item (word) and position within the word.
+  void computeItemPosition (unsigned long long index,
+			    unsigned int& item,
+			    unsigned int& position) const
+  {
+    assert (index < _elements);
+    item = index >> WORDBITSHIFT;
+    position = index & (WORDBITS - 1);
+    assert (position == index - (item << WORDBITSHIFT));
+    assert (item < _elements / WORDBYTES);
+  }
 
   /// A synonym for the datatype corresponding to a word.
   typedef size_t WORD;
@@ -120,7 +122,7 @@ private:
   WORD * _bitarray;
   
   /// The number of elements in the array.
-  unsigned int _elements;
+  unsigned long _elements;
 
 };
 
