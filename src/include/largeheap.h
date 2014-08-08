@@ -5,13 +5,6 @@
 
 #include "heaplayers.h"
 
-//#include "checkpoweroftwo.h"
-//#include "staticlog.h"
-//#include "myhashmap.h"
-//#include "bumpalloc.h"
-//#include "freelistheap.h"
-//#include "cpuinfo.h"
-
 using namespace HL;
 
 template <class Mapper>
