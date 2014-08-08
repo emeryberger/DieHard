@@ -57,13 +57,11 @@ WIN_FLAGS = /Iinclude /Zi /Ox /Oy /DNDEBUG /MD /DDIEHARD_REPLICATED=0
 
 WINDOWS_COMMAND_STANDALONE := cl /LD $(WIN_INCLUDES) $(WIN_FLAGS) winhard.cpp /link /base:0x63000000 kernel32.lib user32.lib msvcrt.lib advapi32.lib /subsystem:console /dll /incremental:no /entry:HardDllMain
 
-MACOS_COMMAND_STANDALONE := $(MACOS_COMPILER) -mpreferred-stack-boundary=4 -m128bit-long-double -msse2 -arch i386 -arch x86_64 -g -O3 -W -Wall -DDIEHARD_MULTITHREADED=1 -DNDEBUG  $(INCLUDE) -D_REENTRANT=1 -compatibility_version 1 -current_version 1 -dynamiclib  -D'CUSTOM_PREFIX(x)=xx\#\#x' $(MACOS_SRC) -o $(TARGET).dylib
+MACOS_COMMAND_STANDALONE := $(MACOS_COMPILER) --std=c++11 -arch i386 -arch x86_64 -g -O3 -W -Wall -DDIEHARD_MULTITHREADED=1 -DNDEBUG  $(INCLUDE) -D_REENTRANT=1 -compatibility_version 1 -current_version 1 -dynamiclib  -D'CUSTOM_PREFIX(x)=xx\#\#x' $(MACOS_SRC) -o $(TARGET).dylib
 
-MACOS_COMMAND_DEBUG_STANDALONE := $(MACOS_COMPILER) -msse2 -arch i386 -arch x86_64 -g -W -Wall -DDIEHARD_MULTITHREADED=1 $(INCLUDE) -D_REENTRANT=1 -compatibility_version 1 -current_version 1 -dynamiclib  -D'CUSTOM_PREFIX(x)=xx\#\#x' $(MACOS_SRC) -o $(TARGET).dylib
+MACOS_COMMAND_DEBUG_STANDALONE := $(MACOS_COMPILER) --std=c++11 -arch i386 -arch x86_64 -g -W -Wall -DDIEHARD_MULTITHREADED=1 $(INCLUDE) -D_REENTRANT=1 -compatibility_version 1 -current_version 1 -dynamiclib  -D'CUSTOM_PREFIX(x)=xx\#\#x' $(MACOS_SRC) -o $(TARGET).dylib
 
-MACOS_COMMAND_REPLICATED := $(MACOS_COMPILER) -msse2 -pipe -O3 -finline-limit=65000 -fkeep-inline-functions -finline-functions -ffast-math -fomit-frame-pointer  $(REPLICATED_SRC) -DDIEHARD_MULTITHREADED=1 -DNDEBUG  $(INCLUDE) -D_REENTRANT=1 -compatibility_version 1 -current_version 1 -dynamiclib $(MACOS_SRC) -o libdieharder_r.dylib
-
-# LINUX_COMMAND_STANDALONE := g++ -m32 -malign-double -pipe -march=pentium4 -DNDEBUG  $(INCLUDE) -D_REENTRANT=1 -DDIEHARD_MULTITHREADED=1 -shared -D'CUSTOM_PREFIX(x)=diehard\#\#x' $(UNIX_SRC) -Bsymbolic -o $(TARGET).so -ldl -lpthread
+MACOS_COMMAND_REPLICATED := $(MACOS_COMPILER) -pipe -O3 -finline-limit=65000 -fkeep-inline-functions -finline-functions -ffast-math -fomit-frame-pointer  $(REPLICATED_SRC) -DDIEHARD_MULTITHREADED=1 -DNDEBUG  $(INCLUDE) -D_REENTRANT=1 -compatibility_version 1 -current_version 1 -dynamiclib $(MACOS_SRC) -o libdieharder_r.dylib
 
 LINUX_COMMAND_STANDALONE := g++ -m32 -finline-functions -malign-double -pipe -march=pentium4 -O3 -DNDEBUG  $(INCLUDE) -D_REENTRANT=1 -DDIEHARD_MULTITHREADED=1 -shared -D'CUSTOM_PREFIX(x)=diehard\#\#x' $(UNIX_SRC) -Bsymbolic -o $(TARGET).so -ldl -lpthread
 
