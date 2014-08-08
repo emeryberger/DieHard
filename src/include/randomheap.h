@@ -18,12 +18,10 @@
 using namespace std;
 
 #include "heaplayers.h"
-// #include "sassert.h"
 
 using namespace HL;
 
 #include "check.h"
-#include "checkpoweroftwo.h"
 #include "log2.h"
 #include "mmapalloc.h"
 #include "randomnumbergenerator.h"
