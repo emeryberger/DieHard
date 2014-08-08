@@ -8,10 +8,6 @@
 
 #include "heaplayers.h"
 
-//#include "guard.h"
-//#include "posixlock.h"
-#include "checkpoweroftwo.h"
-
 template <class VALUE_TYPE,
 	  size_t INIT_SIZE = 4096,
 	  class SourceHeap = HL::MallocHeap>
