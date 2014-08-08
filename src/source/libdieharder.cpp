@@ -27,11 +27,6 @@ enum { Numerator = 8, Denominator = 7 };
 // enum { Numerator = 16, Denominator = 1 };
 
 #include "heaplayers.h"
-// #include "ansiwrapper.h"
-// #include "mmapwrapper.h"
-// #include "lockedheap.h"
-// #include "posixlock.h"
-// #include "oneheap.h"
 
 #include "combineheap.h"
 #include "diehard.h"
@@ -39,7 +34,6 @@ enum { Numerator = 8, Denominator = 7 };
 #include "realrandomvalue.h"
 #include "largeheap.h"
 #include "diehardheap.h"
-// #include "reentrantheap.h"
 #include "version.h"
 
 
