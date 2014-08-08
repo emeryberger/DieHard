@@ -7,9 +7,6 @@
 
 #include "heaplayers.h"
 
-#include "checkpoweroftwo.h"
-// #include "sassert.h"
-
 // Use a fast modulus function if possible.
 
 template <int B>
