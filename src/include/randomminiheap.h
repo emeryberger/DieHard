@@ -14,17 +14,13 @@
 #include <assert.h>
 
 #include "heaplayers.h"
-// #include "cpuinfo.h"
-// #include "sassert.h"
 
 #include "bitmap.h"
 #include "check.h"
 #include "checkedarray.h"
-#include "checkpoweroftwo.h"
 #include "diefast.h"
 #include "madvisewrapper.h"
 #include "modulo.h"
-// #include "mypagetable.h"
 #include "randomnumbergenerator.h"
 #include "staticlog.h"
 
