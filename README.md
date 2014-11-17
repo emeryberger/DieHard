@@ -9,9 +9,10 @@ DieHard: An error-resistant memory allocator for Windows, Linux, and Mac OS X
 ------------------------------------------
 DieHard / Exterminator / DieHarder
 
-Copyright (C) 2005-2012 by [Emery Berger](http://www.cs.umass.edu/~emery)  
+Copyright (C) 2005-2014 by [Emery Berger](http://www.emeryberger.com/)  
 University of Massachusetts, Amherst  
- 
+
+<http://www.emeryberger.com> 
 <http://www.diehard-software.org>  
 <http://www.die-harder.org>  
 
@@ -56,6 +57,8 @@ This distribution includes the source for three systems.
    first appeared in the [Proceedings of the 17th ACM Conference on
    Computer and Communications
    Security](http://doi.acm.org/10.1145/1866307.1866371) (CCS 2010).
+   DieHarder directly inspired security hardening features in Microsoft
+   Windows (starting with version 8).
 
 
 ----------------------------
