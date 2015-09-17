@@ -6,8 +6,8 @@
  * @author Emery Berger <http://www.cs.umass.edu/~emery>
  */
 
-#ifndef _SEGHEAP_H_
-#define _SEGHEAP_H_
+#ifndef DH_SEGHEAP_H_
+#define DH_SEGHEAP_H_
 
   /**
    * @class SegHeap

@@ -1,7 +1,7 @@
 /* -*- C++ -*- */
 
-#ifndef _FREELISTHEAP_H_
-#define _FREELISTHEAP_H_
+#ifndef DH_FREELISTHEAP_H_
+#define DH_FREELISTHEAP_H_
 
 /**
  * @class FreelistHeap

@@ -1,7 +1,7 @@
 /* -*- C++ -*- */
 
-#ifndef _SIZEHEAP_H_
-#define _SIZEHEAP_H_
+#ifndef DH_SIZEHEAP_H_
+#define DH_SIZEHEAP_H_
 
 /**
  * @file sizeheap.h

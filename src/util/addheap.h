@@ -1,7 +1,7 @@
 /* -*- C++ -*- */
 
-#ifndef _ADDHEAP_H_
-#define _ADDHEAP_H_
+#ifndef DH_ADDHEAP_H_
+#define DH_ADDHEAP_H_
 
 /**
  * @file addheap.h

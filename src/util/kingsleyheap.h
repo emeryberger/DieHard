@@ -1,7 +1,7 @@
 // -*- C++ -*-
 
-#ifndef _KINGSLEYHEAP_H_
-#define _KINGSLEYHEAP_H_
+#ifndef DH_KINGSLEYHEAP_H_
+#define DH_KINGSLEYHEAP_H_
 
 #include "segheap.h"
 

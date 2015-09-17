@@ -24,8 +24,8 @@
 
 */
 
-#ifndef _STLALLOCATOR_H_
-#define _STLALLOCATOR_H_
+#ifndef DH_STLALLOCATOR_H_
+#define DH_STLALLOCATOR_H_
 
 #include <stdio.h>
 #include <new>

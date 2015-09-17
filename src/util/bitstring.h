@@ -6,8 +6,8 @@
  * @author Emery Berger <http://www.cs.umass.edu/~emery>
  */
 
-#ifndef _BITSTRING_H_
-#define _BITSTRING_H_
+#ifndef DH_BITSTRING_H_
+#define DH_BITSTRING_H_
 
 #include <assert.h>
 
