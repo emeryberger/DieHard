@@ -63,25 +63,25 @@ MACOS_COMMAND_DEBUG_STANDALONE := $(MACOS_COMPILER) --std=c++11 -arch i386 -arch
 
 MACOS_COMMAND_REPLICATED := $(MACOS_COMPILER) -pipe -O3 -finline-limit=65000 -fkeep-inline-functions -finline-functions -ffast-math -fomit-frame-pointer  $(REPLICATED_SRC) -DDIEHARD_MULTITHREADED=1 -DNDEBUG  $(INCLUDE) -D_REENTRANT=1 -compatibility_version 1 -current_version 1 -dynamiclib $(MACOS_SRC) -o libdieharder_r.dylib
 
-LINUX_COMMAND_STANDALONE := g++ -std=c++11 -m32 -finline-functions -malign-double -pipe -march=pentium4 -O3 -DNDEBUG  $(INCLUDE) -D_REENTRANT=1 -DDIEHARD_MULTITHREADED=1 -shared -D'CUSTOM_PREFIX(x)=diehard\#\#x' $(UNIX_SRC) -Bsymbolic -o $(TARGET).so -ldl -lpthread
+LINUX_COMMAND_STANDALONE := $(CXX) -std=c++11 -m32 -finline-functions -malign-double -pipe -march=pentium4 -O3 -DNDEBUG  $(INCLUDE) -D_REENTRANT=1 -DDIEHARD_MULTITHREADED=1 -shared -D'CUSTOM_PREFIX(x)=diehard\#\#x' $(UNIX_SRC) -Bsymbolic -o $(TARGET).so -ldl -lpthread
 
-LINUX_COMMAND_REPLICATED := g++ -std=c++11 -malign-double -pipe -march=pentium4 -O3 -fno-rtti -finline-functions  -ffast-math -fomit-frame-pointer -DNDEBUG  $(INCLUDE) -D_REENTRANT=1  $(REPLICATED_SRC) -DDIEHARD_MULTITHREADED=1 -shared $(UNIX_SRC) -Bsymbolic -o libdieharder_r.so -ldl -lpthread
+LINUX_COMMAND_REPLICATED := $(CXX) -std=c++11 -malign-double -pipe -march=pentium4 -O3 -fno-rtti -finline-functions  -ffast-math -fomit-frame-pointer -DNDEBUG  $(INCLUDE) -D_REENTRANT=1  $(REPLICATED_SRC) -DDIEHARD_MULTITHREADED=1 -shared $(UNIX_SRC) -Bsymbolic -o libdieharder_r.so -ldl -lpthread
 
 FLAGS = -pedantic -Wall -Wpointer-arith -Woverloaded-virtual -Werror=return-type -Wtype-limits -Wempty-body -Wno-ctor-dtor-privacy -Wno-overlength-strings -Wno-invalid-offsetof -Wno-variadic-macros -Wcast-align -Wno-long-long -pthread -pipe  -DNDEBUG
 
-LINUX_64_COMMAND_STANDALONE_DEBUG := g++ -std=c++11 -W -Wall -O0 -pipe -fPIC -m64 -march=nocona -ffast-math -g $(INCLUDE) -D_REENTRANT=1 -DDIEHARD_MULTITHREADED=1 -shared  -D'CUSTOM_PREFIX(x)=diehard\#\#x' $(UNIX_SRC) -Bsymbolic -o $(TARGET).so -ldl -lpthread
+LINUX_64_COMMAND_STANDALONE_DEBUG := $(CXX) -std=c++11 -W -Wall -O0 -pipe -fPIC -m64 -march=nocona -ffast-math -g $(INCLUDE) -D_REENTRANT=1 -DDIEHARD_MULTITHREADED=1 -shared  -D'CUSTOM_PREFIX(x)=diehard\#\#x' $(UNIX_SRC) -Bsymbolic -o $(TARGET).so -ldl -lpthread
 
-LINUX_64_COMMAND_STANDALONE := g++ $(FLAGS) -std=c++11 -W -Wall -O3 -DNDEBUG -pipe -fPIC -m64 -march=nocona -ffast-math -g $(INCLUDE) -D_REENTRANT=1 -DDIEHARD_MULTITHREADED=1 -shared  -D'CUSTOM_PREFIX(x)=diehard\#\#x' $(UNIX_SRC) -Bsymbolic -o $(TARGET).so -ldl -lpthread
+LINUX_64_COMMAND_STANDALONE := $(CXX) $(FLAGS) -std=c++11 -W -Wall -O3 -DNDEBUG -pipe -fPIC -m64 -march=nocona -ffast-math -g $(INCLUDE) -D_REENTRANT=1 -DDIEHARD_MULTITHREADED=1 -shared  -D'CUSTOM_PREFIX(x)=diehard\#\#x' $(UNIX_SRC) -Bsymbolic -o $(TARGET).so -ldl -lpthread
 
-LINUX_64_COMMAND_REPLICATED := g++ -std=c++11 -O1 -DNDEBUG -pipe -fPIC -march=nocona -m64 -g $(INCLUDE) -D_REENTRANT=1  $(REPLICATED_SRC) -DDIEHARD_MULTITHREADED=1 -shared $(UNIX_SRC) -Bsymbolic -o libdieharder_r.so -ldl -lpthread
+LINUX_64_COMMAND_REPLICATED := $(CXX) -std=c++11 -O1 -DNDEBUG -pipe -fPIC -march=nocona -m64 -g $(INCLUDE) -D_REENTRANT=1  $(REPLICATED_SRC) -DDIEHARD_MULTITHREADED=1 -shared $(UNIX_SRC) -Bsymbolic -o libdieharder_r.so -ldl -lpthread
 
-SOLARIS_SPARC32_COMMAND_STANDALONE := CC -xtarget=ultra2 -xildoff -xO5 -xthreadvar=dynamic -L/usr/lib/lwp -R/usr/lib/lwp -DNDEBUG $(INCLUDE) -DDIEHARD_MULTITHREADED=1 -G -PIC $(UNIX_SRC) sparc-interchange.il -o $(TARGET).so -lthread -ldl -lCrun
+SOLARIS_SPARC32_COMMAND_STANDALONE := $(CC) -xtarget=ultra2 -xildoff -xO5 -xthreadvar=dynamic -L/usr/lib/lwp -R/usr/lib/lwp -DNDEBUG $(INCLUDE) -DDIEHARD_MULTITHREADED=1 -G -PIC $(UNIX_SRC) sparc-interchange.il -o $(TARGET).so -lthread -ldl -lCrun
 
-SOLARIS_SPARC32_COMMAND_REPLICATED := CC -xtarget=ultra2 -dalign -xbuiltin=%all -xO5 -xildoff -xthreadvar=dynamic -L/usr/lib/lwp -R/usr/lib/lwp -DNDEBUG $(INCLUDE)  $(REPLICATED_SRC) -DDIEHARD_MULTITHREADED=1 -G -PIC $(UNIX_SRC) sparc-interchange.il -o libdieharder_r.so -lthread -ldl -lCrun
+SOLARIS_SPARC32_COMMAND_REPLICATED := $(CC) -xtarget=ultra2 -dalign -xbuiltin=%all -xO5 -xildoff -xthreadvar=dynamic -L/usr/lib/lwp -R/usr/lib/lwp -DNDEBUG $(INCLUDE)  $(REPLICATED_SRC) -DDIEHARD_MULTITHREADED=1 -G -PIC $(UNIX_SRC) sparc-interchange.il -o libdieharder_r.so -lthread -ldl -lCrun
 
-SOLARIS_SPARC64_COMMAND_STANDALONE := CC -xcode=pic13 -xtarget=ultra2 -m64 -dalign -xbuiltin=%all -xO5 -xildoff -xthreadvar=dynamic -L/usr/lib/lwp -R/usr/lib/lwp -DNDEBUG $(INCLUDE) -DDIEHARD_MULTITHREADED=1 -G -PIC $(UNIX_SRC) sparc-interchange.il -o $(TARGET).so -lthread -ldl -lCrun
+SOLARIS_SPARC64_COMMAND_STANDALONE := $(CC) -xcode=pic13 -xtarget=ultra2 -m64 -dalign -xbuiltin=%all -xO5 -xildoff -xthreadvar=dynamic -L/usr/lib/lwp -R/usr/lib/lwp -DNDEBUG $(INCLUDE) -DDIEHARD_MULTITHREADED=1 -G -PIC $(UNIX_SRC) sparc-interchange.il -o $(TARGET).so -lthread -ldl -lCrun
 
-SOLARIS_SPARC64_COMMAND_REPLICATED := CC -xcode=pic13 -xtarget=ultra2 -m64 -dalign -xbuiltin=%all -xO5 -xildoff -xthreadvar=dynamic -L/usr/lib/lwp -R/usr/lib/lwp -DNDEBUG $(INCLUDE)  $(REPLICATED_SRC) -DDIEHARD_MULTITHREADED=1 -G -PIC $(UNIX_SRC) sparc-interchange.il -o libdieharder_r.so -lthread -ldl -lCrun
+SOLARIS_SPARC64_COMMAND_REPLICATED := $(CC) -xcode=pic13 -xtarget=ultra2 -m64 -dalign -xbuiltin=%all -xO5 -xildoff -xthreadvar=dynamic -L/usr/lib/lwp -R/usr/lib/lwp -DNDEBUG $(INCLUDE)  $(REPLICATED_SRC) -DDIEHARD_MULTITHREADED=1 -G -PIC $(UNIX_SRC) sparc-interchange.il -o libdieharder_r.so -lthread -ldl -lCrun
 
 
 linux-gcc-x86:
