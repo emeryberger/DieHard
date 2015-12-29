@@ -17,7 +17,11 @@
 namespace DieHarder {
 
   static uintptr_t computePageNumber (void * addr) {
+#if __cplusplus > 199711L
+    return (uintptr_t) addr >> staticlog(CPUInfo::PageSize);
+#else
     return (uintptr_t) addr >> StaticLog<CPUInfo::PageSize>::VALUE;
+#endif
   }
 
   class PageTable {

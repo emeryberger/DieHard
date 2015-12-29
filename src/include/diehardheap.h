@@ -176,9 +176,13 @@ private:
 #else
 
   /// The number of size classes managed by this heap.
+#if __cplusplus > 199711L
+  enum { MAX_INDEX = staticlog(MaxSize) - staticlog(Alignment) + 1 };
+#else
   enum { MAX_INDEX =
 	 StaticLog<MaxSize>::VALUE -
 	 StaticLog<Alignment>::VALUE + 1 };
+#endif
 
 #endif
 
@@ -203,7 +207,12 @@ private:
 #if USE_HALF_LOG
     int index = halflog2(sz); //  - StaticHalfLog2<Alignment>::VALUE;
 #else
+
+#if __cplusplus > 199711L
+    int index = log2(sz) - staticlog(Alignment);
+#else
     int index = log2(sz) - StaticLog<Alignment>::VALUE;
+#endif
 #endif
     return index;
   }

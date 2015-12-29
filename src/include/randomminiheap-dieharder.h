@@ -150,8 +150,13 @@ protected:
     
     // Now compute its index: the number of objects in PRECEDING pages
     // PLUS the object index WITHIN the page.
+#if __cplusplus > 199711L
+    unsigned int ret =
+      pageIdx + (offset >> staticlog(ObjectSize));
+#else
     unsigned int ret =
       pageIdx + (offset >> StaticLog<ObjectSize>::VALUE);
+#endif
     
     assert (ret < NObjects);
     return ret;
@@ -190,14 +195,22 @@ protected:
   void setPageFromIndex (unsigned int index, void * pageAddr) {
     assert (((uintptr_t) pageAddr & (CPUInfo::PageSize - 1)) == 0);
     assert (modulo<ObjectsPerPage>(index) == 0);
+#if __cplusplus > 199711L
+    _mapEntryToPage(index >> staticlog(ObjectsPerPage)) = pageAddr;
+#else
     _mapEntryToPage(index >> StaticLog<ObjectsPerPage>::VALUE) = pageAddr;
+#endif
   }
 
   //@brief Get the page corresponding to this object index.
   void * getPageFromIndex (unsigned int index) {
     // Pick the index that is at the start of a page.
     index -= modulo<ObjectsPerPage>(index);
+#if __cplusplus > 199711L
+    void * pageAddr = _mapEntryToPage(index >> staticlog(ObjectsPerPage));
+#else
     void * pageAddr = _mapEntryToPage(index >> StaticLog<ObjectsPerPage>::VALUE);
+#endif
     assert (((uintptr_t) pageAddr & (CPUInfo::PageSize - 1)) == 0);
     return pageAddr;
   }

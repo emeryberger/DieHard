@@ -77,7 +77,11 @@ protected:
   unsigned int computeIndex (void * ptr) const {
     size_t offset = computeOffset (ptr);
     if (IsPowerOfTwo<ObjectSize>::VALUE) {
+#if __cplusplus > 199711L
+      return (offset >> staticlog(ObjectSize));
+#else
       return (offset >> StaticLog<ObjectSize>::VALUE);
+#endif
     } else {
       return (offset / ObjectSize);
     }

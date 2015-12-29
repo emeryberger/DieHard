@@ -7,8 +7,17 @@
  * @note   Copyright (C) 2005 by Emery Berger, University of Massachusetts Amherst.
  */
 
-#ifndef _STATICIF_H_
-#define _STATICIF_H_
+#ifndef DH_STATICIF_H
+#define DH_STATICIF_H
+
+#if __cplusplus > 199711L
+
+template <class TYPE>
+TYPE constexpr staticif(bool v, TYPE a, TYPE b) {
+  return (v ? a : b);
+}
+
+#else
 
 template <bool b, int a, int c>
 class StaticIf;
@@ -25,5 +34,6 @@ class StaticIf<false, a, b> {
   enum { VALUE = b };
 };
 
+#endif
 
 #endif

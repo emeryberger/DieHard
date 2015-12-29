@@ -15,6 +15,28 @@
   (e.g., 16, 32, 64) and the "halfway-between" sizes 3 * 2^n (e.g., 24, 48).
 */
 
+#if __cplusplus > 199711L
+template <class TYPE>
+TYPE constexpr staticlog2ceiling(TYPE v) {
+  return ((1 << staticlog(v)) < v) ?
+    staticlog(v) + 1 :
+    staticlog(v);
+}
+
+template <class TYPE>
+TYPE constexpr statichalflog2(TYPE v) {
+  return 2 * staticlog2ceiling(v) + 
+    (staticlog2ceiling(v - (1 << (staticlog2ceiling(v)-1))) + 1 == staticlog2ceiling(v))
+    - 1;
+}
+
+template <class TYPE>
+TYPE constexpr statichalfpow2(TYPE v) {
+  return (1 << (v/2)) + (v & 1) * ((1 << (v/2)) / 2);
+}
+
+#else
+
 template <size_t v>
 class StaticLog2Ceiling {
  public:
@@ -42,6 +64,7 @@ class StaticHalfPow2 {
   enum { VALUE = SZ1 + SZ2 };
 };
 
+#endif
 
 inline int halflog2 (size_t v) {
   int a = log2(v);

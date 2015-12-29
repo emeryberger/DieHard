@@ -9,23 +9,27 @@
 
 class MWC64 {
 
-  unsigned long long x, c, t;
+  unsigned long long _x, _c, _t;
 
   void init (unsigned long long seed1, unsigned long long seed2)
   {
-    x = seed1;
-    x <<= 32;
-    x += seed2;
-    c = 123456123456123456ULL;
+    _x = seed1;
+    _x <<= 32;
+    _x += seed2;
+    _c = 123456123456123456ULL;
+    _index = 2;
   }
 
   unsigned long long MWC() {
-    t = (x << 58) + c;
-    c = x >> 6;
-    x += t;
-    c += (x < t);
-    return x;
+    _t = (_x << 58) + _c;
+    _c = _x >> 6;
+    _x += _t;
+    _c += (_x < _t);
+    return _x;
   }
+
+  int _index;
+  unsigned long long _value;
 
 public:
   
@@ -41,9 +45,15 @@ public:
     init (seed1, seed2);
   }
   
-  inline unsigned long long next()
+  inline unsigned long next()
   {
-    return MWC();
+    if (_index == 2) {
+      _value = MWC();
+      _index = 0;
+    }
+    unsigned long v = ((unsigned long *) &_value)[_index];
+    _index++;
+    return v;
   }
 
 };

@@ -12,6 +12,17 @@
 
 #include "staticif.h"
 
+#if __cplusplus > 199711L
+
+int constexpr staticlog(int v) {
+  return ((v == 1) ? 0 :
+	  (v == 2) ? 1 :
+	  (v > 1) ? staticlog(v / 2) + 1 :
+	  0);
+}
+
+#else
+
 template <int Number>
 class StaticLog;
 
@@ -32,5 +43,7 @@ class StaticLog {
 public:
   enum { VALUE = StaticIf<(Number > 1), StaticLog<Number/2>::VALUE + 1, 0>::VALUE };
 };
+
+#endif
 
 #endif

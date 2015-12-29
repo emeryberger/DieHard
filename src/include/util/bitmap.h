@@ -116,7 +116,11 @@ private:
   enum { WORDBYTES = sizeof(WORD) };
 
   /// The log of the number of bits in a WORD, for shifting.
+#if __cplusplus > 199711L
+  enum { WORDBITSHIFT = staticlog(WORDBITS) };
+#else
   enum { WORDBITSHIFT = StaticLog<WORDBITS>::VALUE };
+#endif
 
   /// The bit array itself.
   WORD * _bitarray;

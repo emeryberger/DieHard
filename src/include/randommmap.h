@@ -109,7 +109,12 @@ private:
   RandomMmap(const RandomMmap& r);
   RandomMmap& operator=(const RandomMmap& r);
   
+#if __cplusplus > 199711L
+  enum { BITS = 31 - staticlog(CPUInfo::PageSize) }; // size of address space, minus bits for pages.
+#else
   enum { BITS = 31 - StaticLog<CPUInfo::PageSize>::VALUE }; // size of address space, minus bits for pages.
+#endif
+
   enum { PAGES = (1ULL << BITS) }; // Must be a power of two.
   
   /// Random number generator for probing. note that it needs to produce 64-bit RNGs.

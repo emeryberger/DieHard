@@ -16,8 +16,8 @@ CXXFLAGS = /Zi /MT /Ox /DNDEBUG /DNOMEMOPT=1
 else
 CC      = gcc
 CXX     = g++
-CFLAGS  = -O3 -DNDEBUG # -g # -O
-CXXFLAGS  = -O3 -DNDEBUG -lm # -g # -O
+CFLAGS  = -m32 -O3 -DNDEBUG # -g # -O
+CXXFLAGS  = -m32 -O3 -DNDEBUG -lm # -g # -O
 endif
 
 BINSRC  = cfrac.c

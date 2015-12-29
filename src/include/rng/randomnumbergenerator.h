@@ -10,17 +10,15 @@
 #ifndef DH_RANDOMNUMBERGENERATOR_H
 #define DH_RANDOMNUMBERGENERATOR_H
 
-
 #include "mwc.h"
 #include "realrandomvalue.h"
-
 
 class RandomNumberGenerator {
 public:
 
-  RandomNumberGenerator() // (unsigned int seed1, unsigned int seed2) 
-    : mt (RealRandomValue::value(), RealRandomValue::value()) {
-    // : mt (362436069, 521288629)  {
+  RandomNumberGenerator()
+    : mt (RealRandomValue::value(), RealRandomValue::value())
+  {
   }
 
   inline unsigned int next (void) {
@@ -28,8 +26,8 @@ public:
   }
 
 private:
-
-   MWC mt;
+  
+  MWC mt;
 
 };
 
