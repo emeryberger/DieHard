@@ -11,7 +11,6 @@
 #include "log.h"
 #include "mman.h"
 #include "myassert.h"
-#include "myhashmap.h"
 #include "pagedescription.h"
 #include "sparseheaps.h"
 #include "util.h"

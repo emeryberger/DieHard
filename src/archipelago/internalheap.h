@@ -6,12 +6,8 @@
 #include <string.h>
 
 #include "dlmalloc.h"
-#include "lockedheap.h"
-#include "spinlock.h"
-#include "oneheap.h"
-#include "stlallocator.h"
-#include "perclassheap.h"
-#include "mmapheap.h"
+#include "heaplayers.h"
+
 
 namespace QIH {
 

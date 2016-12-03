@@ -12,7 +12,8 @@
 #include <unistd.h>
 
 #include "allocationclockheap.h"
-#include "ansiwrapper.h"
+
+#include "heaplayers.h"
 
 #ifndef MMAP_POOL_HEAP 
 #include "bitmapheap.h"
@@ -26,8 +27,6 @@
 
 #include "fixedsizeobjheap.h"
 #include "internalheap.h"
-#include "lockedheap.h"
-#include "mmapheap.h"
 
 #ifdef MMAP_POOL_HEAP
 #include "mmappoolheap.h"
@@ -35,10 +34,7 @@
 
 #include "safeinitheap.h"
 #include "singletonheap.h"
-#include "sizeheap.h"
 #include "sizeinmapheap.h"
-#include "spinlock.h"
-#include "staticheap.h"
 
 namespace QIH {
 

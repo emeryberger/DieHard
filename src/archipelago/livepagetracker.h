@@ -3,15 +3,15 @@
 #ifndef __QIH_PAGETRACKER_H__
 #define __QIH_PAGETRACKER_H__
 
+#include "heaplayers.h"
+
 #include "coldcache.h"
 #include "log.h"
 #include "myassert.h"
 #include "internalheap.h"
-#include "myhashmap.h"
 #include "pagedescription.h"
 #include "pagequeue.h"
 #include "sparseheaps.h"
-#include "stlallocator.h"
 #include "util.h"
 
 using namespace std;

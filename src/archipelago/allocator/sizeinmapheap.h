@@ -10,8 +10,9 @@
  * @author Vitaliy Lvin
  */
 
+#include "heaplayers.h"
+
 #include "myassert.h"
-#include "myhashmap.h"
 
 namespace QIH {
 
