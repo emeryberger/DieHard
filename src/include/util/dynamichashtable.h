@@ -139,8 +139,6 @@ private:
     // Save old values.
     size_t old_size = _size;
     StoredObject * old_entries = _entries;
-    unsigned int old_elt_count = _numElements;
-    old_elt_count = old_elt_count;
 
     // Make room for a new table, growing the current one.
     _size *= ExpansionFactor;
@@ -172,20 +170,8 @@ private:
     int begin = key & _mask;
     int lim = (begin - 1 + _size) & _mask;
 
-    int probes = 0;
-    probes = probes;
-
     for (int i = begin; i != lim; i = (i+1) & _mask) {
       //fprintf(stderr,"probing entry %d\n",i);
-#if 0
-      probes++;
-      if(probes % 10 == 0) {
-        // XXX: fix hash function to lower clustering?
-	char buf[255];
-	sprintf (buf, "probed a lot of times: %d - %d\n", probes, _size);
-	printf (buf);
-      }
-#endif
       if (_entries[i].isValid()) {
 
         if (_entries[i].get().hashCode() == key) {

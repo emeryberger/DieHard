@@ -3,15 +3,16 @@
 
 int main()
 {
-  char * ch = (char *) malloc(1);
+  const int len = 4;
+  char * ch = (char *) malloc(len);
   for (int i = 0; i < 100; i++) {
-    printf ("Yay! I read something!\n");
+    printf ("Object at %p: ", (void *) ch);
     for (int j = 0; j < 500; j++) {
-      printf ("%c", (char) ch[i]);
+      printf ("%d ", ch[j % len]);
     }
-    free (ch);
-    ch = (char *) malloc(1);
     printf ("\n");
+    free (ch);
+    ch = (char *) malloc(len);
   }
   return 0;
 }

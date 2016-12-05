@@ -4,10 +4,6 @@
 #define DH_RANDOMMMAP_H
 
 #include "heaplayers.h"
-// #include "mmapwrapper.h"
-// #include "mmapheap.h"
-// #include "posixlock.h"
-// #include "guard.h"
 
 #include "madvisewrapper.h"
 #include "mwc64.h"

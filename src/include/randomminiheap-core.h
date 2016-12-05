@@ -65,10 +65,13 @@ public:
   /// @return an allocated object of size ObjectSize
   /// @param sz   requested object size
   /// @note May return NULL even though there is free space.
+#ifdef NDEBUG
+  void * malloc (size_t)
+#else
   void * malloc (size_t sz)
+#endif
   {
     Check<RandomMiniHeapCore *> sanity (this);
-    sz = sz; // to prevent warnings
 
     // Ensure size is reasonable.
     assert (sz <= ObjectSize);
