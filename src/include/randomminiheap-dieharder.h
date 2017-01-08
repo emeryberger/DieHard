@@ -98,15 +98,11 @@ private:
       void * pagesAddr;
       const unsigned long bytesToAllocate = PagesPerObject * CPUInfo::PageSize;
 
-#if 0 //  WE_ALREADY_HAVE_FULL_ASLR
-      // If we have full ASLR, we can just use mmap.  That is, ASLR
-      // means that every map is randomly distributed through the
-      // address space.  We will otherwise need to use RandomMmap.
-      // Unfortunately, no one really does "full" ASLR...
+      // Note that this assumes that we have "full" ASLR so we can just
+      // use mmap.  That is, ASLR means that every map is randomly
+      // distributed through the address space. As of Dec 2016,
+      // this seems to be the case on Linux. (EDB)
       pagesAddr = MmapWrapper::map (bytesToAllocate);
-#else
-      pagesAddr = DieHarder::mapper.getInstance().map (bytesToAllocate);
-#endif
       
       // Add an entry in the heap map that points to the start of this object.
       setPageFromIndex (objectIndex, pagesAddr);
