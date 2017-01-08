@@ -9,6 +9,7 @@ int main()
   cout << "string = " << ch << endl;
   cout << "  addr = " << (void *) ch << endl;
   delete [] ch;
+  cout << "After deletion: string = " << ch << endl;
   char * ch2 = new char[16];
   strcpy (ch2, "Goodbye, mundo!\n");
   cout << "string = " << ch << endl;
