@@ -78,7 +78,7 @@ public:
   }
 
   bool get (unsigned long k, VALUE_TYPE& value) {
-    Guard<HL::PosixLockType> l (_lock);
+    std::lock_guard<HL::PosixLockType> l (_lock);
 
     return find (k, value);
   }
@@ -86,7 +86,7 @@ public:
   /// @brief Insert the given object into the map.
   void insert (const VALUE_TYPE& s) 
   {
-    Guard<HL::PosixLockType> l (_lock);
+    std::lock_guard<HL::PosixLockType> l (_lock);
     
 #if 0
     {

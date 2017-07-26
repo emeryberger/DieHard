@@ -98,18 +98,12 @@ public:
     Check<RandomHeap *> sanity (this);
 
     // Some basic (static) sanity checks.
-    sassert<(ObjectSize > 0)> ensureReasonableObjects; 
-    sassert<(Numerator >= Denominator)> ensureMultiplierAtLeastOne;
-    sassert<(MIN_SIZE >= ObjectSize)> ensureMinSizeAtLeastObjectSize;
-    sassert<(sizeof(MiniHeapType<MIN_OBJECTS>) ==
-	     sizeof(MiniHeapType<MIN_OBJECTS*2>))>
-      ensureNoDependenciesOnNumberOfObjects;
-
-    // useless assignments to prevent warnings
-    ensureReasonableObjects = ensureReasonableObjects;
-    ensureMultiplierAtLeastOne = ensureMultiplierAtLeastOne;
-    ensureMinSizeAtLeastObjectSize = ensureMinSizeAtLeastObjectSize;
-    ensureNoDependenciesOnNumberOfObjects = ensureNoDependenciesOnNumberOfObjects;
+    static_assert(ObjectSize > 0, "Object is too small.");
+    static_assert(Numerator >= Denominator, "Multiplier must be at least one.");
+    static_assert(MIN_SIZE >= ObjectSize, "Minimum size must be at least as big as one object.");
+    static_assert(sizeof(MiniHeapType<MIN_OBJECTS>) ==
+		  sizeof(MiniHeapType<MIN_OBJECTS*2>),
+		  "There can't be any dependencies on the number of objects.");
 
     // Fill the buffer with miniheaps. NB: the first two have the
     // same number of objects -- this simplifies the math for

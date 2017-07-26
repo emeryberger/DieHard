@@ -47,7 +47,10 @@ UNIX_SRC  = Heap-Layers/wrappers/gnuwrapper.cpp source/libdieharder.cpp
 # UNIX_SRC  = Heap-Layers/wrappers/gnuwrapper-hooks.cpp source/libdieharder.cpp
 MACOS_SRC = Heap-Layers/wrappers/macwrapper.cpp source/libdieharder.cpp
 
-DEPS = $(UNIX_SRC) $(MACOS_SRC)
+DEPS = Heap-Layers $(MACOS_SRC) $(UNIX_SRC)
+
+Heap-Layers:
+	git clone https://github.com/emeryberger/Heap-Layers
 
 REPLICATED_SRC = replicated/replicated.cpp
 
@@ -58,23 +61,23 @@ WIN_FLAGS = /Iinclude /Zi /Ox /Oy /DNDEBUG /MD /DDIEHARD_REPLICATED=0
 
 WINDOWS_COMMAND_STANDALONE := cl /LD $(WIN_INCLUDES) $(WIN_FLAGS) winhard.cpp /link /base:0x63000000 kernel32.lib user32.lib msvcrt.lib advapi32.lib /subsystem:console /dll /incremental:no /entry:HardDllMain
 
-MACOS_COMMAND_STANDALONE := $(MACOS_COMPILER) --std=c++11 -arch i386 -arch x86_64 -g -O3 -W -Wall -DDIEHARD_MULTITHREADED=1 -DNDEBUG $(INCLUDE) -D_REENTRANT=1 -compatibility_version 1 -current_version 1 -dynamiclib $(MACOS_SRC) -o $(TARGET).dylib
+MACOS_COMMAND_STANDALONE := $(MACOS_COMPILER) --std=c++14 -arch i386 -arch x86_64 -g -O3 -W -Wall -DDIEHARD_MULTITHREADED=1 -DNDEBUG $(INCLUDE) -D_REENTRANT=1 -compatibility_version 1 -current_version 1 -dynamiclib $(MACOS_SRC) -o $(TARGET).dylib
 
-MACOS_COMMAND_DEBUG_STANDALONE := $(MACOS_COMPILER) --std=c++11 -arch i386 -arch x86_64 -g -W -Wall -DDIEHARD_MULTITHREADED=1 $(INCLUDE) -D_REENTRANT=1 -compatibility_version 1 -current_version 1 -dynamiclib $(MACOS_SRC) -o $(TARGET).dylib
+MACOS_COMMAND_DEBUG_STANDALONE := $(MACOS_COMPILER) --std=c++14 -arch i386 -arch x86_64 -g -W -Wall -DDIEHARD_MULTITHREADED=1 $(INCLUDE) -D_REENTRANT=1 -compatibility_version 1 -current_version 1 -dynamiclib $(MACOS_SRC) -o $(TARGET).dylib
 
 MACOS_COMMAND_REPLICATED := $(MACOS_COMPILER) -pipe -O3 -finline-limit=65000 -fkeep-inline-functions -finline-functions -ffast-math -fomit-frame-pointer  $(REPLICATED_SRC) -DDIEHARD_MULTITHREADED=1 -DNDEBUG  $(INCLUDE) -D_REENTRANT=1 -compatibility_version 1 -current_version 1 -dynamiclib $(MACOS_SRC) -o libdieharder_r.dylib
 
-LINUX_COMMAND_STANDALONE := $(CXX) -std=c++11 -m32 -finline-functions -malign-double -pipe -march=pentium4 -O3 -DNDEBUG  $(INCLUDE) -D_REENTRANT=1 -DDIEHARD_MULTITHREADED=1 -shared $(UNIX_SRC) -Bsymbolic -o $(TARGET).so -ldl -lpthread
+LINUX_COMMAND_STANDALONE := $(CXX) -std=c++14 -m32 -finline-functions -malign-double -pipe -march=pentium4 -O3 -DNDEBUG  $(INCLUDE) -D_REENTRANT=1 -DDIEHARD_MULTITHREADED=1 -shared $(UNIX_SRC) -Bsymbolic -o $(TARGET).so -ldl -lpthread
 
-LINUX_COMMAND_REPLICATED := $(CXX) -std=c++11 -malign-double -pipe -march=pentium4 -O3 -fno-rtti -finline-functions  -ffast-math -fomit-frame-pointer -DNDEBUG  $(INCLUDE) -D_REENTRANT=1  $(REPLICATED_SRC) -DDIEHARD_MULTITHREADED=1 -shared $(UNIX_SRC) -Bsymbolic -o libdieharder_r.so -ldl -lpthread
+LINUX_COMMAND_REPLICATED := $(CXX) -std=c++14 -malign-double -pipe -march=pentium4 -O3 -fno-rtti -finline-functions  -ffast-math -fomit-frame-pointer -DNDEBUG  $(INCLUDE) -D_REENTRANT=1  $(REPLICATED_SRC) -DDIEHARD_MULTITHREADED=1 -shared $(UNIX_SRC) -Bsymbolic -o libdieharder_r.so -ldl -lpthread
 
 FLAGS = -pedantic -Wall -Wpointer-arith -Woverloaded-virtual -Werror=return-type -Wtype-limits -Wempty-body -Wno-ctor-dtor-privacy -Wno-overlength-strings -Wno-invalid-offsetof -Wno-variadic-macros -Wcast-align -Wno-long-long -pthread -pipe  -DNDEBUG
 
-LINUX_64_COMMAND_STANDALONE_DEBUG := $(CXX) -std=c++11 -W -Wall -O0 -pipe -fPIC -m64 -ffast-math -g $(INCLUDE) -D_REENTRANT=1 -DDIEHARD_MULTITHREADED=1 -shared  $(UNIX_SRC) -Bsymbolic -o $(TARGET).so -ldl -lpthread
+LINUX_64_COMMAND_STANDALONE_DEBUG := $(CXX) -std=c++14 -W -Wall -O0 -pipe -fPIC -m64 -ffast-math -g $(INCLUDE) -D_REENTRANT=1 -DDIEHARD_MULTITHREADED=1 -shared  $(UNIX_SRC) -Bsymbolic -o $(TARGET).so -ldl -lpthread
 
-LINUX_64_COMMAND_STANDALONE := $(CXX) $(FLAGS) -std=c++11 -W -Wall -O3 -DNDEBUG -pipe -fPIC -m64 -ffast-math -g $(INCLUDE) -D_REENTRANT=1 -DDIEHARD_MULTITHREADED=1 -shared  $(UNIX_SRC) -Bsymbolic -o $(TARGET).so -ldl -lpthread
+LINUX_64_COMMAND_STANDALONE := $(CXX) $(FLAGS) -std=c++14 -W -Wall -O3 -DNDEBUG -pipe -fPIC -m64 -ffast-math -g $(INCLUDE) -D_REENTRANT=1 -DDIEHARD_MULTITHREADED=1 -shared  $(UNIX_SRC) -Bsymbolic -o $(TARGET).so -ldl -lpthread
 
-LINUX_64_COMMAND_REPLICATED := $(CXX) -std=c++11 -O1 -DNDEBUG -pipe -fPIC -m64 -g $(INCLUDE) -D_REENTRANT=1  $(REPLICATED_SRC) -DDIEHARD_MULTITHREADED=1 -shared $(UNIX_SRC) -Bsymbolic -o libdieharder_r.so -ldl -lpthread
+LINUX_64_COMMAND_REPLICATED := $(CXX) -std=c++14 -O1 -DNDEBUG -pipe -fPIC -m64 -g $(INCLUDE) -D_REENTRANT=1  $(REPLICATED_SRC) -DDIEHARD_MULTITHREADED=1 -shared $(UNIX_SRC) -Bsymbolic -o libdieharder_r.so -ldl -lpthread
 
 SOLARIS_SPARC32_COMMAND_STANDALONE := CC -xtarget=ultra2 -xildoff -xO5 -xthreadvar=dynamic -L/usr/lib/lwp -R/usr/lib/lwp -DNDEBUG $(INCLUDE) -DDIEHARD_MULTITHREADED=1 -G -PIC $(UNIX_SRC) sparc-interchange.il -o $(TARGET).so -lthread -ldl -lCrun
 
@@ -85,45 +88,44 @@ SOLARIS_SPARC64_COMMAND_STANDALONE := CC -xcode=pic13 -xtarget=ultra2 -m64 -dali
 SOLARIS_SPARC64_COMMAND_REPLICATED := CC -xcode=pic13 -xtarget=ultra2 -m64 -dalign -xbuiltin=%all -xO5 -xildoff -xthreadvar=dynamic -L/usr/lib/lwp -R/usr/lib/lwp -DNDEBUG $(INCLUDE)  $(REPLICATED_SRC) -DDIEHARD_MULTITHREADED=1 -G -PIC $(UNIX_SRC) sparc-interchange.il -o libdieharder_r.so -lthread -ldl -lCrun
 
 
-linux-gcc-x86:
+linux-gcc-x86: $(DEPS)
 	$(LINUX_COMMAND_STANDALONE)
 
-linux-gcc-x86-replicated:
+linux-gcc-x86-replicated: $(DEPS)
 	$(LINUX_COMMAND_REPLICATED)
 
-linux-gcc-x86-64:
+linux-gcc-x86-64: $(DEPS)
 	$(LINUX_64_COMMAND_STANDALONE)
 
-linux-gcc-x86-64-debug:
+linux-gcc-x86-64-debug: $(DEPS)
 	$(LINUX_64_COMMAND_STANDALONE_DEBUG)
 
-linux-gcc-x86-64-replicated:
+linux-gcc-x86-64-replicated: $(DEPS)
 	$(LINUX_64_COMMAND_REPLICATED)
 
-solaris-sparc:
+solaris-sparc: $(DEPS)
 	$(SOLARIS_SPARC32_COMMAND_STANDALONE)
 
-solaris-sparc-replicated:
+solaris-sparc-replicated: $(DEPS)
 	$(SOLARIS_SPARC32_COMMAND_REPLICATED)
 
-solaris-sparc-64:
+solaris-sparc-64: $(DEPS)
 	$(SOLARIS_SPARC64_COMMAND_STANDALONE)
 
-solaris-sparc-64-replicated:
+solaris-sparc-64-replicated: $(DEPS)
 	$(SOLARIS_SPARC64_COMMAND_REPLICATED)
 
-windows:
+windows: $(DEPS)
 	$(WINDOWS_COMMAND_STANDALONE)
 
-macos:
+macos: $(DEPS)
 	$(MACOS_COMMAND_STANDALONE)
 
-macos-debug:
+macos-debug: $(DEPS)
 	$(MACOS_COMMAND_DEBUG_STANDALONE)
 
-macos-replicated:
+macos-replicated: $(DEPS)
 	$(MACOS_COMMAND_REPLICATED)
-
 
 clean:
 	rm -f $(TARGET).so libdieharder_r.so $(TARGET).dylib

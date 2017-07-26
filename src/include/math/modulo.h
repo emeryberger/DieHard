@@ -11,8 +11,7 @@
 
 template <int B>
 inline size_t modulo (size_t v) {
-  sassert<(B > 0)> modulus_must_be_positive;
-  modulus_must_be_positive = modulus_must_be_positive;
+  static_assert(B > 0, "Modulus must be positive.");
 
   enum { Pow2 = IsPowerOfTwo<B>::VALUE };
   if (Pow2) {

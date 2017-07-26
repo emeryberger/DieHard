@@ -46,11 +46,8 @@ public:
 
     // Object size must be a multiple of page size (if bigger than a
     // page).
-    sassert<((ObjectSize <= CPUInfo::PageSize)
-	     || CPUInfo::PageSize * (ObjectSize / CPUInfo::PageSize) == ObjectSize)>
-      objectSizeMultipleOfPageSize;
-    objectSizeMultipleOfPageSize = objectSizeMultipleOfPageSize;
-
+    static_assert((ObjectSize <= CPUInfo::PageSize
+		   || CPUInfo::PageSize * (ObjectSize / CPUInfo::PageSize) == ObjectSize), "Object size must be a multiple of page size if it is bigger than a page.");
   }
 
   typedef RandomMiniHeapCore<Numerator, Denominator, ObjectSize, NObjects, Allocator, DieFastOn, true> SuperHeap;
@@ -255,8 +252,7 @@ public:
 
   RandomMiniHeapDieHarderChoose()
   {
-    sassert<(ObjectSize <= CPUInfo::PageSize)> verifySmall;
-    verifySmall = verifySmall;
+    static_assert(ObjectSize <= CPUInfo::PageSize, "Object must be no larger than a page.");
   }
 
   inline size_t getSize (void * ptr) {
@@ -287,8 +283,7 @@ public:
   typedef RandomMiniHeapDieHarderBase<Numerator, Denominator, ObjectSize, NObjects, Allocator, DieFastOn> SuperHeap;
 
   RandomMiniHeapDieHarderChoose() {
-    sassert<(ObjectSize >= CPUInfo::PageSize)> verifyLarge;
-    verifyLarge = verifyLarge;
+    static_assert(ObjectSize >= CPUInfo::PageSize, "Object must be at least a page in size.");
   }
 
   inline size_t getSize (void * ptr) {

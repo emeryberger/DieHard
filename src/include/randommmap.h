@@ -36,7 +36,7 @@ public:
   }
 
   void * map (size_t sz) {
-    Guard<PosixLockType> m (_lock);
+    std::lock_guard<PosixLockType> m (_lock);
 
     // Round up to the nearest number of pages required.
     unsigned long npages = (sz + CPUInfo::PageSize - 1) / CPUInfo::PageSize;
@@ -78,7 +78,7 @@ public:
   
   void unmap (void * ptr, size_t sz)
   {
-    Guard<PosixLockType> m (_lock);
+    std::lock_guard<PosixLockType> m (_lock);
 
     // Round up to the nearest number of pages required.
     unsigned int npages = (sz + CPUInfo::PageSize - 1) / CPUInfo::PageSize;

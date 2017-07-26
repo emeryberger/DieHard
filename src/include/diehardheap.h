@@ -21,7 +21,6 @@
 #include <new>
 
 #include "heaplayers.h"
-// #include "sassert.h"
 
 #include "diefast.h"
 #include "staticforloop.h"
@@ -55,28 +54,24 @@ public:
   enum { Alignment = 8 };
 #endif
   
-  DieHardHeap (void)
+  DieHardHeap()
     : _localRandomValue (RealRandomValue::value())
   {
     // Check that there are no size dependencies to worry about.
     typedef RandomHeap<Numerator, Denominator, Alignment, MaxSize, RandomMiniHeap, DieFastOn, DieHarderOn> RH1;
     typedef RandomHeap<Numerator, Denominator, 256 * Alignment, MaxSize, RandomMiniHeap, DieFastOn, DieHarderOn> RH2;
 
-    sassert<(sizeof(RH1) == (sizeof(RH2)))>
-      verifyNoSizeDependencies;
+    static_assert(sizeof(RH1) == sizeof(RH2),
+		  "There can't be any dependencies on object sizes.");
 
     // Check to make sure the size specified by MaxSize is correct.
 #if USE_HALF_LOG
-    sassert<(StaticHalfPow2<MAX_INDEX-1>::VALUE) == MaxSize>
-      verifySizeFormulation;
+    static_assert(StaticHalfPow2<MAX_INDEX-1>::VALUE == MaxSize,
+		  "Size specified by MaxSize is incorrect.");
 #else
-    sassert<((1 << (MAX_INDEX-1)) * Alignment) == MaxSize>
-      verifySizeFormulation;
+    static_assert((1 << (MAX_INDEX-1)) * Alignment == MaxSize,
+		  "Size specified by MaxSize is incorrect.");
 #endif
-
-    // avoiding warnings here
-    verifyNoSizeDependencies = verifyNoSizeDependencies;
-    verifySizeFormulation = verifySizeFormulation;
 
     // Warning: some crazy template meta-programming in the name of
     // efficiency below.
