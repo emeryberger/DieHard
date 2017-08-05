@@ -3,8 +3,8 @@
 /**
  * @file   libdiehard.cpp
  * @brief  Replaces malloc and friends with DieHard versions.
- * @author Emery Berger <http://www.cs.umass.edu/~emery>
- * @note   Copyright (C) 2005-2011 by Emery Berger, University of Massachusetts Amherst.
+ * @author Emery Berger <http://www.emeryberger.org>
+ * @note   Copyright (C) 2005-2017 by Emery Berger, University of Massachusetts Amherst.
  */
 
 // The undef below ensures that any pthread_* calls get strong
@@ -42,12 +42,10 @@ enum { Numerator = 8, Denominator = 7 };
 class TheLargeHeap : public OneHeap<LargeHeap<MmapWrapper> > {};
 
 
-#include "../test/brokenheap.h"
-
 typedef
  ANSIWrapper<
   LockedHeap<PosixLockType,
-	     CombineHeap<DieHardHeap<Numerator, Denominator, 4096,
+	     CombineHeap<DieHardHeap<Numerator, Denominator, 65536,
 				     (DIEHARD_DIEFAST == 1),
 				     (DIEHARD_DIEHARDER == 1)>,
 			 TheLargeHeap> > >
