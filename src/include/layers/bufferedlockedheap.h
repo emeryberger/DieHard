@@ -32,9 +32,9 @@ public:
   enum { Alignment = Super::Alignment };
 
   void * malloc (size_t sz) {
-    std::lock_guard<LockType> l (thelock);
+    std::lock_guard<LockType> l (_theLock);
     void *ptr = Super::malloc (sz);
-    if (ptr != NULL) {
+    if (ptr != nullptr) {
       return ptr;
     }
     // Emptying the freeBuffer and trying again
@@ -44,10 +44,10 @@ public:
 
   void free (void *ptr) {
     if (freeIndex == Size) {
-      std::lock_guard<LockType> l (thelock);
+      std::lock_guard<LockType> l (_theLock);
       emptyFreeBuffer();
     }
-    if (freeBuffer == NULL) {
+    if (freeBuffer == nullptr) {
       init();
     }
     freeBuffer[freeIndex] = ptr;
@@ -55,25 +55,23 @@ public:
   }
 
   inline size_t getSize (void * ptr) const {
-    std::lock_guard<LockType> l (thelock);
     return Super::getSize (ptr);
   }
 
   inline size_t getSize (void * ptr) {
-    std::lock_guard<LockType> l (thelock);
     return Super::getSize (ptr);
   }
 
   inline void lock (void) {
-    thelock.lock();
+    _theLock.lock();
   }
 
   inline void unlock (void) {
-    thelock.unlock();
+    _theLock.unlock();
   }
 
   void clear (void) {
-    std::lock_guard<LockType> l (thelock);
+    std::lock_guard<LockType> l (_theLock);
     emptyFreeBuffer();
     Super::free (freeBuffer);
   }
@@ -81,7 +79,7 @@ public:
 private:
 
   void init (void) {
-    std::lock_guard<LockType> l (thelock);
+    std::lock_guard<LockType> l (_theLock);
     freeBuffer = reinterpret_cast<void **>
       (Super::malloc (sizeof(void *) * Size));
     freeIndex = 0;
@@ -97,11 +95,11 @@ private:
   static thread_local void **freeBuffer;
   static thread_local int freeIndex;
 
-  LockType thelock;
+  LockType _theLock;
 };
 
 template <int Size, class LockType, class Super>
-thread_local void **BufferedLockedHeap<Size, LockType, Super>::freeBuffer = NULL;
+thread_local void **BufferedLockedHeap<Size, LockType, Super>::freeBuffer = nullptr;
 template <int Size, class LockType, class Super>
 thread_local int BufferedLockedHeap<Size, LockType, Super>::freeIndex = 0;
 
