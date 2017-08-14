@@ -6,8 +6,8 @@
  * @author Emery Berger <http://www.cs.umass.edu/~emery>
  */
 
-#ifndef DH_SEGHEAP_H_
-#define DH_SEGHEAP_H_
+#ifndef DH_SEGHEAP_H
+#define DH_SEGHEAP_H
 
   /**
    * @class SegHeap
@@ -51,7 +51,7 @@
 
     public:
 
-      inline SegHeap (void)
+      inline SegHeap()
 	: memoryHeld (0),
 	  maxObjectSize (((csFunction) getClassMaxSize) (NumBins - 1))
       {
@@ -60,9 +60,9 @@
 	}
       }
 
-      inline ~SegHeap (void) {}
+      inline ~SegHeap() {}
 
-      inline size_t getMemoryHeld (void) const {
+      inline size_t getMemoryHeld() const {
 	return memoryHeld;
       }
 
@@ -160,7 +160,7 @@
       }
 
 
-      void clear (void) {
+      void clear() {
 	int i;
 	for (i = 0; i < NumBins; i++) {
 	  myLittleHeap[i].clear();
@@ -263,7 +263,7 @@ namespace HL {
 
   public:
 
-    void freeAll (void) {
+    void freeAll() {
       int i;
       for (i = 0; i < NumBins; i++) {
 	const size_t sz = ((csFunction) getClassMaxSize)(i);

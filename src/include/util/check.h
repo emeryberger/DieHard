@@ -1,7 +1,7 @@
 // -*- C++ -*-
 
-#ifndef _CHECK_H_
-#define _CHECK_H_
+#ifndef CHECK_H
+#define CHECK_H
 
 template <class C>
 class Check {
@@ -15,7 +15,7 @@ public:
 #endif
   }
 
-  ~Check (void) {
+  ~Check() {
 #ifndef NDEBUG
     _item->check();
 #endif

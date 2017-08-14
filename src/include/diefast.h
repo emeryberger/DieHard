@@ -1,7 +1,7 @@
 // -*- C++ -*-
 
-#ifndef _DIEFAST_H_
-#define _DIEFAST_H_
+#ifndef DIEFAST_H
+#define DIEFAST_H
 
 // DieFast mixin.
 
