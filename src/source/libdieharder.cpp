@@ -28,6 +28,7 @@ enum { Numerator = 8, Denominator = 7 };
 
 #include "heaplayers.h"
 
+#include "bufferedlockedheap.h"
 #include "combineheap.h"
 #include "diehard.h"
 #include "randomnumbergenerator.h"
