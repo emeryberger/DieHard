@@ -44,7 +44,7 @@ class TheLargeHeap : public OneHeap<LargeHeap<MmapWrapper> > {};
 
 typedef
  ANSIWrapper<
-  LockedHeap<PosixLockType,
+  BufferedLockedHeap<100, PosixLockType,
 	     CombineHeap<DieHardHeap<Numerator, Denominator, 65536,
 				     (DIEHARD_DIEFAST == 1),
 				     (DIEHARD_DIEHARDER == 1)>,
