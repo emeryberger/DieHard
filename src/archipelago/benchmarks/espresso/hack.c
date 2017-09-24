@@ -1,6 +1,6 @@
 #include "espresso.h"
 
-map_dcset(PLA)
+void map_dcset(PLA)
 pPLA PLA;
 {
     int var, i;
@@ -74,7 +74,7 @@ pPLA PLA;
     PLA->D = sf_delc(PLA->D, 2*var, 2*var+1);
 }
 
-map_output_symbolic(PLA)
+void map_output_symbolic(PLA)
 pPLA PLA;
 {
     pset_family newF, newD;
@@ -395,7 +395,7 @@ symbolic_list_t *list;	/* current place in the symbolic list */
 }
 
 
-symbolic_hack_labels(PLA, list, compress, new_size, old_size, size_added)
+void symbolic_hack_labels(PLA, list, compress, new_size, old_size, size_added)
 pPLA PLA;
 symbolic_t *list;
 pset compress;

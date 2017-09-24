@@ -573,7 +573,7 @@ ppair pair;
     global_PLA->phase = NULL;
 }
 
-generate_all_pairs(pair, n, candidate, action)
+void generate_all_pairs(pair, n, candidate, action)
 ppair pair;
 int n;
 pset candidate;
