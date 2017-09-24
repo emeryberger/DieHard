@@ -45,8 +45,8 @@ ostream& operator<<(ostream& s, const GeneralMatrix& X)
       mr.Next();  s << "\n";
    }
    s << flush;
-   // s.flags(f);
-      s.flags((std::_Ios_Fmtflags) f); // EDB
+    s.flags(f);
+    //   s.flags((std::_Ios_Fmtflags) f); // EDB
    return s;
 }
 

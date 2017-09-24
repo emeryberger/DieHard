@@ -97,8 +97,9 @@
 #ifdef __GNUG__                         // Gnu C++
    #include <stdlib.h>
    #ifdef WANT_STREAM
-      #include <iostream.h>
-      #include <iomanip.h>
+      #include <iostream>
+      #include <iomanip>
+using namespace std;
    #endif
    #ifdef WANT_MATH
       #include <math.h>
