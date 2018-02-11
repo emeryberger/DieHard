@@ -11,10 +11,6 @@
 
 #include <stdlib.h>
 
-#if defined(USE_LOCH) && defined(_WIN32)
-#pragma comment(lib, "loch.lib")
-#endif
-
 #define NOMEMOPT 1
 
 /* END EDB */
