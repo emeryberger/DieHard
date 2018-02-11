@@ -100,7 +100,6 @@ To use DieHard, build with "make darwin" and set two environment variables
 as follows:
 
 	% export DYLD_INSERT_LIBRARIES=/path/to/libdiehard.dylib
-	% export DYLD_FORCE_FLAT_NAMESPACE=
 
 DieHard will then replace the system malloc in any new application executed
 from that terminal window.
