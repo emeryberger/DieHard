@@ -3,6 +3,7 @@
 #ifndef RANDOMMINIHEAP_CORE
 #define RANDOMMINIHEAP_CORE
 
+#include "tprintf.hh"
 
 class RandomMiniHeapBase {
 public:
@@ -36,6 +37,26 @@ template <int Numerator,
 	  bool DieFastOn,
 	  bool DieHarderOn>
 class RandomMiniHeapCore : public RandomMiniHeapBase {
+private:
+  
+  void reportOverflowError(void * ptr) {
+    if (DieFastOn) {
+      tprintf::tprintf("DieFast: Overflow detected in object at address: @\n", ptr);
+    }
+  }
+  
+  void reportDoubleFreeError(void * ptr) {
+    if (DieFastOn) {
+      tprintf::tprintf("DieFast: Double free detected in object at address: @\n", ptr);
+    }
+  }
+  
+  void reportInvalidFreeError(void * ptr) {
+    if (DieFastOn) {
+      tprintf::tprintf("DieFast: Invalid free called on address: @\n", ptr);
+    }
+  }
+  
 public:
 
   /// Check values for sanity checking.
@@ -99,7 +120,7 @@ public:
     if (DieFastOn) {
       // Check to see if this object was overflowed.
       if (DieFast::checkNot (ptr, ObjectSize, _freedValue)) {
-	//	reportOverflowError();
+	reportOverflowError(ptr);
       }
     }
 
@@ -117,6 +138,7 @@ public:
 
     // Return false if the pointer is out of range.
     if (!inBounds(ptr)) {
+      reportInvalidFreeError(ptr);
       return false;
     }
 
@@ -129,7 +151,7 @@ public:
     if (_miniHeapBitmap.reset (index)) {
       // We actually reset the bit, so this was not a double free.
     } else {
-      //      reportDoubleFreeError();
+      reportDoubleFreeError(ptr);
       didFree = false;
     }
     return didFree;
@@ -172,7 +194,7 @@ protected:
       if (!_miniHeapBitmap.isSet (index - 1)) {
 	void * p = (void *) (((ObjectStruct *) ptr) - 1);
 	if (DieFast::checkNot (p, ObjectSize, _freedValue)) {
-	  //	reportOverflowError();
+	  reportOverflowError(ptr);
 	}
       }
       // Check successor.
@@ -180,7 +202,7 @@ protected:
 	  (!_miniHeapBitmap.isSet (index + 1))) {
 	void * p = (void *) (((ObjectStruct *) ptr) + 1);
 	if (DieFast::checkNot (p, ObjectSize, _freedValue)) {
-	  //	reportOverflowError();
+	  reportOverflowError(ptr);
 	}
       }
     }
