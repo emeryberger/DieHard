@@ -70,11 +70,11 @@ int main() {
       // sarbak -- works
       char* str3 = new char[8];
       char* str4 = new char[8];
-      sprintf (str3, "7654321");
+      sprintf (str3, "123456789012345678901234567890");
       print(c,"performed heap overflow.\n");
-      sprintf (str4, "1234567");
-  
+      sprintf (str4, "123456789012345678901234567890");
       print(c,"performed heap overflow.\n");
+      
       if( ! (c%rpt_rate) ) {
 	printf ("'%s' should NOT equal '%s'.\n", str3, str4);
 	printf ("str1 = '%s'\n", str1);
