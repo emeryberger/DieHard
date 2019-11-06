@@ -11,6 +11,9 @@
 #ifndef DH_REALRANDOMVALUE_H
 #define DH_REALRANDOMVALUE_H
 
+#include <fcntl.h>
+#include <unistd.h>
+
 #include <random>
 
 /**
@@ -25,9 +28,10 @@ public:
   {}
 
   static unsigned int value() {
-    // Now just a thin wrapper over the C++11 random device.
-    std::random_device rnd;
-    return rnd();
+    int fd = open("/dev/urandom", O_RDONLY);
+    unsigned int buf;
+    auto sz = read(fd, (void *)&buf, sizeof(buf));
+    return buf;
   }
 };
 
