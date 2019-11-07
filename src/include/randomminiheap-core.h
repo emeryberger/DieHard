@@ -11,7 +11,7 @@ public:
   virtual void * malloc (size_t) = 0;
   virtual bool free (void *) = 0;
   virtual size_t getSize (void *) = 0;
-  virtual void activate (void) = 0;
+  virtual void activate() = 0;
   virtual ~RandomMiniHeapBase () {}
 };
 
@@ -39,15 +39,15 @@ template <int Numerator,
 class RandomMiniHeapCore : public RandomMiniHeapBase {
 private:
   
-  void reportOverflowError(void * ptr) {
+  void reportOverflowError(void * ptr, int offset) {
     if (DieFastOn) {
-      tprintf::tprintf("DieFast: Overflow detected in object at address: @\n", ptr);
+      tprintf::tprintf("DieFast: Overflow detected in object at address: @, position: @ (malloc size = @)\n", ptr, offset, ObjectSize);
     }
   }
   
   void reportDoubleFreeError(void * ptr) {
     if (DieFastOn) {
-      tprintf::tprintf("DieFast: Double free detected in object at address: @\n", ptr);
+      tprintf::tprintf("DieFast: Double free detected in object at address: @ (malloc size = @)\n", ptr, ObjectSize);
     }
   }
   
@@ -85,7 +85,7 @@ public:
 
   /// @return an allocated object of size ObjectSize
   /// @param sz   requested object size
-  /// @note May return NULL even though there is free space.
+  /// @note May return nullptr even though there is free space.
 #ifdef NDEBUG
   void * malloc (size_t)
 #else
@@ -97,7 +97,7 @@ public:
     // Ensure size is reasonable.
     assert (sz <= ObjectSize);
 
-    void * ptr = NULL;
+    void * ptr = nullptr;
 
     // Try to allocate an object from the bitmap.
     unsigned int index = modulo<NObjects> (_random.next());
@@ -105,7 +105,7 @@ public:
     bool didMalloc = _miniHeapBitmap.tryToSet (index);
 
     if (!didMalloc) {
-      return NULL;
+      return nullptr;
     }
 
     // Get the address of the indexed object.
@@ -120,7 +120,14 @@ public:
     if (DieFastOn) {
       // Check to see if this object was overflowed.
       if (DieFast::checkNot (ptr, ObjectSize, _freedValue)) {
-	reportOverflowError(ptr);
+	auto * l = (size_t *) ptr;
+	int i;
+	for (i = 0; i < (int) (ObjectSize / sizeof(size_t)); i++) {
+	  if (l[i] != _freedValue) {
+	    break;
+	  }
+	}
+	reportOverflowError(ptr, i * sizeof(size_t));
       }
     }
 
@@ -138,7 +145,8 @@ public:
 
     // Return false if the pointer is out of range.
     if (!inBounds(ptr)) {
-      reportInvalidFreeError(ptr);
+      // Can't do the below because we always check lots of miniheaps...
+      //      reportInvalidFreeError(ptr);
       return false;
     }
 
@@ -159,7 +167,7 @@ public:
 
 
   /// Sanity check.
-  void check (void) const {
+  void check() const {
     assert ((_check1 == CHECK1) &&
 	    (_check2 == CHECK2));
   }
@@ -211,7 +219,7 @@ protected:
 
 
   /// @return true iff heap is currently active.
-  inline bool isActivated (void) const {
+  inline bool isActivated() const {
     return _isHeapActivated;
   }
 
