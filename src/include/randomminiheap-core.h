@@ -120,15 +120,10 @@ public:
     if (DieFastOn) {
       // Check to see if this object was overflowed.
       if (DieFast::checkNot (ptr, ObjectSize, _freedValue)) {
-	auto * l = (size_t *) ptr;
-	int i;
-	for (i = 0; i < (int) (ObjectSize / sizeof(size_t)); i++) {
-	  if (l[i] != _freedValue) {
-	    break;
-	  }
-	}
-	reportOverflowError(ptr, i * sizeof(size_t));
+	reportOverflowError(ptr, overflowIndex(ptr));
       }
+      // Check if the object to the left or to the right are intact (if they are free).
+      checkOverflowError(index);
     }
 
     // Make sure the returned object is the right size.
@@ -162,6 +157,12 @@ public:
       reportDoubleFreeError(ptr);
       didFree = false;
     }
+
+    if (DieFastOn) {
+      // Check if the object to the left or to the right are intact (if they are free).
+      checkOverflowError(index);
+    }
+    
     return didFree;
   }
 
@@ -191,33 +192,47 @@ protected:
   virtual bool inBounds (void * ptr) const = 0;
 
 
-#if 0
+private:
+
+  unsigned int overflowIndex(void * ptr) {
+    auto * l = (size_t *) ptr;
+    unsigned int i;
+    for (i = 0; i < (int) (ObjectSize / sizeof(size_t)); i++) {
+      if (l[i] != _freedValue) {
+	break;
+      }
+    }
+    return i * sizeof(size_t);
+  }
+  
+#if 1
   /// @brief Checks for overflows.
-  void checkOverflowError (void * ptr, unsigned int index)
+  void checkOverflowError (unsigned int index)
   {
-    ptr = ptr;
-    index = index;
-    if (!DieHarderOn) {
+    auto leftIndex = (index - 1) % NObjects;
+    auto rightIndex = (index + 1) % NObjects;
+    
+    if (DieHarderOn) {
       // Check predecessor.
-      if (!_miniHeapBitmap.isSet (index - 1)) {
-	void * p = (void *) (((ObjectStruct *) ptr) - 1);
+      if (!_miniHeapBitmap.isSet (leftIndex)) {
+	void * p = getObject(leftIndex);
 	if (DieFast::checkNot (p, ObjectSize, _freedValue)) {
-	  reportOverflowError(ptr);
+	  reportOverflowError(p, overflowIndex(p));
 	}
       }
       // Check successor.
-      if ((index < (NObjects - 1)) &&
-	  (!_miniHeapBitmap.isSet (index + 1))) {
-	void * p = (void *) (((ObjectStruct *) ptr) + 1);
+      if (!_miniHeapBitmap.isSet (rightIndex)) {
+      void * p = getObject(rightIndex);
 	if (DieFast::checkNot (p, ObjectSize, _freedValue)) {
-	  reportOverflowError(ptr);
+	  reportOverflowError(p, overflowIndex(p));
 	}
       }
     }
   }
 #endif
 
-
+protected:
+  
   /// @return true iff heap is currently active.
   inline bool isActivated() const {
     return _isHeapActivated;
