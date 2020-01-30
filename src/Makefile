@@ -9,10 +9,6 @@ all:
 	@echo linux-gcc-x86
 	@echo linux-gcc-x86-64
 	@echo macos
-	@echo solaris-sunw-sparc
-	@echo solaris-sunw-x86
-	@echo solaris-sunw-x86-64
-	@echo solaris-gcc-sparc
 	@echo generic-gcc
 	@echo windows
 	@echo -----------------------------------------------------------------
@@ -23,7 +19,7 @@ all:
 	@echo
 
 
-.PHONY: macos freebsd linux-gcc-x86 linux-gcc-x86-debug solaris-sunw-sparc solaris-sunw-x86 solaris-gcc-sparc generic-gcc linux-gcc-x86-64 windows clean
+.PHONY: macos freebsd linux-gcc-x86 linux-gcc-x86-debug generic-gcc linux-gcc-x86-64 windows clean
 
 DIEHARD_TARGET    := libdiehard
 DIEHARDER_TARGET  := libdieharder
@@ -54,7 +50,7 @@ Heap-Layers:
 
 REPLICATED_SRC = replicated/replicated.cpp
 
-MACOS_COMPILER = g++
+MACOS_COMPILER = $(CXX)
 # MACOS_COMPILER = llvm-g++
 
 WIN_FLAGS = /Iinclude /Zi /Ox /Oy /DNDEBUG /MD /DDIEHARD_REPLICATED=0 
@@ -79,14 +75,6 @@ LINUX_64_COMMAND_STANDALONE := clang++ $(FLAGS) -std=c++14 -W -Wall -O3 -DNDEBUG
 
 LINUX_64_COMMAND_REPLICATED := $(CXX) -std=c++14 -O1 -DNDEBUG -pipe -fPIC -m64 -g $(INCLUDE) -D_REENTRANT=1  $(REPLICATED_SRC) -DDIEHARD_MULTITHREADED=1 -shared $(UNIX_SRC) -Bsymbolic -o libdieharder_r.so -ldl -lpthread
 
-SOLARIS_SPARC32_COMMAND_STANDALONE := CC -xtarget=ultra2 -xildoff -xO5 -xthreadvar=dynamic -L/usr/lib/lwp -R/usr/lib/lwp -DNDEBUG $(INCLUDE) -DDIEHARD_MULTITHREADED=1 -G -PIC $(UNIX_SRC) sparc-interchange.il -o $(TARGET).so -lthread -ldl -lCrun
-
-SOLARIS_SPARC32_COMMAND_REPLICATED := CC -xtarget=ultra2 -dalign -xbuiltin=%all -xO5 -xildoff -xthreadvar=dynamic -L/usr/lib/lwp -R/usr/lib/lwp -DNDEBUG $(INCLUDE)  $(REPLICATED_SRC) -DDIEHARD_MULTITHREADED=1 -G -PIC $(UNIX_SRC) sparc-interchange.il -o libdieharder_r.so -lthread -ldl -lCrun
-
-SOLARIS_SPARC64_COMMAND_STANDALONE := CC -xcode=pic13 -xtarget=ultra2 -m64 -dalign -xbuiltin=%all -xO5 -xildoff -xthreadvar=dynamic -L/usr/lib/lwp -R/usr/lib/lwp -DNDEBUG $(INCLUDE) -DDIEHARD_MULTITHREADED=1 -G -PIC $(UNIX_SRC) sparc-interchange.il -o $(TARGET).so -lthread -ldl -lCrun
-
-SOLARIS_SPARC64_COMMAND_REPLICATED := CC -xcode=pic13 -xtarget=ultra2 -m64 -dalign -xbuiltin=%all -xO5 -xildoff -xthreadvar=dynamic -L/usr/lib/lwp -R/usr/lib/lwp -DNDEBUG $(INCLUDE)  $(REPLICATED_SRC) -DDIEHARD_MULTITHREADED=1 -G -PIC $(UNIX_SRC) sparc-interchange.il -o libdieharder_r.so -lthread -ldl -lCrun
-
 
 linux-gcc-x86: $(DEPS)
 	$(LINUX_COMMAND_STANDALONE)
@@ -102,18 +90,6 @@ linux-gcc-x86-64-debug: $(DEPS)
 
 linux-gcc-x86-64-replicated: $(DEPS)
 	$(LINUX_64_COMMAND_REPLICATED)
-
-solaris-sparc: $(DEPS)
-	$(SOLARIS_SPARC32_COMMAND_STANDALONE)
-
-solaris-sparc-replicated: $(DEPS)
-	$(SOLARIS_SPARC32_COMMAND_REPLICATED)
-
-solaris-sparc-64: $(DEPS)
-	$(SOLARIS_SPARC64_COMMAND_STANDALONE)
-
-solaris-sparc-64-replicated: $(DEPS)
-	$(SOLARIS_SPARC64_COMMAND_REPLICATED)
 
 windows: $(DEPS)
 	$(WINDOWS_COMMAND_STANDALONE)
