@@ -57,7 +57,7 @@ WIN_FLAGS = /Iinclude /Zi /Ox /Oy /DNDEBUG /MD /DDIEHARD_REPLICATED=0
 
 WINDOWS_COMMAND_STANDALONE := cl /LD $(WIN_INCLUDES) $(WIN_FLAGS) winhard.cpp /link /base:0x63000000 kernel32.lib user32.lib msvcrt.lib advapi32.lib /subsystem:console /dll /incremental:no /entry:HardDllMain
 
-MACOS_COMMAND_STANDALONE := $(MACOS_COMPILER) --std=c++17 -arch x86_64 -g -O3 -W -Wall -DDIEHARD_MULTITHREADED=1 -DNDEBUG -DDIEHARD_DIEFAST=1 $(INCLUDE) -D_REENTRANT=1 -compatibility_version 1 -current_version 1 -dynamiclib $(MACOS_SRC) -o $(TARGET).dylib
+MACOS_COMMAND_STANDALONE := $(MACOS_COMPILER) --std=c++17 -arch x86_64 -g -O3 -W -Wall -DDIEHARD_MULTITHREADED=1 -DNDEBUG -DDIEHARD_DIEFAST=0 $(INCLUDE) -D_REENTRANT=1 -compatibility_version 1 -current_version 1 -dynamiclib $(MACOS_SRC) -o $(TARGET).dylib
 
 MACOS_COMMAND_DEBUG_STANDALONE := $(MACOS_COMPILER) --std=c++14 -arch x86_64 -g -W -Wall -DDIEHARD_MULTITHREADED=1 $(INCLUDE) -D_REENTRANT=1 -compatibility_version 1 -current_version 1 -dynamiclib $(MACOS_SRC) -o $(TARGET).dylib
 
@@ -71,7 +71,7 @@ FLAGS = -pedantic -Wall -Wpointer-arith -Woverloaded-virtual -Werror=return-type
 
 LINUX_64_COMMAND_STANDALONE_DEBUG := $(CXX) -std=c++14 -W -Wall -O0 -pipe -fPIC -m64 -ffast-math -g $(INCLUDE) -D_REENTRANT=1 -DDIEHARD_MULTITHREADED=1 -shared  $(UNIX_SRC) -Bsymbolic -o $(TARGET).so -ldl -lpthread
 
-LINUX_64_COMMAND_STANDALONE := clang++ $(FLAGS) -std=c++14 -W -Wall -O3 -DNDEBUG -pipe -fPIC -m64 -ffast-math -g $(INCLUDE) -D_REENTRANT=1 -DDIEHARD_MULTITHREADED=1  -DDIEHARD_DIEFAST=1 -ferror-limit=1 -shared  $(UNIX_SRC) -Bsymbolic -o $(TARGET).so -ldl -lpthread
+LINUX_64_COMMAND_STANDALONE := clang++ $(FLAGS) -std=c++14 -W -Wall -O3 -DNDEBUG -pipe -fPIC -m64 -ffast-math -g $(INCLUDE) -D_REENTRANT=1 -DDIEHARD_MULTITHREADED=1  -DDIEHARD_DIEFAST=0 -ferror-limit=1 -shared  $(UNIX_SRC) -Bsymbolic -o $(TARGET).so -ldl -lpthread
 
 LINUX_64_COMMAND_REPLICATED := $(CXX) -std=c++14 -O1 -DNDEBUG -pipe -fPIC -m64 -g $(INCLUDE) -D_REENTRANT=1  $(REPLICATED_SRC) -DDIEHARD_MULTITHREADED=1 -shared $(UNIX_SRC) -Bsymbolic -o libdieharder_r.so -ldl -lpthread
 
