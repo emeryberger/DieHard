@@ -37,14 +37,29 @@ enum { Numerator = 8, Denominator = 7 };
 #include "version.h"
 
 
+#include "tprintf.h"
+
 /*************************  define the DieHard heap ************************/
 
-class TheLargeHeap : public OneHeap<LargeHeap<MmapWrapper> > {};
+class TheLargeHeap : public OneHeap<LargeHeap<MmapWrapper> > {
+  typedef OneHeap<LargeHeap<MmapWrapper> > Super;
+public:
+  void * malloc(size_t sz) {
+    auto ptr = Super::malloc(sz);
+    //    tprintf::tprintf("malloc(@) = @\n", sz, ptr);
+    return ptr;
+  }
+  auto free(void * ptr) {
+    //    tprintf::tprintf("free(@)\n", ptr);
+    return Super::free(ptr);
+  }
+};
 
 
 typedef
  ANSIWrapper<
   LockedHeap<PosixLockType,
+	     //	     CombineHeap<DieHardHeap<Numerator, Denominator, 1048576, // 65536,
 	     CombineHeap<DieHardHeap<Numerator, Denominator, 65536,
 				     (DIEHARD_DIEFAST == 1),
 				     (DIEHARD_DIEHARDER == 1)>,
@@ -64,6 +79,8 @@ inline static TheCustomHeapType * getCustomHeap (void) {
 #pragma warning(disable:4273)
 #endif
 
+#include "Heap-Layers/wrappers/generic-memalign.cpp"
+
 extern "C" {
 
   void * xxmalloc (size_t sz) {
@@ -74,6 +91,10 @@ extern "C" {
     getCustomHeap()->free (ptr);
   }
 
+  void * xxmemalign(size_t alignment, size_t sz) {
+    return generic_xxmemalign(alignment, sz);
+  }
+  
   size_t xxmalloc_usable_size (void * ptr) {
     return getCustomHeap()->getSize (ptr);
   }
