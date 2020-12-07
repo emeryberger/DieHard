@@ -224,7 +224,6 @@ private:
   public:
     void * malloc (size_t sz) {
       CheckPowerOfTwo<Value> verifyPowTwo;
-      verifyPowTwo = verifyPowTwo;
       // Round up to the next multiple of a page.
       sz = (sz + Value - 1) & ~(Value - 1);
       return SuperHeap::malloc (sz);

@@ -37,8 +37,6 @@ enum { Numerator = 8, Denominator = 7 };
 #include "version.h"
 
 
-#include "tprintf.h"
-
 /*************************  define the DieHard heap ************************/
 
 class TheLargeHeap : public OneHeap<LargeHeap<MmapWrapper> > {
@@ -46,11 +44,9 @@ class TheLargeHeap : public OneHeap<LargeHeap<MmapWrapper> > {
 public:
   void * malloc(size_t sz) {
     auto ptr = Super::malloc(sz);
-    //    tprintf::tprintf("malloc(@) = @\n", sz, ptr);
     return ptr;
   }
   auto free(void * ptr) {
-    //    tprintf::tprintf("free(@)\n", ptr);
     return Super::free(ptr);
   }
 };

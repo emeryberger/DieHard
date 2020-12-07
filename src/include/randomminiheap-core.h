@@ -78,8 +78,6 @@ public:
     // NOTE: Not clear if this is strictly required but it is
     // invariably true.
     CheckPowerOfTwo<CPUInfo::PageSize> invariant2;
-
-    invariant2 = invariant2;
   }
 
 

@@ -42,7 +42,6 @@ public:
   {
     // Must have a power of two objects in a page.
     CheckPowerOfTwo<ObjectsPerPage> powerOfTwoObjectsPerPage;
-    powerOfTwoObjectsPerPage = powerOfTwoObjectsPerPage;
 
     // Object size must be a multiple of page size (if bigger than a
     // page).

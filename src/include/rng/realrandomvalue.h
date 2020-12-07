@@ -30,7 +30,7 @@ public:
   static unsigned int value() {
     int fd = open("/dev/urandom", O_RDONLY);
     unsigned int buf;
-    auto sz = read(fd, (void *)&buf, sizeof(buf));
+    read(fd, (void *)&buf, sizeof(buf));
     return buf;
   }
 };
