@@ -111,7 +111,6 @@ public:
 
 #ifndef NDEBUG
     unsigned int computedIndex = computeIndex (ptr);
-    computedIndex = computedIndex;
     assert (index == computedIndex);
 #endif
     

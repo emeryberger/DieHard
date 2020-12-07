@@ -85,20 +85,19 @@ public:
   }
   
   /// @brief Allocate an object of the requested size.
-  /// @return such an object, or NULL.
+  /// @return such an object, or null.
   inline void * malloc (size_t sz) {
     assert (sz <= MaxSize);
-    assert (sz >= Alignment);
-
-#if 0
-    // If the object request size is too big, just return NULL.
+#if 1
+    // If the object request size is too big, just return null.
     if (sz > MaxSize) {
-      return NULL;
+      return nullptr;
     }
     if (sz < Alignment) {
       sz = Alignment;
     }
 #endif
+    assert (sz >= Alignment);
 
     // Compute the index corresponding to the size request, and
     // return an object allocated from that heap.
@@ -154,7 +153,7 @@ public:
       return 0;
     } else {
       void * heap = DieHarder::pageTable.getInstance().getHeap (ptr);
-      if (heap == NULL) return 0;
+      if (heap == nullptr) return 0;
       else return ((RandomMiniHeapBase *) heap)->getSize(ptr);
     }
   }
