@@ -6,8 +6,8 @@ all:
 	@echo To build DieHard / DieHarder, specify the desired build target:
 	@echo -----------------------------------------------------------------
 	@echo freebsd
-	@echo linux-gcc-x86
-	@echo linux-gcc-x86-64
+	@echo linux-gcc-32
+	@echo linux-gcc-64
 	@echo macos
 	@echo generic-gcc
 	@echo windows
@@ -19,7 +19,7 @@ all:
 	@echo
 
 
-.PHONY: macos freebsd linux-gcc-x86 linux-gcc-x86-debug generic-gcc linux-gcc-x86-64 windows clean
+.PHONY: macos freebsd linux-gcc-32 linux-gcc-32-debug generic-gcc linux-gcc-64 linux-gcc-64-debug windows clean
 
 DIEHARD_TARGET    := libdiehard
 DIEHARDER_TARGET  := libdieharder
@@ -69,26 +69,26 @@ LINUX_COMMAND_REPLICATED := $(CXX) -std=c++14 -malign-double -pipe -march=pentiu
 
 FLAGS = -pedantic -Wall -Wpointer-arith -Woverloaded-virtual -Werror=return-type -Wtype-limits -Wempty-body -Wno-ctor-dtor-privacy -Wno-overlength-strings -Wno-invalid-offsetof -Wno-variadic-macros -Wcast-align -Wno-long-long -pthread -pipe  -DNDEBUG
 
-LINUX_64_COMMAND_STANDALONE_DEBUG := $(CXX) -std=c++14 -W -Wall -O0 -pipe -fPIC -m64 -ffast-math -g $(INCLUDE) -D_REENTRANT=1 -DDIEHARD_MULTITHREADED=1 -shared  $(UNIX_SRC) -Bsymbolic -o $(TARGET).so -ldl -lpthread
+LINUX_64_COMMAND_STANDALONE_DEBUG := $(CXX) -std=c++14 -W -Wall -O0 -pipe -fPIC  -ffast-math -g $(INCLUDE) -D_REENTRANT=1 -DDIEHARD_MULTITHREADED=1 -shared  $(UNIX_SRC) -Bsymbolic -o $(TARGET).so -ldl -lpthread
 
-LINUX_64_COMMAND_STANDALONE := clang++ $(FLAGS) -std=c++14 -W -Wall -O3 -DNDEBUG -pipe -fPIC -m64 -ffast-math -g $(INCLUDE) -D_REENTRANT=1 -DDIEHARD_MULTITHREADED=1  -DDIEHARD_DIEFAST=0 -ferror-limit=1 -shared  $(UNIX_SRC) -Bsymbolic -o $(TARGET).so -ldl -lpthread
+LINUX_64_COMMAND_STANDALONE := clang++ $(FLAGS) -std=c++14 -W -Wall -O3 -DNDEBUG -pipe -fPIC -ffast-math -g $(INCLUDE) -D_REENTRANT=1 -DDIEHARD_MULTITHREADED=1  -DDIEHARD_DIEFAST=0 -ferror-limit=1 -shared  $(UNIX_SRC) -Bsymbolic -o $(TARGET).so -ldl -lpthread
 
 LINUX_64_COMMAND_REPLICATED := $(CXX) -std=c++14 -O1 -DNDEBUG -pipe -fPIC -m64 -g $(INCLUDE) -D_REENTRANT=1  $(REPLICATED_SRC) -DDIEHARD_MULTITHREADED=1 -shared $(UNIX_SRC) -Bsymbolic -o libdieharder_r.so -ldl -lpthread
 
 
-linux-gcc-x86: $(DEPS)
+linux-gcc: $(DEPS)
 	$(LINUX_COMMAND_STANDALONE)
 
-linux-gcc-x86-replicated: $(DEPS)
+linux-gcc-replicated: $(DEPS)
 	$(LINUX_COMMAND_REPLICATED)
 
-linux-gcc-x86-64: $(DEPS)
+linux-gcc-64: $(DEPS)
 	$(LINUX_64_COMMAND_STANDALONE)
 
-linux-gcc-x86-64-debug: $(DEPS)
+linux-gcc-64-debug: $(DEPS)
 	$(LINUX_64_COMMAND_STANDALONE_DEBUG)
 
-linux-gcc-x86-64-replicated: $(DEPS)
+linux-gcc-64-replicated: $(DEPS)
 	$(LINUX_64_COMMAND_REPLICATED)
 
 windows: $(DEPS)
