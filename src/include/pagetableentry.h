@@ -24,12 +24,7 @@ public:
     //fprintf(stderr,"%p: %p, %d\n",pNum, b, idx);
   }
 
- PageTableEntry (const PageTableEntry & rhs)
-  : _pageNumber (rhs._pageNumber),
-    _heap (rhs._heap),
-    _objectIndex (rhs._objectIndex)
-  {
-  }
+ PageTableEntry (const PageTableEntry & rhs) = default;
 
   void * getHeap() const {
     return _heap;
