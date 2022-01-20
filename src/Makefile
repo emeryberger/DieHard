@@ -26,12 +26,7 @@ DIEHARDER_TARGET  := libdieharder
 
 TARGET ?= libdiehard
 
-# WIN_INCLUDES = /I. /Iinclude /Iinclude/layers /Iinclude/util /Iinclude/math /Iinclude/static /Iinclude/rng /Iinclude/hoard /Iinclude/superblocks /IHeap-Layers
-
 INCLUDES = -I. -Iinclude -Iinclude/layers -Iinclude/util -Iinclude/math -Iinclude/static -Iinclude/rng -Iinclude/hoard -Iinclude/superblocks -IHeap-Layers
-
-# -IHeap-Layers/arch-specific -IHeap-Layers/wrappers -IHeap-Layers/utility -IHeap-Layers/locks -IHeap-Layers/threads -IHeap-Layers/heaps/buildingblock -IHeap-Layers/heaps/threads -IHeap-Layers/heaps/utility -IHeap-Layers/heaps/general -IHeap-Layers/heaps/combining -IHeap-Layers/heaps/objectrep -IHeap-Layers/heaps/top -IHeap-Layers/heaps/debug -IHeap-Layers/heaps/special
-
 
 ifeq ($(TARGET),libdieharder)
 INCLUDE := $(INCLUDES) -DDIEHARD_DIEHARDER=1
@@ -40,8 +35,10 @@ INCLUDE := $(INCLUDES) -DDIEHARD_DIEHARDER=0
 endif
 
 UNIX_SRC  = Heap-Layers/wrappers/gnuwrapper.cpp source/libdieharder.cpp
-# UNIX_SRC  = Heap-Layers/wrappers/gnuwrapper-hooks.cpp source/libdieharder.cpp
 MACOS_SRC = Heap-Layers/wrappers/macwrapper.cpp source/libdieharder.cpp
+
+$(MACOS_SRC): Heap-Layers
+$(UNIX_SRC): Heap-Layers
 
 DEPS = Heap-Layers $(MACOS_SRC) $(UNIX_SRC)
 
