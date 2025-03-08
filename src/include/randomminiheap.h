@@ -15,26 +15,6 @@
 
 #include "heaplayers.h"
 
-#include "bitmap.h"
-#include "check.h"
-#include "checkedarray.h"
-#include "diefast.h"
-#include "madvisewrapper.h"
-#include "modulo.h"
-#include "randomnumbergenerator.h"
-#include "staticlog.h"
-
-#include "heaplayers.h"
-// #include "mmapwrapper.h"
-// #include "singleton.h"
-// #include "cpuinfo.h"
-// #include "mmapheap.h"
-
-#include "madvisewrapper.h"
-#include "dynamichashtable.h"
-#include "pagetableentry.h"
-
-
 #include "randomminiheap-core.h"
 #include "randomminiheap-diehard.h"
 #include "randomminiheap-dieharder.h"

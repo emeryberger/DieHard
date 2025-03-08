@@ -3,6 +3,10 @@
 #ifndef RANDOMMINIHEAP_CORE
 #define RANDOMMINIHEAP_CORE
 
+#include "bitmap.h"
+#include "check.h"
+#include "modulo.h"
+#include "randomnumbergenerator.h"
 #include "tprintf.hh"
 
 class RandomMiniHeapBase {

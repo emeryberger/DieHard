@@ -3,6 +3,10 @@
 #ifndef DH_RANDOMMINIHEAP_DIEHARD
 #define DH_RANDOMMINIHEAP_DIEHARD
 
+#include "diefast.h"
+#include "madvisewrapper.h"
+#include "staticlog.h"
+
 #include "randomminiheap-core.h"
 
 template <int Numerator,

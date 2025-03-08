@@ -3,6 +3,9 @@
 #ifndef DH_RANDOMMINIHEAP_DIEHARDER
 #define DH_RANDOMMINIHEAP_DIEHARDER
 
+#include "checkedarray.h"
+#include "staticlog.h"
+
 #include "randomminiheap-core.h"
 #include "dieharder-pagetable.h"
 
