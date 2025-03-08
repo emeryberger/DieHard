@@ -30,12 +30,8 @@ enum { Numerator = 8, Denominator = 7 };
 
 #include "combineheap.h"
 #include "diehard.h"
-#include "randomnumbergenerator.h"
-#include "realrandomvalue.h"
 #include "largeheap.h"
 #include "diehardheap.h"
-#include "version.h"
-
 
 /*************************  define the DieHard heap ************************/
 
@@ -75,13 +71,27 @@ inline static TheCustomHeapType * getCustomHeap (void) {
 #pragma warning(disable:4273)
 #endif
 
+#include "printf.h"
+
+#if !defined(_WIN32)
+#include <unistd.h>
+
+extern "C" {
+  // For use by the replacement printf routines (see
+  // https://github.com/emeryberger/printf)
+  void _putchar(char ch) { ::write(1, (void *)&ch, 1); }
+}
+#endif
+
 // Heap-Layers
 #include "wrappers/generic-memalign.cpp"
 
 extern "C" {
 
   void * xxmalloc (size_t sz) {
-    return getCustomHeap()->malloc (sz);
+    auto ptr = getCustomHeap()->malloc (sz);
+    // printf_("xxmalloc %lu = %p\n", sz, ptr);
+    return ptr;
   }
 
   void xxfree (void * ptr) {
