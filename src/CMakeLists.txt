@@ -30,7 +30,6 @@ include_directories(
   ${PROJECT_SOURCE_DIR}/include/rng
   ${PROJECT_SOURCE_DIR}/include/hoard
   ${PROJECT_SOURCE_DIR}/include/superblocks
-  ${PROJECT_SOURCE_DIR}/Heap-Layers
 )
 
 include(FetchContent)
@@ -42,14 +41,26 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(Heap-Layers)
 include_directories(${heap-layers_SOURCE_DIR})
 
+
+include(FetchContent)
+FetchContent_Declare(
+  printf
+  GIT_REPOSITORY https://github.com/emeryberger/printf.git
+  GIT_TAG        master
+)
+FetchContent_MakeAvailable(printf)
+include_directories(${printf_SOURCE_DIR})
+
 set(UNIX_SOURCES
   ${heap-layers_SOURCE_DIR}/wrappers/gnuwrapper.cpp
   source/libdieharder.cpp
+  ${printf_SOURCE_DIR}/printf.cpp
 )
 
 set(MACOS_SOURCES
   ${heap-layers_SOURCE_DIR}/wrappers/macwrapper.cpp
   source/libdieharder.cpp
+  ${printf_SOURCE_DIR}/printf.cpp
 )
 
 if(APPLE)
