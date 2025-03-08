@@ -9,8 +9,8 @@
 
 // Use a fast modulus function if possible.
 
-template <int B>
-inline size_t modulo (size_t v) {
+template <unsigned long B>
+inline unsigned long modulo (unsigned long v) {
   static_assert(B > 0, "Modulus must be positive.");
 
   enum { Pow2 = IsPowerOfTwo<B>::VALUE };
