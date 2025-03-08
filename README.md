@@ -79,13 +79,22 @@ as follows:
 Copy `winhard.dll` to the same directory as the executable.
 
 
-### Linux / Solaris ###
+### Linux / Mac ###
+
+```bash
+        % cd src/build
+	% cmake ..
+	% make
+```
 
 Build the shared library with `make`. You can either link in the
-resulting shared object (`libdiehard.so`), or use DieHard by
-setting the `LD_PRELOAD` environment variable, as in:
+resulting shared object (`libdiehard.so`/`libdiehard.dylib`), or use DieHard by
+setting the `LD_PRELOAD` (Linux) or `DYLD_INSERT_LIBRARIES` (Mac) environment variables, as in:
 
-	% setenv LD_PRELOAD /path/to/diehard/libdiehard.so
+```bash
+	% setenv LD_PRELOAD $PWD/libdiehard.so                # Linux
+	% export DYLD_INSERT_LIBRARIES=$PWD/libdiehard.dylib  # Mac
+```
 
 To use the replicated version, invoke your program with (for example):
 
@@ -94,21 +103,12 @@ To use the replicated version, invoke your program with (for example):
 This would create 3 replicas of yourapp. If the application does not
 read from standard input, add `< /dev/null` to the command line.
 
-### Mac OS X ###
-
-To use DieHard, build with "make darwin" and set two environment variables
-as follows:
-
-	% export DYLD_INSERT_LIBRARIES=/path/to/libdiehard.dylib
-
-DieHard will then replace the system malloc in any new application executed
-from that terminal window.
 
 ----------------------------
 Notes about the source code:
 ----------------------------
 
-This directory contains the source code for DieHard. The version here
+The `src/` directory contains the source code for DieHard. The version here
 uses an adaptive algorithm that differs substantially from that
 described in the PLDI 2006 paper (../docs/pldi2006-diehard.pdf). In
 particular, this version adjusts its heap size dynamically rather than
@@ -121,7 +121,7 @@ the subdirectory `replicated/`.
 The fault injectors described in the PLDI paper are in the `util/`
 directory. The library `libbrokenmalloc.so` can be used to inject buffer
 overflows and dangling pointer errors. To inject buffer overflows,
-just set `LD_PRELOAD` to point to `libbrokenmalloc.so`, and set the
+just set `LD_PRELOAD` or `DYLD_INSERT_LIBRARIES` to point to `libbrokenmalloc.so`, and set the
 appropriate environment variables (shown at startup). To inject
 dangling pointer errors, you must first run the program with
 `libtrackalloc.so` preloaded, and then run it on the same inputs with
