@@ -1,6 +1,3 @@
-__if downloading from GitHub, make sure to use `--recursive`, as in:__
-    `git clone --recursive https://github.com/emeryberger/DieHard`
-
 DieHard
 =======
 
@@ -82,14 +79,15 @@ Copy `winhard.dll` to the same directory as the executable.
 ### Linux / Mac ###
 
 ```bash
-        % cd src/build
+        % mkdir src/build && cd src/build
 	% cmake ..
 	% make
 ```
 
-Build the shared library with `make`. You can either link in the
-resulting shared object (`libdiehard.so`/`libdiehard.dylib`), or use DieHard by
-setting the `LD_PRELOAD` (Linux) or `DYLD_INSERT_LIBRARIES` (Mac) environment variables, as in:
+You can either link in the resulting shared object
+(`libdiehard.so`/`libdiehard.dylib`), or use DieHard by setting the
+`LD_PRELOAD` (Linux) or `DYLD_INSERT_LIBRARIES` (Mac) environment
+variables, as in:
 
 ```bash
 	% setenv LD_PRELOAD $PWD/libdiehard.so                # Linux

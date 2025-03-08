@@ -6,8 +6,8 @@ project(DieHard LANGUAGES CXX)
 #
 
 # By default, build both diehard (traditional) and dieharder
-option(BUILD_DIEHARDER     "Enable building the dieharder library"       ON)
-option(BUILD_REPLICATED    "Enable building replicated variant of dieharder" OFF)
+option(BUILD_DIEHARDER     "Enable building the DieHarder library"       ON)
+option(BUILD_REPLICATED    "Enable building replicated variant of DieHarder" OFF)
 
 # Default to C++14 (adjust as desired)
 set(CMAKE_CXX_STANDARD 14)
@@ -18,8 +18,6 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 #
 # ─── INCLUDE DIRECTORIES ──────────────────────────────────────────────
-#
-# These mimic the original -I flags. Update as needed.
 #
 
 include_directories(
@@ -35,40 +33,22 @@ include_directories(
   ${PROJECT_SOURCE_DIR}/Heap-Layers
 )
 
-#
-# ─── FETCH OR PROVIDE HEAP-LAYERS (OPTIONAL EXAMPLE) ─────────────────
-#
-# If you wish CMake to automatically fetch the Heap-Layers dependency,
-# uncomment the FetchContent logic below. Otherwise, ensure you have
-# cloned Heap-Layers in the correct location.
-#
-# include(FetchContent)
-# FetchContent_Declare(
-#   HeapLayers
-#   GIT_REPOSITORY https://github.com/emeryberger/Heap-Layers.git
-#   GIT_TAG        main
-# )
-# FetchContent_MakeAvailable(HeapLayers)
-#
-# If Heap-Layers is purely header-only for your use-case, you can skip
-# add_subdirectory and just include its path (as above).
-#
-
-#
-# ─── SOURCE FILES ─────────────────────────────────────────────────────
-#
-# The Makefile differentiated between UNIX and macOS wrapper sources.
-# We do so here with a simple platform check. If the code itself handles
-# the needed #ifdef logic, you can consolidate further.
-#
+include(FetchContent)
+FetchContent_Declare(
+  Heap-Layers
+  GIT_REPOSITORY https://github.com/emeryberger/Heap-Layers.git
+  GIT_TAG        master
+)
+FetchContent_MakeAvailable(Heap-Layers)
+include_directories(${heap-layers_SOURCE_DIR})
 
 set(UNIX_SOURCES
-  Heap-Layers/wrappers/gnuwrapper.cpp
+  ${heap-layers_SOURCE_DIR}/wrappers/gnuwrapper.cpp
   source/libdieharder.cpp
 )
 
 set(MACOS_SOURCES
-  Heap-Layers/wrappers/macwrapper.cpp
+  ${heap-layers_SOURCE_DIR}/wrappers/macwrapper.cpp
   source/libdieharder.cpp
 )
 

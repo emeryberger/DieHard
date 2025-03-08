@@ -75,7 +75,8 @@ inline static TheCustomHeapType * getCustomHeap (void) {
 #pragma warning(disable:4273)
 #endif
 
-#include "Heap-Layers/wrappers/generic-memalign.cpp"
+// Heap-Layers
+#include "wrappers/generic-memalign.cpp"
 
 extern "C" {
 
