@@ -10,7 +10,7 @@
 #ifndef DH_RANDOMNUMBERGENERATOR_H
 #define DH_RANDOMNUMBERGENERATOR_H
 
-#include "mwc.h"
+#include "mwc64.h"
 #include "realrandomvalue.h"
 
 class RandomNumberGenerator {
@@ -27,7 +27,7 @@ public:
 
 private:
   
-  MWC mt;
+  MWC64 mt;
 
 };
 
