@@ -69,6 +69,9 @@ else()
   set(DIEHARD_SOURCES ${UNIX_SOURCES})
 endif()
 
+set(CMAKE_BUILD_TYPE RelWithDebInfo)
+
+
 #
 # ─── DIEHARD LIBRARY (DIEHARD_DIEHARDER=0) ────────────────────────────
 #
