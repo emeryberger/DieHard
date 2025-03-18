@@ -38,11 +38,11 @@ enum { Numerator = 8, Denominator = 7 };
 class TheLargeHeap : public OneHeap<LargeHeap<MmapWrapper> > {
   typedef OneHeap<LargeHeap<MmapWrapper> > Super;
 public:
-  void * malloc(size_t sz) {
+  inline void * malloc(size_t sz) {
     auto ptr = Super::malloc(sz);
     return ptr;
   }
-  auto free(void * ptr) {
+  inline auto free(void * ptr) {
     return Super::free(ptr);
   }
 };
@@ -52,7 +52,7 @@ typedef
  ANSIWrapper<
   LockedHeap<PosixLockType,
 	     //	     CombineHeap<DieHardHeap<Numerator, Denominator, 1048576, // 65536,
-	     CombineHeap<DieHardHeap<Numerator, Denominator, 65536,
+	     CombineHeap<DieHardHeap<Numerator, Denominator, 1048576, // 65536,
 				     (DIEHARD_DIEFAST == 1),
 				     (DIEHARD_DIEHARDER == 1)>,
 			 TheLargeHeap> > >
