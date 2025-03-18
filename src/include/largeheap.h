@@ -5,6 +5,8 @@
 
 #include "heaplayers.h"
 
+#include <unordered_map>
+
 using namespace HL;
 
 template <class Mapper>
@@ -55,12 +57,12 @@ private:
   public HL::FreelistHeap<BumpAlloc<65536, MapAlloc<Mapper> > > { };
 
   /// The map type, with all the pieces in place.
-  typedef MyHashMap<void *, size_t, SourceHeap> mapType;
+  typedef std::unordered_map<void *, size_t, std::hash<void *>, std::equal_to<void *>, HL::STLAllocator<std::pair<void * const, size_t>, SourceHeap>>  mapType;
 
   mapType _objectSize;
 
   inline size_t get (void * ptr) {
-    size_t sz = _objectSize.get (ptr);
+    size_t sz = _objectSize[ptr];
     return sz;
   }
   
@@ -69,7 +71,7 @@ private:
     size_t currSize = sz;
     int iterations = (sz + CPUInfo::PageSize - 1) / CPUInfo::PageSize;
     for (int i = 0; i < iterations; i++) {
-      _objectSize.set ((char *) ptr + i * CPUInfo::PageSize, currSize);
+      _objectSize[((char *) ptr + i * CPUInfo::PageSize)] = currSize;
       currSize -= CPUInfo::PageSize;
     }
   }
