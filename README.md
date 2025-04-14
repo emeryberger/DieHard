@@ -6,12 +6,8 @@ DieHard: An error-resistant memory allocator for Windows, Linux, and Mac OS X
 ------------------------------------------
 DieHard / Exterminator / DieHarder
 
-Copyright (C) 2005-2018 by [Emery Berger](http://www.emeryberger.com/)  
+[Emery Berger](http://www.emeryberger.com/)  
 University of Massachusetts Amherst  
-
-<http://www.emeryberger.com>  
-<http://www.diehard-software.org>  
-<http://www.die-harder.org>  
 
 ----------------------------------------
 
