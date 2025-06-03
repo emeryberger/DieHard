@@ -1,7 +1,7 @@
 DieHard
 =======
 
-DieHard: An error-resistant memory allocator for Windows, Linux, and Mac OS X
+DieHard: An error-resistant memory allocator
 
 ------------------------------------------
 DieHard / Exterminator / DieHarder
@@ -58,19 +58,7 @@ This distribution includes the source for three systems.
 Build and usage instructions
 ----------------------------
 
-### Windows ###
-
-To build the Windows version (randomized runtime only), do this:
-
-	% nmake /f Makefile.win32
-
-To use DieHard as a library with your application, link your program
-as follows:
-
-	% cl /MD yourapp.cpp usewinhard.obj winhard.lib
-
-Copy `winhard.dll` to the same directory as the executable.
-
+Note that Windows is not currently supported as a platform.
 
 ### Linux / Mac ###
 
@@ -96,7 +84,6 @@ To use the replicated version, invoke your program with (for example):
 
 This would create 3 replicas of yourapp. If the application does not
 read from standard input, add `< /dev/null` to the command line.
-
 
 ----------------------------
 Notes about the source code:
@@ -137,20 +124,12 @@ DieHard?
 DieHard is good for software developers, since it makes programmer
 errors unlikely to crash a program and reduces the risk of security
 vulnerabilities. It's also good for end users, who can take advantage
-of DieHard's protections now.  What versions of Windows (& Firefox)
-does DieHard support?
-
-In addition to supporting nearly any application for Linux and
-Solaris, DieHard currently protects Firefox on Windows XP and
-2003. DieHard works with Firefox versions 1.5.0.9 and higher, as well
-as version 2.0.0.1.
+of DieHard's protections now.
 
 ### Can DieHard protect any other application than Mozilla? ###
 
-On Windows, the DieHard protection system currently supports Mozilla
-only; we plan to add more applications soon. On Linux, DieHard can
-protect any application. In addition, programmers using DieHard (on
-Windows or Linux) can protect any application they are developing.
+DieHard can protect any application. In addition, programmers using
+DieHard can protect any application they are developing.
 
 ### My security program claims that the DieHard zip file contains a virus - can that be true? ###
 
@@ -177,8 +156,7 @@ Yes.
 
 There is a version of DieHard for Linux that runs multiple replicas
 simultaneously, and then you can choose how many replicas you would
-like to run. However, the Windows version runs just one copy of your
-program.
+like to run.
  
 ### Does DieHard prevent all crashes? If not, what does it prevent? ###
 
