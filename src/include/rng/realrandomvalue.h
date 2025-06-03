@@ -13,6 +13,7 @@
 
 #include <fcntl.h>
 #include <unistd.h>
+#include <cstdlib>
 
 #include <random>
 
@@ -28,6 +29,13 @@ public:
   {}
 
   static unsigned int value() {
+    // If this environment variable is set, use its value as the given seed.
+    const char* varName = "DIEHARD_RANDOM_SEED";
+    char* varValue = getenv(varName);
+    if (varValue) {
+      auto seed = atoi(varValue);
+      return seed;
+    }
     int fd = open("/dev/urandom", O_RDONLY);
     unsigned int buf;
     read(fd, (void *)&buf, sizeof(buf));
