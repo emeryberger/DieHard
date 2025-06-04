@@ -14,8 +14,11 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <cstdlib>
+#include <sys/stat.h>
 
 #include <random>
+
+#include "printf.h"
 
 /**
  * @class RealRandomValue
@@ -29,7 +32,8 @@ public:
   {}
 
   static unsigned int value() {
-    // If this environment variable is set, use its value as the given seed.
+    // If the environment variable DIEHARD_RANDOM_SEED is set, use its
+    // value as the given seed.
     const char* varName = "DIEHARD_RANDOM_SEED";
     char* varValue = getenv(varName);
     if (varValue) {
@@ -39,6 +43,20 @@ public:
     int fd = open("/dev/urandom", O_RDONLY);
     unsigned int buf;
     read(fd, (void *)&buf, sizeof(buf));
+    // If the environment variable DIEHARD_OUTPUT_SEED_FILE is set,
+    // write the seed to it.
+    {
+      const char* varName = "DIEHARD_OUTPUT_SEED_FILE";
+      char* filename = getenv(varName);
+      if (filename) {
+	int fd = open(filename, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+	if (fd) {
+	  char str[256];
+	  snprintf_(str, sizeof(str), "%u\n", buf);
+	  write(fd, str, strlen(str));
+	}
+      }
+    }
     return buf;
   }
 };

@@ -31,7 +31,7 @@ template <int Numerator, int Denominator>
 class RandomHeapBase {
 public:
 
-  virtual ~RandomHeapBase (void) {}
+  virtual ~RandomHeapBase() {}
 
   virtual void * malloc (size_t) = 0;
   virtual bool free (void *) = 0;
@@ -252,7 +252,7 @@ private:
 
 
   /// @return the desired mini-heap.
-  inline typename MiniHeapType<MIN_OBJECTS>::SuperHeap * getMiniHeap (unsigned int index) const {
+  inline typename MiniHeapType<MIN_OBJECTS>::SuperHeap * getMiniHeap(unsigned int index) const {
     Check<const RandomHeap *> sanity (this);
     assert (index < MAX_MINIHEAPS);
     assert (index <= _miniHeapsInUse);
@@ -261,7 +261,7 @@ private:
 
 
   // Activate another mini heap to satisfy the current memory requests.
-  NO_INLINE void getAnotherMiniHeap (void) {
+  NO_INLINE void getAnotherMiniHeap() {
 
     
     Check<RandomHeap *> sanity (this);
