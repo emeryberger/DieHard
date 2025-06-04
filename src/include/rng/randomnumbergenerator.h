@@ -12,15 +12,10 @@
 #include "mwc64.h"
 #include "seedmanager.h"
 
-#include "printf.h"
-
 class RandomNumberGenerator {
 public:
   RandomNumberGenerator() { 
     {
-      static auto count = 0;
-      printf_("Count = %d\n", count);
-      count++;
     }
     
     // Get a unique seed pair from the SeedManager
