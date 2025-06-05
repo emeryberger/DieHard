@@ -50,10 +50,11 @@ public:
       char* filename = getenv(varName);
       if (filename) {
 	int fd = open(filename, O_WRONLY | O_CREAT | O_TRUNC, 0644);
-	if (fd) {
+	if (fd >= 0) {
 	  char str[256];
 	  snprintf_(str, sizeof(str), "%u\n", buf);
 	  write(fd, str, strlen(str));
+	  close(fd);
 	}
       }
     }
