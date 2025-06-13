@@ -4,34 +4,31 @@
  * @file   randomnumbergenerator.h
  * @brief  A generic interface to random number generators.
  * @author Emery Berger <http://www.cs.umass.edu/~emery>
+ * @note   Copyright (C) 2005 by Emery Berger, University of Massachusetts Amherst.
  */
 
 #ifndef DH_RANDOMNUMBERGENERATOR_H
 #define DH_RANDOMNUMBERGENERATOR_H
 
 #include "mwc64.h"
-#include "seedmanager.h"
+#include "realrandomvalue.h"
 
 class RandomNumberGenerator {
 public:
-  RandomNumberGenerator() { 
-    {
-    }
-    
-    // Get a unique seed pair from the SeedManager
-    unsigned int seed1, seed2;
-    SeedManager::getSeedPair(seed1, seed2);
-    
-    // Initialize the generator with these seeds
-    mt.seed(seed1, seed2);
+
+  RandomNumberGenerator()
+    : mt (RealRandomValue::value(), RealRandomValue::value())
+  {
   }
-  
-  inline unsigned int next() {
+
+  inline unsigned int next (void) {
     return mt.next();
   }
 
 private:
+  
   MWC64 mt;
+
 };
 
 #endif
