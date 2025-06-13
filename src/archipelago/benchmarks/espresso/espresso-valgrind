@@ -1,2 +1,0 @@
-#!/bin/bash
-valgrind -q --tool=memcheck ./espresso $@

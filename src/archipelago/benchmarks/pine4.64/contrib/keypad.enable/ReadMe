@@ -1,7 +1,0 @@
-These context diffs when applied to pico/tcap.c enable entrance
-and exit of "keypad mode".  This mode is especially useful (and 
-necessary!) for HP terminals which require this mode to make the 
-arrow keys useful.
-
-These changes are based on a bug report submitted by Jochiam Richter
-(zjr@rz.uni-jena.de).

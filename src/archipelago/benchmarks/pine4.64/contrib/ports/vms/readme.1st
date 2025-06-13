@@ -1,9 +1,0 @@
-
-To build the VMS version of pine, just move the VMSBUILD.COM command
-script into the top level pine directory.  If the script fails moving
-the pine-specific c-client build script (VMSBUILD_CCLIENT.COM) into
-place, just copy it by hand into the C-CLIENT.DIR it creates.  This
-RENAME was added just prior to release by the pine team and was not
-part of the contributed port.
-
-- The Pine Team
