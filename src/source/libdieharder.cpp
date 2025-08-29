@@ -83,9 +83,6 @@ extern "C" {
 }
 #endif
 
-// Heap-Layers
-#include "wrappers/generic-memalign.cpp"
-
 extern "C" {
 
   void * xxmalloc (size_t sz) {
@@ -98,10 +95,6 @@ extern "C" {
     getCustomHeap()->free (ptr);
   }
 
-  void * xxmemalign(size_t alignment, size_t sz) {
-    return generic_xxmemalign(alignment, sz);
-  }
-  
   size_t xxmalloc_usable_size (void * ptr) {
     return getCustomHeap()->getSize (ptr);
   }
@@ -114,4 +107,13 @@ extern "C" {
     getCustomHeap()->unlock();
   }
 
+  void * xxmemalign(size_t alignment, size_t sz) {
+    // NOTE: this logic works because DieHard only allocates power-of-two objects, naturally aligned.
+    // Changing that behavior will break this code.
+    auto ptr = xxmalloc(sz < alignment ? alignment : sz);
+    assert(static_cast<uintptr_t>(ptr) % alignment == 0);
+    return ptr;
+  }
+  
+  
 }
