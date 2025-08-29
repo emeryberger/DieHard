@@ -15,9 +15,6 @@
 
 
 
-#define USE_HALF_LOG 0
-
-
 #include <new>
 
 #include "heaplayers.h"
@@ -65,13 +62,8 @@ public:
 		  "There can't be any dependencies on object sizes.");
 
     // Check to make sure the size specified by MaxSize is correct.
-#if USE_HALF_LOG
-    static_assert(StaticHalfPow2<MAX_INDEX-1>::VALUE == MaxSize,
-		  "Size specified by MaxSize is incorrect.");
-#else
     static_assert((1 << (MAX_INDEX-1)) * Alignment == MaxSize,
 		  "Size specified by MaxSize is incorrect.");
-#endif
 
     // Warning: some crazy template meta-programming in the name of
     // efficiency below.
@@ -160,15 +152,6 @@ public:
   
 private:
 
-#if USE_HALF_LOG
-
-  
-  /// The number of size classes managed by this heap.
-  enum { MAX_INDEX =
-	 StaticHalfLog2<MaxSize>::VALUE + 1 };
-
-#else
-
   /// The number of size classes managed by this heap.
 #if __cplusplus > 199711L
   enum { MAX_INDEX = staticlog(MaxSize) - staticlog(Alignment) + 1 };
@@ -178,8 +161,6 @@ private:
 	 StaticLog<Alignment>::VALUE + 1 };
 #endif
 
-#endif
-
 private:
 
 
@@ -187,26 +168,17 @@ private:
   static inline size_t getClassSize (int index) {
     assert (index >= 0);
     assert (index < MAX_INDEX);
-#if USE_HALF_LOG
-    return halfpow2 (index); //  * Alignment;
-#else
     return (1 << index) * Alignment;
-#endif
   }
 
   /// @return the index (size class) for the given size
   static inline int getIndex (size_t sz) {
     // Now compute the log.
     assert (sz >= Alignment);
-#if USE_HALF_LOG
-    int index = halflog2(sz); //  - StaticHalfLog2<Alignment>::VALUE;
-#else
-
 #if __cplusplus > 199711L
     int index = log2(sz) - staticlog(Alignment);
 #else
     int index = log2(sz) - StaticLog<Alignment>::VALUE;
-#endif
 #endif
     return index;
   }
@@ -218,13 +190,7 @@ private:
       new ((char *) buf + MINIHEAPSIZE * index)
 	RandomHeap<Numerator,
 	Denominator,
-#if USE_HALF_LOG
-		   // NOTE: wasting some indices up front here....
-
-	StaticHalfPow2<index>::VALUE, // NB: = getClassSize(index)
-#else
 	(1 << index) * Alignment, // NB: = getClassSize(index)
-#endif
 	MaxSize,
         RandomMiniHeap,
         DieFastOn,
