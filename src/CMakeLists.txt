@@ -9,9 +9,18 @@ project(DieHard LANGUAGES CXX)
 option(BUILD_DIEHARDER     "Enable building the DieHarder library"       ON)
 option(BUILD_REPLICATED    "Enable building replicated variant of DieHarder" OFF)
 
+# Write a version map to enable replacing direct libc allocation calls.
+set(VERS_SCRIPT ${CMAKE_CURRENT_BINARY_DIR}/vers.map)
+file(WRITE ${VERS_SCRIPT}
+"GLIBC_2.2.5 {\n  global:\n    __libc_malloc;\n    __libc_free;\n    __libc_realloc;\n    __libc_calloc;\n    __libc_memalign;\n  local: *;\n};\n")
+
 # Default to C++14 (adjust as desired)
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+# Ensure that the compiler doesn't replace anything with malloc/free
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fno-builtin-malloc -fno-builtin-free")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-builtin-malloc -fno-builtin-free")
 
 # Generate position-independent code; required for shared libraries on many platforms
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
@@ -128,6 +137,12 @@ if(BUILD_REPLICATED AND BUILD_DIEHARDER)
   set_target_properties(dieharder_r PROPERTIES
     OUTPUT_NAME "dieharder_r"
   )
+endif()
+
+# For Linux, link with the version script declared above.
+if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
+  target_link_options(diehard PRIVATE "LINKER:--version-script=${VERS_SCRIPT}")
+  target_link_options(dieharder PRIVATE "LINKER:--version-script=${VERS_SCRIPT}")
 endif()
 
 #
