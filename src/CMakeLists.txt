@@ -5,6 +5,8 @@ project(DieHard LANGUAGES CXX)
 # ─── OPTIONS ──────────────────────────────────────────────────────────
 #
 
+set(CMAKE_OSX_ARCHITECTURES arm64 arm64e x86_64)
+
 # By default, build both diehard (traditional) and dieharder
 option(BUILD_DIEHARDER     "Enable building the DieHarder library"       ON)
 option(BUILD_REPLICATED    "Enable building replicated variant of DieHarder" OFF)
@@ -12,7 +14,7 @@ option(BUILD_REPLICATED    "Enable building replicated variant of DieHarder" OFF
 # Write a version map to enable replacing direct libc allocation calls.
 set(VERS_SCRIPT ${CMAKE_CURRENT_BINARY_DIR}/vers.map)
 file(WRITE ${VERS_SCRIPT}
-"GLIBC_2.2.5 {\n  global:\n    __libc_malloc;\n    __libc_free;\n    __libc_realloc;\n    __libc_calloc;\n    __libc_memalign;\n  local: *;\n};\n")
+"GLIBC_2.2.5 {\n  global:\n    __libc_malloc;\n    __libc_free;\n    __libc_realloc;\n    __libc_calloc;\n    __libc_memalign;\n    local: custom*;\n      xx*;\n};\n")
 
 # Default to C++14 (adjust as desired)
 set(CMAKE_CXX_STANDARD 14)
