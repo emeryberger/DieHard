@@ -5,13 +5,24 @@ project(DieHard LANGUAGES CXX)
 # ─── OPTIONS ──────────────────────────────────────────────────────────
 #
 
+set(CMAKE_OSX_ARCHITECTURES arm64 arm64e x86_64)
+
 # By default, build both diehard (traditional) and dieharder
 option(BUILD_DIEHARDER     "Enable building the DieHarder library"       ON)
 option(BUILD_REPLICATED    "Enable building replicated variant of DieHarder" OFF)
 
+# Write a version map to enable replacing direct libc allocation calls.
+set(VERS_SCRIPT ${CMAKE_CURRENT_BINARY_DIR}/vers.map)
+file(WRITE ${VERS_SCRIPT}
+"GLIBC_2.2.5 {\n  global:\n    __libc_malloc;\n    __libc_free;\n    __libc_realloc;\n    __libc_calloc;\n    __libc_memalign;\n    local: custom*;\n      xx*;\n};\n")
+
 # Default to C++14 (adjust as desired)
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+# Ensure that the compiler doesn't replace anything with malloc/free
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fvisibility=hidden -fno-builtin-malloc -fno-builtin-free")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fvisibility=hidden -fno-builtin-malloc -fno-builtin-free")
 
 # Generate position-independent code; required for shared libraries on many platforms
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
@@ -21,15 +32,15 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 #
 
 include_directories(
-  ${PROJECT_SOURCE_DIR}
-  ${PROJECT_SOURCE_DIR}/include
-  ${PROJECT_SOURCE_DIR}/include/layers
-  ${PROJECT_SOURCE_DIR}/include/util
-  ${PROJECT_SOURCE_DIR}/include/math
-  ${PROJECT_SOURCE_DIR}/include/static
-  ${PROJECT_SOURCE_DIR}/include/rng
-  ${PROJECT_SOURCE_DIR}/include/hoard
-  ${PROJECT_SOURCE_DIR}/include/superblocks
+  ${PROJECT_SOURCE_DIR}/src
+  ${PROJECT_SOURCE_DIR}/src/include
+  ${PROJECT_SOURCE_DIR}/src/include/layers
+  ${PROJECT_SOURCE_DIR}/src/include/util
+  ${PROJECT_SOURCE_DIR}/src/include/math
+  ${PROJECT_SOURCE_DIR}/src/include/static
+  ${PROJECT_SOURCE_DIR}/src/include/rng
+  ${PROJECT_SOURCE_DIR}/src/include/hoard
+  ${PROJECT_SOURCE_DIR}/src/include/superblocks
 )
 
 include(FetchContent)
@@ -53,13 +64,13 @@ include_directories(${printf_SOURCE_DIR})
 
 set(UNIX_SOURCES
   ${heap-layers_SOURCE_DIR}/wrappers/gnuwrapper.cpp
-  source/libdieharder.cpp
+  src/source/libdieharder.cpp
   ${printf_SOURCE_DIR}/printf.cpp
 )
 
 set(MACOS_SOURCES
   ${heap-layers_SOURCE_DIR}/wrappers/macwrapper.cpp
-  source/libdieharder.cpp
+  src/source/libdieharder.cpp
   ${printf_SOURCE_DIR}/printf.cpp
 )
 
@@ -128,6 +139,12 @@ if(BUILD_REPLICATED AND BUILD_DIEHARDER)
   set_target_properties(dieharder_r PROPERTIES
     OUTPUT_NAME "dieharder_r"
   )
+endif()
+
+# For Linux, link with the version script declared above.
+if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
+  target_link_options(diehard PRIVATE "LINKER:--version-script=${VERS_SCRIPT}")
+  target_link_options(dieharder PRIVATE "LINKER:--version-script=${VERS_SCRIPT}")
 endif()
 
 #
