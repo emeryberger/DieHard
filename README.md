@@ -63,7 +63,7 @@ Note that Windows is not currently supported as a platform.
 ### Linux / Mac ###
 
 ```bash
-        % mkdir src/build && cd src/build
+        % mkdir build && cd build
 	% cmake ..
 	% make
 ```
