@@ -177,7 +177,6 @@ install(TARGETS diehard dieharder
         LIBRARY DESTINATION lib
         ARCHIVE DESTINATION lib)
 
-#
 # ─── USAGE ────────────────────────────────────────────────────────────
 #
 # Typical usage:
