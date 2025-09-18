@@ -35,6 +35,12 @@ global:
     posix_memalign;
     strdup;
     strndup;
+    _Znwm*;
+    _Znam*;
+    _ZdlPv*;
+    _ZdaPv*;
+    _ZdlPvm*;
+    _ZdaPvm*;
 local:
     *;
   };
@@ -45,10 +51,10 @@ set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Ensure that the compiler doesn't replace anything with malloc/free
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fvisibility=hidden -fno-builtin-malloc -fno-builtin-free")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fvisibility=hidden -fno-builtin-malloc -fno-builtin-free")
-#set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fno-builtin-malloc -fno-builtin-free")
-#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-builtin-malloc -fno-builtin-free")
+#set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fvisibility=hidden -fno-builtin-malloc -fno-builtin-free")
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fvisibility=hidden -fno-builtin-malloc -fno-builtin-free")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fno-builtin-malloc -fno-builtin-free")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-builtin-malloc -fno-builtin-free")
 
 # Generate position-independent code; required for shared libraries on many platforms
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
