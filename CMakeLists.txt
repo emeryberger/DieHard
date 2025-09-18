@@ -14,7 +14,31 @@ option(BUILD_REPLICATED    "Enable building replicated variant of DieHarder" OFF
 # Write a version map to enable replacing direct libc allocation calls.
 set(VERS_SCRIPT ${CMAKE_CURRENT_BINARY_DIR}/vers.map)
 file(WRITE ${VERS_SCRIPT}
-"GLIBC_2.2.5 {\n  global:\n    __libc_malloc;\n    __libc_free;\n    __libc_realloc;\n    __libc_calloc;\n    __libc_memalign;\n    local: custom*;\n      xx*;\n};\n")
+"GLIBC_2.2.5 {
+global:
+    __libc_malloc;
+    __libc_free;
+    __libc_realloc;
+    __libc_calloc;
+    __libc_memalign;
+    malloc;
+    malloc_usable_size;
+    cfree;
+    free;
+    realloc;
+    calloc;
+    reallocarray;
+    memalign;
+    aligned_alloc;
+    valloc;
+    pvalloc;
+    posix_memalign;
+    strdup;
+    strndup;
+local:
+    *;
+  };
+")
 
 # Default to C++14 (adjust as desired)
 set(CMAKE_CXX_STANDARD 14)
@@ -23,6 +47,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # Ensure that the compiler doesn't replace anything with malloc/free
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fvisibility=hidden -fno-builtin-malloc -fno-builtin-free")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fvisibility=hidden -fno-builtin-malloc -fno-builtin-free")
+#set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fno-builtin-malloc -fno-builtin-free")
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-builtin-malloc -fno-builtin-free")
 
 # Generate position-independent code; required for shared libraries on many platforms
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
@@ -146,6 +172,10 @@ if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
   target_link_options(diehard PRIVATE "LINKER:--version-script=${VERS_SCRIPT}")
   target_link_options(dieharder PRIVATE "LINKER:--version-script=${VERS_SCRIPT}")
 endif()
+
+install(TARGETS diehard dieharder
+        LIBRARY DESTINATION lib
+        ARCHIVE DESTINATION lib)
 
 #
 # ─── USAGE ────────────────────────────────────────────────────────────
