@@ -182,11 +182,11 @@ if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
 endif()
 
 if (BUILD_DIEHARDER)
-install(TARGETS diehard dieharder
+install(TARGETS diehard diehard_static dieharder dieharder_static
         LIBRARY DESTINATION lib
         ARCHIVE DESTINATION lib)
 else()
-install(TARGETS diehard
+install(TARGETS diehard diehard_static
         LIBRARY DESTINATION lib
         ARCHIVE DESTINATION lib)
 endif()
