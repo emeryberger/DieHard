@@ -14,6 +14,7 @@
 #undef __GXX_WEAK__ 
 
 #include <stdlib.h>
+#include <atomic>
 #include <new>
 
 // The heap multiplier.
@@ -33,30 +34,101 @@ enum { Numerator = 8, Denominator = 7 };
 #include "largeheap.h"
 #include "diehardheap.h"
 
+#include "printf.h"
+
+
 /*************************  define the DieHard heap ************************/
 
-class TheLargeHeap : public OneHeap<LargeHeap<MmapWrapper> > {
-  typedef OneHeap<LargeHeap<MmapWrapper> > Super;
+class TheLargeHeap : public OneHeap<LargeHeap<MmapWrapper> > { };
+
+#include "rng/mwc64.h"
+
+template <int K, class Super>
+class ShardHeap {
 public:
-  inline void * malloc(size_t sz) {
-    auto ptr = Super::malloc(sz);
-    return ptr;
+
+  enum { Alignment = Super::Alignment };
+  enum { MAX_SIZE = Super::MAX_SIZE };
+
+  // Disable locking since we are already thread-safe.
+  
+  void lock() {
+    return;
   }
-  inline auto free(void * ptr) {
-    return Super::free(ptr);
+  
+  void unlock() {
+    return;
   }
+
+  inline int getIndex() {
+    // Pick a subheap randomly; we use the same one for the lifetime
+    // of the thread.
+    static __thread auto index = -1;
+    if (index == -1) {
+      index = computeIndex();
+    }
+    return index;
+  }
+  
+  void * malloc(size_t sz) {
+    return _heap[getIndex()].malloc(sz);
+  }
+  
+  auto free(void * ptr) {
+    return _heap[getIndex()].free(ptr);
+  }
+  
+  size_t getSize(void * ptr) {
+    return _heap[getIndex()].getSize(ptr);
+  }
+  
+private:
+
+  int computeIndex() {
+    // power of two choices; pick the least contended heap
+    static __thread MWC64 rng;
+    auto r1 = rng.next() % K;
+    auto r2 = rng.next() % K;
+    int index;
+    if (_occupied[r1]++ < _occupied[r2]++) {
+      _occupied[r2]--;
+      index = r1;
+    } else {
+      _occupied[r1]--;
+      index = r2;
+    }
+    return index;
+  }
+  
+  LockedHeap<PosixLockType, Super> _heap[K];
+  std::atomic<int> _occupied[K];
 };
 
+#define USE_SHARDED_DIEHARD 1
+
+#if !USE_SHARDED_DIEHARD
 
 typedef
  ANSIWrapper<
   LockedHeap<PosixLockType,
-	     //	     CombineHeap<DieHardHeap<Numerator, Denominator, 1048576, // 65536,
 	     CombineHeap<DieHardHeap<Numerator, Denominator, 1048576, // 65536,
 				     (DIEHARD_DIEFAST == 1),
 				     (DIEHARD_DIEHARDER == 1)>,
 			 TheLargeHeap> > >
 TheDieHardHeap;
+
+#else // USE_SHARDED_DIEHARD
+
+typedef
+ ANSIWrapper<
+  CombineHeap<ShardHeap<32, DieHardHeap<Numerator, Denominator, 1048576, // 65536,
+				       (DIEHARD_DIEFAST == 1),
+				       (DIEHARD_DIEHARDER == 1)>>,
+	      TheLargeHeap> >
+TheDieHardHeap;
+
+#endif
+
 
 class TheCustomHeapType : public TheDieHardHeap {};
 
@@ -70,8 +142,6 @@ inline static TheCustomHeapType * getCustomHeap (void) {
 #if defined(_WIN32)
 #pragma warning(disable:4273)
 #endif
-
-#include "printf.h"
 
 #if !defined(_WIN32)
 #include <unistd.h>
@@ -87,7 +157,13 @@ extern "C" {
 
   void * xxmalloc (size_t sz) {
     auto ptr = getCustomHeap()->malloc (sz);
-    // printf_("xxmalloc %lu = %p\n", sz, ptr);
+#if 0
+    static long mallocs = 0L;
+    mallocs++;
+    if (mallocs % 10000 == 0) {
+      printf_("xxmalloc %lu = %p\n", sz, ptr);
+    }
+#endif
     return ptr;
   }
 

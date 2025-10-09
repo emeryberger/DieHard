@@ -43,6 +43,14 @@ public:
     return sz;
   }
 
+  void lock() {
+    _small.lock();
+  }
+
+  void unlock() {
+    _small.unlock();
+  }
+  
 private:
   SmallHeap _small;
   BigHeap _big;
