@@ -14,6 +14,7 @@
 #undef __GXX_WEAK__ 
 
 #include <stdlib.h>
+#include <algorithm>
 #include <atomic>
 #include <new>
 
@@ -85,6 +86,7 @@ public:
 private:
 
   int computeIndex() {
+#if 0
     // power of two choices; pick the least contended heap
     static __thread MWC64 rng;
     auto r1 = rng.next() % K;
@@ -98,10 +100,27 @@ private:
       index = r2;
     }
     return index;
+#endif
+    // Pick the least contended heap
+    // Initialize min_val with the value of the first element.
+    // Use .load() to safely get the value.
+    int min_val = _occupied[0].load();
+    int min_index = 0;
+
+    // Iterate through the rest of the array.
+    for (size_t i = 1; i < _occupied.size(); ++i) {
+        int current_val = _occupied[i].load();
+        if (current_val < min_val) {
+            min_val = current_val;
+	    min_index = i;
+        }
+    }
+    _occupied[min_index]++;
+    return min_index;
   }
   
   LockedHeap<PosixLockType, Super> _heap[K];
-  std::atomic<int> _occupied[K];
+  std::array<std::atomic<int>, K> _occupied;
 };
 
 #define USE_SHARDED_DIEHARD 1
