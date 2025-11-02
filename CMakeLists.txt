@@ -8,22 +8,51 @@ project(DieHard LANGUAGES CXX)
 set(CMAKE_OSX_ARCHITECTURES arm64 arm64e x86_64)
 
 # By default, build both diehard (traditional) and dieharder
-option(BUILD_DIEHARDER     "Enable building the DieHarder library"       ON)
-option(BUILD_REPLICATED    "Enable building replicated variant of DieHarder" OFF)
+option(BUILD_DIEHARDER     "Enable building the DieHarder library"       FALSE)
+option(BUILD_REPLICATED    "Enable building replicated variant of DieHarder" FALSE)
 
 # Write a version map to enable replacing direct libc allocation calls.
 set(VERS_SCRIPT ${CMAKE_CURRENT_BINARY_DIR}/vers.map)
 file(WRITE ${VERS_SCRIPT}
-# "GLIBC_2.2.5 {\n  global:\n    *;\n};\n")
-"GLIBC_2.2.5 {\n  global:\n    __libc_malloc;\n    __libc_free;\n    __libc_realloc;\n    __libc_calloc;\n    __libc_memalign;\n    local:\n    custom*;\n    xx*;\n};\n")
+"GLIBC_2.2.5 {
+global:
+    __libc_malloc;
+    __libc_free;
+    __libc_realloc;
+    __libc_calloc;
+    __libc_memalign;
+    malloc;
+    malloc_usable_size;
+    cfree;
+    free;
+    realloc;
+    calloc;
+    reallocarray;
+    memalign;
+    aligned_alloc;
+    valloc;
+    pvalloc;
+    posix_memalign;
+    strdup;
+    strndup;
+    _Znwm*;
+    _Znam*;
+    _ZdlPv*;
+    _ZdaPv*;
+    _ZdlPvm*;
+    _ZdaPvm*;
+local:
+    *;
+  };
+")
 
 # Default to C++14 (adjust as desired)
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Ensure that the compiler doesn't replace anything with malloc/free
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fno-builtin-malloc -fno-builtin-free")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-builtin-malloc -fno-builtin-free")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fvisibility=hidden -fno-builtin-malloc -fno-builtin-calloc -fno-builtin-realloc -fno-builtin-free")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fvisibility=hidden -fno-builtin-malloc -fno-builtin-calloc -fno-builtin-realloc -fno-builtin-free")
 
 # Generate position-independent code; required for shared libraries on many platforms
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
@@ -89,6 +118,7 @@ set(CMAKE_BUILD_TYPE RelWithDebInfo)
 #
 
 add_library(diehard SHARED ${DIEHARD_SOURCES})
+add_library(diehard_static STATIC ${DIEHARD_SOURCES})
 target_compile_definitions(diehard
   PRIVATE
     DIEHARD_DIEHARDER=0        # Original Makefile used 0 for DieHard
@@ -108,6 +138,7 @@ set_target_properties(diehard PROPERTIES
 
 if(BUILD_DIEHARDER)
   add_library(dieharder SHARED ${DIEHARD_SOURCES})
+  add_library(dieharder_static STATIC ${DIEHARD_SOURCES})
   target_compile_definitions(dieharder
     PRIVATE
       DIEHARD_DIEHARDER=1
@@ -145,12 +176,20 @@ endif()
 # For Linux, link with the version script declared above.
 if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
   target_link_options(diehard PRIVATE "LINKER:--version-script=${VERS_SCRIPT}")
-  target_link_options(dieharder PRIVATE "LINKER:--version-script=${VERS_SCRIPT}")
+  if (BUILD_DIEHARDER)
+    target_link_options(dieharder PRIVATE "LINKER:--version-script=${VERS_SCRIPT}")
+  endif()
 endif()
 
-install(TARGETS diehard dieharder
+if (BUILD_DIEHARDER)
+install(TARGETS diehard diehard_static dieharder dieharder_static
         LIBRARY DESTINATION lib
         ARCHIVE DESTINATION lib)
+else()
+install(TARGETS diehard diehard_static
+        LIBRARY DESTINATION lib
+        ARCHIVE DESTINATION lib)
+endif()
 
 # ─── USAGE ────────────────────────────────────────────────────────────
 #
