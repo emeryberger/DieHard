@@ -209,6 +209,13 @@ install(TARGETS diehard diehard_static
         ARCHIVE DESTINATION lib)
 endif()
 
+# ─── TESTS ─────────────────────────────────────────────────────────────
+#
+option(BUILD_TESTS "Build tests" ON)
+if(BUILD_TESTS)
+  add_subdirectory(tests)
+endif()
+
 # ─── USAGE ────────────────────────────────────────────────────────────
 #
 # Typical usage:

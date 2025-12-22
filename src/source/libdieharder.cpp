@@ -36,6 +36,7 @@ enum { Numerator = 8, Denominator = 7 };
 #include "util/atomicbitmap.h"
 #include "globalfreepool.h"
 #include "objectownership.h"
+#include "scalableheap.h"
 
 /*************************  define the DieHard heap ************************/
 
@@ -60,16 +61,34 @@ public:
 // Scalable design: Per-thread heaps with atomic bitmaps and cross-thread free pool.
 // Each thread gets its own heap instance; cross-thread frees are batched and
 // returned to the owner thread periodically via the OwnershipTrackingHeap.
+//
+// Uses ScalableHeap instead of ThreadSpecificHeap to handle early initialization
+// on macOS where pthread TLS may not be ready when malloc is first called.
 
+// The per-thread heap type
 typedef
- ThreadSpecificHeap<
   ANSIWrapper<
    OwnershipTrackingHeap<
     CombineHeap<DieHardHeap<Numerator, Denominator, 1048576,
                             (DIEHARD_DIEFAST == 1),
                             (DIEHARD_DIEHARDER == 1),
                             AtomicBitMap>,
-                TheLargeHeap> > > >
+                TheLargeHeap> > >
+PerThreadDieHardHeap;
+
+// The fallback heap (locked, for early init)
+typedef
+ ANSIWrapper<
+  LockedHeap<PosixLockType,
+     CombineHeap<DieHardHeap<Numerator, Denominator, 1048576,
+                             (DIEHARD_DIEFAST == 1),
+                             (DIEHARD_DIEHARDER == 1)>,
+                 TheLargeHeap> > >
+FallbackDieHardHeap;
+
+// The scalable heap with early-init fallback
+typedef
+ ScalableHeap<PerThreadDieHardHeap, FallbackDieHardHeap>
 TheDieHardHeap;
 
 #else
