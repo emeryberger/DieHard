@@ -5,7 +5,8 @@ project(DieHard LANGUAGES CXX)
 # ─── OPTIONS ──────────────────────────────────────────────────────────
 #
 
-set(CMAKE_OSX_ARCHITECTURES arm64 arm64e x86_64)
+# Note: arm64e requires special entitlements and can cause issues on CI
+set(CMAKE_OSX_ARCHITECTURES arm64 x86_64)
 
 # By default, build both diehard (traditional) and dieharder
 option(BUILD_DIEHARDER     "Enable building the DieHarder library"       FALSE)
