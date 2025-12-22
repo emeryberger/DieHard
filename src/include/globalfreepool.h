@@ -35,19 +35,20 @@ static constexpr size_t INVALID_THREAD_ID = SIZE_MAX;
 #define CACHE_LINE_SIZE 64
 #endif
 
-// Maximum number of threads supported
+// Maximum number of threads supported (can be overridden at compile time)
 #ifndef MAX_THREADS
-#define MAX_THREADS 256
+#define MAX_THREADS 64
 #endif
 
 // Batch size threshold before signaling owner thread
 #ifndef FREE_BATCH_SIZE
-#define FREE_BATCH_SIZE 64
+#define FREE_BATCH_SIZE 32
 #endif
 
 // Ring buffer capacity per thread (must be power of 2)
+// Reduced from 4096 to keep static memory footprint reasonable (~512KB vs 8MB)
 #ifndef FREE_QUEUE_CAPACITY
-#define FREE_QUEUE_CAPACITY 4096
+#define FREE_QUEUE_CAPACITY 1024
 #endif
 
 /**
