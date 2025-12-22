@@ -32,17 +32,17 @@ jobs:
     - name: Run GlobalFreePool unit test
       run: ./build/tests/test_globalfreepool
 
-    - name: Run cross-thread free test with DieHard
+    - name: Run cross-thread free test
       run: LD_PRELOAD=./build/libdiehard.so ./build/tests/test_remote_free
 
-    - name: Run scalability test (1 thread)
-      if: matrix.scalable == 'ON'
-      run: |
-        # Build threadtest
-        g++ -std=c++14 -O2 -pthread -o threadtest src/test/threadtest.cpp 2>/dev/null || echo "threadtest source not found, skipping"
-        if [ -f threadtest ]; then
-          LD_PRELOAD=./build/libdiehard.so ./threadtest 1 10 10000 0 64
-        fi
+    - name: Run double-free test
+      run: LD_PRELOAD=./build/libdiehard.so ./build/tests/test_doublefree
+
+    - name: Run invalid-free test
+      run: LD_PRELOAD=./build/libdiehard.so ./build/tests/test_invalidfree
+
+    - name: Run threadtest (scalability)
+      run: LD_PRELOAD=./build/libdiehard.so ./build/tests/threadtest 4 10 10000 0 64
 
   build-macos:
     runs-on: macos-latest
@@ -69,8 +69,17 @@ jobs:
     - name: Run GlobalFreePool unit test
       run: ./build/tests/test_globalfreepool
 
-    - name: Run cross-thread free test with DieHard
+    - name: Run cross-thread free test
       run: DYLD_INSERT_LIBRARIES=./build/libdiehard.dylib ./build/tests/test_remote_free
+
+    - name: Run double-free test
+      run: DYLD_INSERT_LIBRARIES=./build/libdiehard.dylib ./build/tests/test_doublefree
+
+    - name: Run invalid-free test
+      run: DYLD_INSERT_LIBRARIES=./build/libdiehard.dylib ./build/tests/test_invalidfree
+
+    - name: Run threadtest (scalability)
+      run: DYLD_INSERT_LIBRARIES=./build/libdiehard.dylib ./build/tests/threadtest 4 10 10000 0 64
 
   build-dieharder:
     runs-on: ubuntu-latest
@@ -100,7 +109,13 @@ jobs:
       run: |
         ./build/tests/test_globalfreepool
         LD_PRELOAD=./build/libdiehard.so ./build/tests/test_remote_free
+        LD_PRELOAD=./build/libdiehard.so ./build/tests/test_doublefree
+        LD_PRELOAD=./build/libdiehard.so ./build/tests/test_invalidfree
+        LD_PRELOAD=./build/libdiehard.so ./build/tests/threadtest 2 10 5000 0 32
 
     - name: Run tests with DieHarder
       run: |
         LD_PRELOAD=./build/libdieharder.so ./build/tests/test_remote_free
+        LD_PRELOAD=./build/libdieharder.so ./build/tests/test_doublefree
+        LD_PRELOAD=./build/libdieharder.so ./build/tests/test_invalidfree
+        LD_PRELOAD=./build/libdieharder.so ./build/tests/threadtest 2 10 5000 0 32
