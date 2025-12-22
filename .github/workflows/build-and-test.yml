@@ -1,0 +1,121 @@
+name: Build and Test
+
+on:
+  push:
+    branches: [ master, scalable_algorithm ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build-linux:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        build_type: [Release, Debug]
+        scalable: [ON, OFF]
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Configure CMake
+      run: |
+        mkdir -p build
+        cd build
+        cmake -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
+              -DBUILD_SCALABLE=${{ matrix.scalable }} \
+              -DBUILD_TESTS=ON \
+              ..
+
+    - name: Build
+      run: cmake --build build --parallel
+
+    - name: Run GlobalFreePool unit test
+      run: ./build/tests/test_globalfreepool
+
+    - name: Run cross-thread free test
+      run: LD_PRELOAD=./build/libdiehard.so ./build/tests/test_remote_free
+
+    - name: Run double-free test
+      run: LD_PRELOAD=./build/libdiehard.so ./build/tests/test_doublefree
+
+    - name: Run invalid-free test
+      run: LD_PRELOAD=./build/libdiehard.so ./build/tests/test_invalidfree
+
+    - name: Run threadtest (scalability)
+      run: LD_PRELOAD=./build/libdiehard.so ./build/tests/threadtest 4 10 10000 0 64
+
+  build-macos:
+    runs-on: macos-latest
+    strategy:
+      matrix:
+        build_type: [Release]
+        scalable: [ON, OFF]
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Configure CMake
+      run: |
+        mkdir -p build
+        cd build
+        cmake -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
+              -DBUILD_SCALABLE=${{ matrix.scalable }} \
+              -DBUILD_TESTS=ON \
+              ..
+
+    - name: Build
+      run: cmake --build build --parallel
+
+    - name: Run GlobalFreePool unit test
+      run: ./build/tests/test_globalfreepool
+
+    - name: Run cross-thread free test
+      run: DYLD_INSERT_LIBRARIES=./build/libdiehard.dylib ./build/tests/test_remote_free
+
+    - name: Run double-free test
+      run: DYLD_INSERT_LIBRARIES=./build/libdiehard.dylib ./build/tests/test_doublefree
+
+    - name: Run invalid-free test
+      run: DYLD_INSERT_LIBRARIES=./build/libdiehard.dylib ./build/tests/test_invalidfree
+
+    - name: Run threadtest (scalability)
+      run: DYLD_INSERT_LIBRARIES=./build/libdiehard.dylib ./build/tests/threadtest 4 10 10000 0 64
+
+  build-dieharder:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Configure CMake with DieHarder
+      run: |
+        mkdir -p build
+        cd build
+        cmake -DCMAKE_BUILD_TYPE=Release \
+              -DBUILD_DIEHARDER=ON \
+              -DBUILD_SCALABLE=ON \
+              -DBUILD_TESTS=ON \
+              ..
+
+    - name: Build
+      run: cmake --build build --parallel
+
+    - name: Verify libraries built
+      run: |
+        ls -la build/libdiehard.so
+        ls -la build/libdieharder.so
+
+    - name: Run tests with DieHard
+      run: |
+        ./build/tests/test_globalfreepool
+        LD_PRELOAD=./build/libdiehard.so ./build/tests/test_remote_free
+        LD_PRELOAD=./build/libdiehard.so ./build/tests/test_doublefree
+        LD_PRELOAD=./build/libdiehard.so ./build/tests/test_invalidfree
+        LD_PRELOAD=./build/libdiehard.so ./build/tests/threadtest 2 10 5000 0 32
+
+    - name: Run tests with DieHarder
+      run: |
+        LD_PRELOAD=./build/libdieharder.so ./build/tests/test_remote_free
+        LD_PRELOAD=./build/libdieharder.so ./build/tests/test_doublefree
+        LD_PRELOAD=./build/libdieharder.so ./build/tests/test_invalidfree
+        LD_PRELOAD=./build/libdieharder.so ./build/tests/threadtest 2 10 5000 0 32

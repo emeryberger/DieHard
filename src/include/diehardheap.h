@@ -36,7 +36,8 @@ template <int Numerator,
 	  int Denominator,
 	  int MaxSize,
 	  bool DieFastOn,
-	  bool DieHarderOn>
+	  bool DieHarderOn,
+	  template <class> class BitMapType = BitMap>
 
 class DieHardHeap {
 public:
@@ -55,8 +56,8 @@ public:
     : _localRandomValue (RealRandomValue::value())
   {
     // Check that there are no size dependencies to worry about.
-    typedef RandomHeap<Numerator, Denominator, Alignment, MaxSize, RandomMiniHeap, DieFastOn, DieHarderOn> RH1;
-    typedef RandomHeap<Numerator, Denominator, 256 * Alignment, MaxSize, RandomMiniHeap, DieFastOn, DieHarderOn> RH2;
+    typedef RandomHeap<Numerator, Denominator, Alignment, MaxSize, RandomMiniHeap, DieFastOn, DieHarderOn, BitMapType> RH1;
+    typedef RandomHeap<Numerator, Denominator, 256 * Alignment, MaxSize, RandomMiniHeap, DieFastOn, DieHarderOn, BitMapType> RH2;
 
     static_assert(sizeof(RH1) == sizeof(RH2),
 		  "There can't be any dependencies on object sizes.");
@@ -194,7 +195,8 @@ private:
 	MaxSize,
         RandomMiniHeap,
         DieFastOn,
-        DieHarderOn>();
+        DieHarderOn,
+        BitMapType>();
     }
   };
 
@@ -206,8 +208,8 @@ private:
     return (RandomHeapBase<Numerator, Denominator> *) &_buf[MINIHEAPSIZE * index];
   }
 
-  enum { MINIHEAPSIZE = 
-	 sizeof(RandomHeap<Numerator, Denominator, Alignment, MaxSize, RandomMiniHeap, DieFastOn, DieHarderOn>) };
+  enum { MINIHEAPSIZE =
+	 sizeof(RandomHeap<Numerator, Denominator, Alignment, MaxSize, RandomMiniHeap, DieFastOn, DieHarderOn, BitMapType>) };
 
   /// A random value used for detecting overflows (for DieFast).
   const size_t _localRandomValue;

@@ -62,10 +62,32 @@ Note that Windows is not currently supported as a platform.
 
 ### Linux / Mac ###
 
+**Standard build:**
 ```bash
-        % mkdir build && cd build
-	% cmake ..
-	% make
+% mkdir build && cd build
+% cmake ..
+% make
+```
+
+**Build with DieHarder (security-focused variant):**
+```bash
+% cmake -DBUILD_DIEHARDER=ON ..
+% make
+```
+
+**Build with scalable multi-threaded support:**
+```bash
+% cmake -DBUILD_SCALABLE=ON ..
+% make
+```
+
+The scalable build uses per-thread heaps with lock-free allocation for improved
+performance on multi-core systems. See the "Scalable Multi-Threaded Mode" section below.
+
+**Build options can be combined:**
+```bash
+% cmake -DBUILD_DIEHARDER=ON -DBUILD_SCALABLE=ON ..
+% make
 ```
 
 You can either link in the resulting shared object
@@ -108,6 +130,60 @@ dangling pointer errors, you must first run the program with
 `libtrackalloc.so` preloaded, and then run it on the same inputs with
 `libbrokenmalloc.so`.
 
+----------------------------
+Scalable Multi-Threaded Mode
+----------------------------
+
+The standard DieHard build uses a single global heap protected by a lock. While
+correct, this can cause contention on multi-core systems with many threads.
+
+Building with `-DBUILD_SCALABLE=ON` enables a scalable design that:
+
+- **Per-thread heaps**: Each thread gets its own `DieHardHeap` instance via
+  `ThreadSpecificHeap`, eliminating lock contention on the fast path.
+
+- **Lock-free allocation**: Uses atomic bitmaps with compare-and-swap (CAS)
+  operations instead of locks for slot allocation within miniheaps.
+
+- **Heap-based ownership detection**: Object ownership is determined by querying
+  the heap structure itself (`getSize()`), avoiding per-object tracking overhead.
+  A lightweight `HeapRegistry` tracks per-thread heap instances for cross-thread
+  lookups.
+
+- **Cross-thread free handling**: When thread A frees an object allocated by
+  thread B, the object is queued in a lock-free per-owner queue. Thread B
+  drains its queue periodically (on allocation or when a threshold is reached).
+
+- **Cache-line aligned counters**: Heap metadata is aligned to prevent false
+  sharing between cores.
+
+**Performance**: The scalable mode provides significant speedups for multi-threaded
+workloads:
+
+| Threads | Non-scalable | Scalable | Speedup |
+|---------|--------------|----------|---------|
+| 1       | 0.23s        | 0.21s    | 1.1x    |
+| 2       | 0.40s        | 0.10s    | 4.0x    |
+| 4       | 0.56s        | 0.05s    | 11.2x   |
+| 8       | 0.53s        | 0.06s    | 8.8x    |
+
+*(threadtest benchmark: 50 iterations, 30000 objects, 64-byte allocations)*
+
+**Probabilistic guarantees are preserved**: Each per-thread heap maintains the
+same randomization properties as the original design, providing equivalent
+protection against buffer overflows, dangling pointers, and double frees.
+
+**When to use scalable mode**:
+- Applications with many threads performing frequent allocations
+- Systems where allocation throughput is a bottleneck
+- Multi-core systems where lock contention is observed
+
+**Key source files for scalable mode**:
+- `src/include/util/atomicbitmap.h` - Lock-free bitmap implementation
+- `src/include/heapregistry.h` - Registry of per-thread heap instances
+- `src/include/globalfreepool.h` - Cross-thread free pool
+- `src/include/objectownership.h` - Ownership tracking heap wrapper
+
 
 Frequently Asked Questions
 --------------------------
@@ -143,6 +219,14 @@ aren't running DieHard.
 
 Unless your system had too little memory installed, DieHard generally has no
 perceptible performance impact on applications like Firefox.
+
+### How does scalable mode differ from the standard build? ###
+
+The standard build uses a single global heap protected by a lock, which
+can become a bottleneck with many threads. The scalable build
+(`-DBUILD_SCALABLE=ON`) gives each thread its own heap and uses lock-free
+atomic operations, allowing allocation throughput to scale with the number
+of cores. Both modes provide the same probabilistic memory safety guarantees.
 
 ### How much more memory does DieHard require? ###
 

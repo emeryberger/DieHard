@@ -14,9 +14,10 @@ template <int Numerator,
 	  unsigned long ObjectSize,
 	  unsigned long NObjects,
 	  class Allocator,
-	  bool DieFastOn>
+	  bool DieFastOn,
+	  template <class> class BitMapType = BitMap>
 class RandomMiniHeapDieHard :
-  public RandomMiniHeapCore<Numerator, Denominator, ObjectSize, NObjects, Allocator, DieFastOn, true> {
+  public RandomMiniHeapCore<Numerator, Denominator, ObjectSize, NObjects, Allocator, DieFastOn, true, BitMapType> {
 public:
 
   /// @return the space remaining from this point in this object
@@ -49,7 +50,7 @@ public:
     return didFree;
   }
 
-  typedef RandomMiniHeapCore<Numerator, Denominator, ObjectSize, NObjects, Allocator, DieFastOn, true> SuperHeap;
+  typedef RandomMiniHeapCore<Numerator, Denominator, ObjectSize, NObjects, Allocator, DieFastOn, true, BitMapType> SuperHeap;
 
 protected:
 
