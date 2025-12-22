@@ -10,7 +10,7 @@ set(CMAKE_OSX_ARCHITECTURES arm64 arm64e x86_64)
 # By default, build both diehard (traditional) and dieharder
 option(BUILD_DIEHARDER     "Enable building the DieHarder library"       FALSE)
 option(BUILD_REPLICATED    "Enable building replicated variant of DieHarder" FALSE)
-option(BUILD_SCALABLE      "Enable scalable multi-threaded design with per-thread heaps" FALSE)
+option(BUILD_SCALABLE      "Enable scalable multi-threaded design with per-thread heaps" TRUE)
 
 # Write a version map to enable replacing direct libc allocation calls.
 set(VERS_SCRIPT ${CMAKE_CURRENT_BINARY_DIR}/vers.map)
@@ -219,8 +219,9 @@ endif()
 # If you wish to enable replicated mode:
 #   cmake -DBUILD_REPLICATED=ON ..
 #
-# If you wish to enable scalable multi-threaded mode (per-thread heaps):
-#   cmake -DBUILD_SCALABLE=ON ..
+# Scalable multi-threaded mode (per-thread heaps) is enabled by default.
+# To disable it:
+#   cmake -DBUILD_SCALABLE=OFF ..
 #
 # The scalable mode uses:
 #   - Atomic bitmaps for lock-free allocation

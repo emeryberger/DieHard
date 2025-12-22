@@ -14,7 +14,7 @@ The repository contains three related systems:
 ## Build Commands
 
 ```bash
-# Standard build
+# Standard build (scalable mode is enabled by default)
 mkdir build && cd build
 cmake ..
 make
@@ -23,16 +23,12 @@ make
 cmake -DBUILD_DIEHARDER=ON ..
 make
 
-# Build with scalable multi-threaded mode (per-thread heaps)
-cmake -DBUILD_SCALABLE=ON ..
+# Build without scalable mode (single global heap, not recommended)
+cmake -DBUILD_SCALABLE=OFF ..
 make
 
 # Build with replicated mode support
 cmake -DBUILD_DIEHARDER=ON -DBUILD_REPLICATED=ON ..
-make
-
-# Combine options as needed
-cmake -DBUILD_DIEHARDER=ON -DBUILD_SCALABLE=ON ..
 make
 ```
 
@@ -108,9 +104,9 @@ Controlled by compile definitions:
 - `DIEHARD_REPLICATED=1` - Support for replica-based execution
 - `DIEHARD_SCALABLE=1` - Scalable per-thread heap design
 
-### Scalable Multi-Threaded Design (BUILD_SCALABLE=ON)
+### Scalable Multi-Threaded Design (default)
 
-The scalable variant replaces the single global locked heap with per-thread heaps for improved multi-core performance:
+The default build uses a scalable design that replaces the single global locked heap with per-thread heaps for improved multi-core performance:
 
 **Architecture:**
 ```
