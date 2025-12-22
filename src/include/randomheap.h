@@ -14,6 +14,7 @@
 
 #include <iostream>
 #include <new>
+#include <atomic>
 
 using namespace std;
 
@@ -26,6 +27,13 @@ using namespace HL;
 #include "mmapalloc.h"
 #include "randomnumbergenerator.h"
 #include "staticlog.h"
+#include "util/bitmap.h"
+#include "util/atomicbitmap.h"
+
+// Cache line size for alignment to prevent false sharing
+#ifndef CACHE_LINE_SIZE
+#define CACHE_LINE_SIZE 64
+#endif
 
 template <int Numerator, int Denominator>
 class RandomHeapBase {
@@ -46,6 +54,7 @@ public:
  * @param Numerator the numerator of the heap multiplier.
  * @param Denominator the denominator of the heap multiplier.
  * @param ObjectSize the object size managed by this heap.
+ * @param BitMapType the bitmap implementation to use (BitMap or AtomicBitMap).
  * @author Emery Berger <http://www.cs.umass.edu/~emery>
  **/
 
@@ -59,9 +68,11 @@ template <int Numerator,
 		    unsigned long NObjects,
 		    class Allocator,
 		    bool DieFastOn2,
-                    bool DieHarderOn2> class MiniHeap,
+		    bool DieHarderOn2,
+		    template <class> class BitMapType2> class MiniHeap,
 	  bool DieFastOn,
-	  bool DieHarderOn>
+	  bool DieHarderOn,
+	  template <class> class BitMapType = BitMap>
 class RandomHeap : public RandomHeapBase<Numerator, Denominator> {
 
   /// The most miniheaps we will use without overflowing.
@@ -93,7 +104,8 @@ public:
       _inUse (0UL),
       _miniHeapsInUse (0),
       _chunksInUse (0),
-      _check2 ((size_t) CHECK2)
+      _check2 ((size_t) CHECK2),
+      _growLock (false)
   {
     Check<RandomHeap *> sanity (this);
 
@@ -120,12 +132,14 @@ public:
     assert (sz <= ObjectSize);
 
     // If we're "out" of memory, get more.
-    while (Numerator * _inUse >= _available * Denominator) {
+    // Use atomic loads for lock-free fast path check.
+    while (Numerator * _inUse.load(std::memory_order_relaxed) >=
+           _available.load(std::memory_order_relaxed) * Denominator) {
       getAnotherMiniHeap();
     }
 
-    void * ptr = NULL;
-    while (ptr == NULL) {
+    void * ptr = nullptr;
+    while (ptr == nullptr) {
       ptr = getObject(sz);
     }
 
@@ -143,8 +157,8 @@ public:
     }
 #endif
 
-    // Bump up the amount of space in use and return.
-    _inUse++;
+    // Atomically bump up the amount of space in use and return.
+    _inUse.fetch_add(1, std::memory_order_relaxed);
 
     return ptr;
   }
@@ -155,11 +169,13 @@ public:
 
     // Starting with the largest mini-heap, try to free the object.
     // If we find it, return true.
-    for (int i = _miniHeapsInUse - 1; i >= 0; i--) {
-      
+    // Load miniHeapsInUse atomically for the iteration bound.
+    unsigned int numHeaps = _miniHeapsInUse.load(std::memory_order_acquire);
+    for (int i = numHeaps - 1; i >= 0; i--) {
+
       if (getMiniHeap(i)->free (ptr)) {
-        // Found it -- drop the amount of space in use.
-	_inUse--;
+        // Found it -- atomically drop the amount of space in use.
+        _inUse.fetch_sub(1, std::memory_order_relaxed);
         return true;
       }
     }
@@ -175,8 +191,8 @@ public:
 
     // We start from the largest heap (most objects) and work our way
     // down to improve performance in the common case.
-
-    int v = _miniHeapsInUse;
+    // Load miniHeapsInUse atomically.
+    unsigned int v = _miniHeapsInUse.load(std::memory_order_acquire);
 
     for (int i = v - 1; i >= 0; i--) {
       size_t sz = getMiniHeap(i)->getSize (ptr);
@@ -203,15 +219,17 @@ private:
   // Pick a random heap, and get an object from it.
 
   inline void * getObject (size_t sz) {
-    void * ptr = NULL;
+    void * ptr = nullptr;
     while (!ptr) {
       size_t rnd = _random.next();
       // NB: _chunksInUse acts as a bitmask that eliminates the need for
       // an (expensive) modulus operation on _available -- the
       // expression is the same as "v = rnd % _available".
-      size_t v      = rnd & _chunksInUse;
+      // Load atomically to get a consistent snapshot.
+      unsigned int chunks = _chunksInUse.load(std::memory_order_acquire);
+      size_t v = rnd & chunks;
       // Compute the index as a log of v (+1 to avoid log2(0)).
-      unsigned int index  = log2(v + 1);
+      unsigned int index = log2(v + 1);
       ptr = getMiniHeap(index)->malloc (sz);
     }
     return ptr;
@@ -234,8 +252,9 @@ private:
 			      BumpAlloc<CPUInfo::PageSize, MmapAlloc> > > TheAllocator;
 
   // The type of a mini heap.
+  // Passes through the BitMapType template parameter for lock-free or standard allocation.
   template <unsigned long Number> class MiniHeapType
-    : public MiniHeap<Numerator, Denominator, ObjectSize, Number, TheAllocator, DieFastOn, DieHarderOn> {};
+    : public MiniHeap<Numerator, Denominator, ObjectSize, Number, TheAllocator, DieFastOn, DieHarderOn, BitMapType> {};
 
   // The size of a mini heap.
   enum { MINIHEAP_SIZE = sizeof(MiniHeapType<MIN_OBJECTS>) };
@@ -255,35 +274,87 @@ private:
   inline typename MiniHeapType<MIN_OBJECTS>::SuperHeap * getMiniHeap (unsigned int index) const {
     Check<const RandomHeap *> sanity (this);
     assert (index < MAX_MINIHEAPS);
-    assert (index <= _miniHeapsInUse);
+    assert (index <= _miniHeapsInUse.load(std::memory_order_relaxed));
     return (typename MiniHeapType<MIN_OBJECTS>::SuperHeap *) &_buf[index * MINIHEAP_SIZE];
   }
 
 
   // Activate another mini heap to satisfy the current memory requests.
+  // Uses a spinlock to ensure only one thread grows the heap at a time.
   NO_INLINE void getAnotherMiniHeap (void) {
 
-    
     Check<RandomHeap *> sanity (this);
-    if (_miniHeapsInUse < MAX_MINIHEAPS) {
-      // Update the amount of available space.
-      if( _miniHeapsInUse == 0) {
-        _available += MIN_OBJECTS;
-      } else {
-        _available += (1 << (_miniHeapsInUse-1)) * MIN_OBJECTS;
-      }
-      // Activate the new mini heap.
-      getMiniHeap(_miniHeapsInUse)->activate();
-      // Update the number of mini heaps in use (one more).
-      _miniHeapsInUse++;
-      // Update the number of chunks in use (multiples of MIN_OBJECTS) minus 1.
-      _chunksInUse = (1 << (_miniHeapsInUse - 1)) - 1;
-      assert ((unsigned long) ((_chunksInUse + 1) * MIN_OBJECTS) == _available);
-      // Verifies that it is indeed, a power of two minus 1.
-      assert (((_chunksInUse + 1) & _chunksInUse) == 0);
-    }
-    check();
 
+    // Try to acquire the grow lock using a simple spinlock.
+    bool expected = false;
+    if (!_growLock.compare_exchange_strong(expected, true,
+                                            std::memory_order_acquire,
+                                            std::memory_order_relaxed)) {
+      // Another thread is growing the heap. Spin-wait until done.
+      while (_growLock.load(std::memory_order_acquire)) {
+        // Pause to reduce contention on the cache line.
+#if defined(__x86_64__) || defined(__i386__)
+        __builtin_ia32_pause();
+#elif defined(__aarch64__)
+        asm volatile("yield");
+#endif
+      }
+      // Re-check if we still need to grow (the other thread may have done it).
+      if (Numerator * _inUse.load(std::memory_order_relaxed) <
+          _available.load(std::memory_order_relaxed) * Denominator) {
+        return;
+      }
+      // Still need to grow, try again.
+      expected = false;
+      if (!_growLock.compare_exchange_strong(expected, true,
+                                              std::memory_order_acquire,
+                                              std::memory_order_relaxed)) {
+        return; // Another thread got it; let them handle it.
+      }
+    }
+
+    // We hold the lock. Double-check we still need to grow.
+    unsigned int currentHeaps = _miniHeapsInUse.load(std::memory_order_relaxed);
+    if (Numerator * _inUse.load(std::memory_order_relaxed) <
+        _available.load(std::memory_order_relaxed) * Denominator) {
+      // Another thread already grew the heap. Release lock and return.
+      _growLock.store(false, std::memory_order_release);
+      return;
+    }
+
+    if (currentHeaps < MAX_MINIHEAPS) {
+      // Calculate the new available space.
+      size_t newAvailable;
+      if (currentHeaps == 0) {
+        newAvailable = _available.load(std::memory_order_relaxed) + MIN_OBJECTS;
+      } else {
+        newAvailable = _available.load(std::memory_order_relaxed) +
+                       (1 << (currentHeaps - 1)) * MIN_OBJECTS;
+      }
+
+      // Activate the new mini heap.
+      getMiniHeap(currentHeaps)->activate();
+
+      // Update counters atomically with release semantics.
+      // Order matters: update _available and _chunksInUse before _miniHeapsInUse
+      // so readers see consistent state.
+      _available.store(newAvailable, std::memory_order_relaxed);
+      unsigned int newChunks = (1 << currentHeaps) - 1;
+      _chunksInUse.store(newChunks, std::memory_order_relaxed);
+
+      // Memory fence to ensure all updates are visible before incrementing heap count.
+      std::atomic_thread_fence(std::memory_order_release);
+
+      _miniHeapsInUse.store(currentHeaps + 1, std::memory_order_release);
+
+      assert ((unsigned long) ((newChunks + 1) * MIN_OBJECTS) == newAvailable);
+      // Verifies that it is indeed, a power of two minus 1.
+      assert (((newChunks + 1) & newChunks) == 0);
+    }
+
+    // Release the grow lock.
+    _growLock.store(false, std::memory_order_release);
+    check();
   }
      
   /// Local random source.
@@ -291,17 +362,23 @@ private:
 
   size_t _check1;
 
-  /// The amount of space available.
-  size_t _available;
+  /// The amount of space available (atomic for lock-free access).
+  /// Aligned to cache line to prevent false sharing.
+  alignas(CACHE_LINE_SIZE) std::atomic<size_t> _available;
 
-  /// The amount of space currently in use (allocated).
-  size_t _inUse;
+  /// The amount of space currently in use (allocated, atomic).
+  /// Aligned to cache line to prevent false sharing.
+  alignas(CACHE_LINE_SIZE) std::atomic<size_t> _inUse;
 
-  /// The number of "mini-heaps" currently in use.
-  unsigned int _miniHeapsInUse;
+  /// The number of "mini-heaps" currently in use (atomic).
+  /// Aligned to cache line to prevent false sharing.
+  alignas(CACHE_LINE_SIZE) std::atomic<unsigned int> _miniHeapsInUse;
 
-  /// The number of "chunks" in use (multiples of MIN_OBJECTS) minus 1.
-  unsigned int _chunksInUse;
+  /// The number of "chunks" in use (multiples of MIN_OBJECTS) minus 1 (atomic).
+  std::atomic<unsigned int> _chunksInUse;
+
+  /// Spinlock for heap growth synchronization.
+  alignas(CACHE_LINE_SIZE) std::atomic<bool> _growLock;
 
   /// The buffer that holds the various mini heaps.
   char _buf[sizeof(MiniHeapType<MIN_OBJECTS>) * MAX_MINIHEAPS];

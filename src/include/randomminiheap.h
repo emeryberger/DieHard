@@ -26,7 +26,8 @@ template <int Numerator,
 	  unsigned long NObjects,
 	  class Allocator,
 	  bool DieFastOn,
-	  bool DieHarderOn>
+	  bool DieHarderOn,
+	  template <class> class BitMapType = BitMap>
 class RandomMiniHeap;
 
 
@@ -35,18 +36,20 @@ template <int Numerator,
 	  unsigned long ObjectSize,
 	  unsigned long NObjects,
 	  class Allocator,
-	  bool DieFastOn>
-class RandomMiniHeap<Numerator, Denominator, ObjectSize, NObjects, Allocator, DieFastOn, true> :
-  public RandomMiniHeapDieHarder<Numerator, Denominator, ObjectSize, NObjects, Allocator, DieFastOn> {};
+	  bool DieFastOn,
+	  template <class> class BitMapType>
+class RandomMiniHeap<Numerator, Denominator, ObjectSize, NObjects, Allocator, DieFastOn, true, BitMapType> :
+  public RandomMiniHeapDieHarder<Numerator, Denominator, ObjectSize, NObjects, Allocator, DieFastOn, BitMapType> {};
 
 template <int Numerator,
 	  int Denominator,
 	  unsigned long ObjectSize,
 	  unsigned long NObjects,
 	  class Allocator,
-	  bool DieFastOn>
-class RandomMiniHeap<Numerator, Denominator, ObjectSize, NObjects, Allocator, DieFastOn, false> :
-  public RandomMiniHeapDieHard<Numerator, Denominator, ObjectSize, NObjects, Allocator, DieFastOn> {};
+	  bool DieFastOn,
+	  template <class> class BitMapType>
+class RandomMiniHeap<Numerator, Denominator, ObjectSize, NObjects, Allocator, DieFastOn, false, BitMapType> :
+  public RandomMiniHeapDieHard<Numerator, Denominator, ObjectSize, NObjects, Allocator, DieFastOn, BitMapType> {};
 
 
 #endif
