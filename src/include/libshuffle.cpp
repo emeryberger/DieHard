@@ -23,18 +23,19 @@ public:
 };
 
 
-#if 0 // USE HEAP LAYERS HEAP
+#if 1 // USE HEAP LAYERS HEAP
+
+class TopHeap : public SizeHeap<UniqueHeap<ZoneHeap<MmapHeap, 65536> > > {};
 
 // Shuffled freelist heap.
 class Shuffler :
   public ANSIWrapper<
   LockedHeap<PosixLockType,
-	     KingsleyHeap<
-	       ShuffleHeap<2,
-			   SizeHeap<FreelistHeap<MemSource> >
-			   >,
-	       SizeHeap<MemSource> // mapHeap>
-	       > > > {};
+	     ShuffleHeap<4096,
+			 2048,
+			 KingsleyHeap<AdaptHeap<DLList, TopHeap>, TopHeap>
+			 >
+	       > > {};
 
 
 #endif
@@ -52,7 +53,7 @@ class Shuffler :
 
 #endif
 
-#if 1
+#if 0
 // Straight-up TLSF
 class Shuffler : public LockedHeap<PosixLockType, TLSFHeap> {};
 #endif
@@ -90,11 +91,14 @@ char *itob(unsigned long x)
 class TheCustomHeapType : public Shuffler {
 public:
   TheCustomHeapType() {
+#if 0
     char buf[255];
     sprintf (buf, "output-%d", getpid());
     fd = open (buf, O_CREAT | O_RDWR | O_APPEND, S_IRWXU);
+#endif
   }
   void * malloc (size_t sz) {
+    return Shuffler::malloc(sz);
     static int allocs = 0;
     ++allocs;
 
@@ -162,5 +166,15 @@ extern "C" {
     getCustomHeap()->unlock();
   }
 
+}
+
+int main()
+{
+  for (auto i = 0; i < 10; i++) {
+    auto ptr = xxmalloc(32);
+    std::cout << ptr << std::endl;
+    xxfree(ptr);
+  }
+  return 0;
 }
 

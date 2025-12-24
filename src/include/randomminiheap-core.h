@@ -4,6 +4,7 @@
 #define RANDOMMINIHEAP_CORE
 
 #include "bitmap.h"
+#include "util/atomicbitmap.h"
 #include "check.h"
 #include "modulo.h"
 #include "randomnumbergenerator.h"
@@ -30,6 +31,7 @@ public:
  * @param Allocator the source heap for allocations.
  * @param DieFastOn true iff we are trying to detect errors.
  * @param DieHarderOn true iff we are trying to prevent security vulnerabilities.
+ * @param BitMapType the bitmap implementation to use (BitMap or AtomicBitMap).
  * @sa    RandomHeap
  * @author Emery Berger <http://www.cs.umass.edu/~emery>
  **/
@@ -39,7 +41,8 @@ template <int Numerator,
 	  unsigned long NObjects,
 	  class Allocator,
 	  bool DieFastOn,
-	  bool DieHarderOn>
+	  bool DieHarderOn,
+	  template <class> class BitMapType = BitMap>
 class RandomMiniHeapCore : public RandomMiniHeapBase {
 private:
   
@@ -259,7 +262,8 @@ protected:
   bool _isHeapActivated;
 
   /// The bitmap for this heap.
-  BitMap<Allocator> _miniHeapBitmap;
+  /// Uses the BitMapType template parameter for lock-free or standard bitmap.
+  BitMapType<Allocator> _miniHeapBitmap;
 
   /// Sanity check value.
   const size_t _check2;

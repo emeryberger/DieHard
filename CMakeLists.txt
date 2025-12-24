@@ -5,11 +5,13 @@ project(DieHard LANGUAGES CXX)
 # ─── OPTIONS ──────────────────────────────────────────────────────────
 #
 
-set(CMAKE_OSX_ARCHITECTURES arm64 arm64e x86_64)
+# Note: arm64e requires special entitlements and can cause issues on CI
+set(CMAKE_OSX_ARCHITECTURES arm64 x86_64)
 
 # By default, build both diehard (traditional) and dieharder
 option(BUILD_DIEHARDER     "Enable building the DieHarder library"       FALSE)
 option(BUILD_REPLICATED    "Enable building replicated variant of DieHarder" FALSE)
+option(BUILD_SCALABLE      "Enable scalable multi-threaded design with per-thread heaps" TRUE)
 
 # Write a version map to enable replacing direct libc allocation calls.
 set(VERS_SCRIPT ${CMAKE_CURRENT_BINARY_DIR}/vers.map)
@@ -124,6 +126,14 @@ target_compile_definitions(diehard
     DIEHARD_DIEHARDER=0        # Original Makefile used 0 for DieHard
     DIEHARD_MULTITHREADED=1
     _REENTRANT=1
+    $<$<BOOL:${BUILD_SCALABLE}>:DIEHARD_SCALABLE=1>
+)
+target_compile_definitions(diehard_static
+  PRIVATE
+    DIEHARD_DIEHARDER=0
+    DIEHARD_MULTITHREADED=1
+    _REENTRANT=1
+    $<$<BOOL:${BUILD_SCALABLE}>:DIEHARD_SCALABLE=1>
 )
 # Link with pthread/dl on Unix-like systems; on Windows, CMake will adjust automatically
 target_link_libraries(diehard PRIVATE pthread dl)
@@ -144,6 +154,14 @@ if(BUILD_DIEHARDER)
       DIEHARD_DIEHARDER=1
       DIEHARD_MULTITHREADED=1
       _REENTRANT=1
+      $<$<BOOL:${BUILD_SCALABLE}>:DIEHARD_SCALABLE=1>
+  )
+  target_compile_definitions(dieharder_static
+    PRIVATE
+      DIEHARD_DIEHARDER=1
+      DIEHARD_MULTITHREADED=1
+      _REENTRANT=1
+      $<$<BOOL:${BUILD_SCALABLE}>:DIEHARD_SCALABLE=1>
   )
   target_link_libraries(dieharder PRIVATE pthread dl)
   set_target_properties(dieharder PROPERTIES
@@ -166,6 +184,7 @@ if(BUILD_REPLICATED AND BUILD_DIEHARDER)
       DIEHARD_MULTITHREADED=1
       DIEHARD_REPLICATED=1
       _REENTRANT=1
+      $<$<BOOL:${BUILD_SCALABLE}>:DIEHARD_SCALABLE=1>
   )
   target_link_libraries(dieharder_r PRIVATE pthread dl)
   set_target_properties(dieharder_r PROPERTIES
@@ -191,6 +210,13 @@ install(TARGETS diehard diehard_static
         ARCHIVE DESTINATION lib)
 endif()
 
+# ─── TESTS ─────────────────────────────────────────────────────────────
+#
+option(BUILD_TESTS "Build tests" ON)
+if(BUILD_TESTS)
+  add_subdirectory(tests)
+endif()
+
 # ─── USAGE ────────────────────────────────────────────────────────────
 #
 # Typical usage:
@@ -200,6 +226,16 @@ endif()
 #
 # If you wish to enable replicated mode:
 #   cmake -DBUILD_REPLICATED=ON ..
+#
+# Scalable multi-threaded mode (per-thread heaps) is enabled by default.
+# To disable it:
+#   cmake -DBUILD_SCALABLE=OFF ..
+#
+# The scalable mode uses:
+#   - Atomic bitmaps for lock-free allocation
+#   - Per-thread heap instances (via ThreadSpecificHeap)
+#   - Cross-thread free pool for objects freed by non-owner threads
+#   - Object ownership tracking for efficient cross-thread free routing
 #
 # You now have libdiehard, optionally libdieharder, and optionally
 # libdieharder_r, as shared libraries.

@@ -32,6 +32,11 @@ enum { Numerator = 8, Denominator = 7 };
 #include "diehard.h"
 #include "largeheap.h"
 #include "diehardheap.h"
+#include "util/bitmap.h"
+#include "util/atomicbitmap.h"
+#include "globalfreepool.h"
+#include "objectownership.h"
+#include "scalableheap.h"
 
 /*************************  define the DieHard heap ************************/
 
@@ -48,15 +53,59 @@ public:
 };
 
 
+// Choose between original locked heap and new scalable design based on compile flag.
+// DIEHARD_SCALABLE=1 enables the lock-free, per-thread heap design.
+
+#if DIEHARD_SCALABLE
+
+// Scalable design: Per-thread heaps with atomic bitmaps and cross-thread free pool.
+// Each thread gets its own heap instance; cross-thread frees are batched and
+// returned to the owner thread periodically via the OwnershipTrackingHeap.
+//
+// Uses ScalableHeap instead of ThreadSpecificHeap to handle early initialization
+// on macOS where pthread TLS may not be ready when malloc is first called.
+
+// The per-thread heap type
+typedef
+  ANSIWrapper<
+   OwnershipTrackingHeap<
+    CombineHeap<DieHardHeap<Numerator, Denominator, 1048576,
+                            (DIEHARD_DIEFAST == 1),
+                            (DIEHARD_DIEHARDER == 1),
+                            AtomicBitMap>,
+                TheLargeHeap> > >
+PerThreadDieHardHeap;
+
+// The fallback heap (locked, for early init)
 typedef
  ANSIWrapper<
   LockedHeap<PosixLockType,
-	     //	     CombineHeap<DieHardHeap<Numerator, Denominator, 1048576, // 65536,
-	     CombineHeap<DieHardHeap<Numerator, Denominator, 1048576, // 65536,
+     CombineHeap<DieHardHeap<Numerator, Denominator, 1048576,
+                             (DIEHARD_DIEFAST == 1),
+                             (DIEHARD_DIEHARDER == 1)>,
+                 TheLargeHeap> > >
+FallbackDieHardHeap;
+
+// The scalable heap with early-init fallback
+typedef
+ ScalableHeap<PerThreadDieHardHeap, FallbackDieHardHeap>
+TheDieHardHeap;
+
+#else
+
+// Original design: Single global heap protected by a lock.
+// Simpler but doesn't scale well with multiple threads.
+
+typedef
+ ANSIWrapper<
+  LockedHeap<PosixLockType,
+	     CombineHeap<DieHardHeap<Numerator, Denominator, 1048576,
 				     (DIEHARD_DIEFAST == 1),
 				     (DIEHARD_DIEHARDER == 1)>,
 			 TheLargeHeap> > >
 TheDieHardHeap;
+
+#endif // DIEHARD_SCALABLE
 
 class TheCustomHeapType : public TheDieHardHeap {};
 
@@ -100,11 +149,18 @@ extern "C" {
   }
 
   void xxmalloc_lock() {
+#if !DIEHARD_SCALABLE
+    // Lock is only meaningful for the non-scalable (global locked) heap.
+    // The scalable design uses per-thread heaps and doesn't need locking.
     getCustomHeap()->lock();
+#endif
   }
 
   void xxmalloc_unlock() {
+#if !DIEHARD_SCALABLE
+    // Unlock is only meaningful for the non-scalable (global locked) heap.
     getCustomHeap()->unlock();
+#endif
   }
 
   void * xxmemalign(size_t alignment, size_t sz) {

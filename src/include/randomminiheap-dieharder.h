@@ -14,9 +14,10 @@ template <int Numerator,
 	  unsigned long ObjectSize,
 	  unsigned long NObjects,
 	  class Allocator,
-	  bool DieFastOn>
+	  bool DieFastOn,
+	  template <class> class BitMapType = BitMap>
 class RandomMiniHeapDieHarderBase :
-  public RandomMiniHeapCore<Numerator, Denominator, ObjectSize, NObjects, Allocator, DieFastOn, true> 
+  public RandomMiniHeapCore<Numerator, Denominator, ObjectSize, NObjects, Allocator, DieFastOn, true, BitMapType>
 {
 protected:
 
@@ -52,7 +53,7 @@ public:
 		   || CPUInfo::PageSize * (ObjectSize / CPUInfo::PageSize) == ObjectSize), "Object size must be a multiple of page size if it is bigger than a page.");
   }
 
-  typedef RandomMiniHeapCore<Numerator, Denominator, ObjectSize, NObjects, Allocator, DieFastOn, true> SuperHeap;
+  typedef RandomMiniHeapCore<Numerator, Denominator, ObjectSize, NObjects, Allocator, DieFastOn, true, BitMapType> SuperHeap;
 
   bool free (void * ptr) {
     bool didFree = SuperHeap::free (ptr);
@@ -235,7 +236,8 @@ template <int Numerator,
 	  unsigned long NObjects,
 	  class Allocator,
 	  bool DieFastOn,
-	  bool BigObjects>
+	  bool BigObjects,
+	  template <class> class BitMapType = BitMap>
 class RandomMiniHeapDieHarderChoose;
 
 
@@ -247,9 +249,10 @@ template <int Numerator,
 	  unsigned long ObjectSize,
 	  unsigned long NObjects,
 	  class Allocator,
-	  bool DieFastOn>
-class RandomMiniHeapDieHarderChoose<Numerator, Denominator, ObjectSize, NObjects, Allocator, DieFastOn, false> :
-  public RandomMiniHeapDieHarderBase<Numerator, Denominator, ObjectSize, NObjects, Allocator, DieFastOn> {
+	  bool DieFastOn,
+	  template <class> class BitMapType>
+class RandomMiniHeapDieHarderChoose<Numerator, Denominator, ObjectSize, NObjects, Allocator, DieFastOn, false, BitMapType> :
+  public RandomMiniHeapDieHarderBase<Numerator, Denominator, ObjectSize, NObjects, Allocator, DieFastOn, BitMapType> {
 public:
 
   RandomMiniHeapDieHarderChoose()
@@ -278,11 +281,12 @@ template <int Numerator,
 	  unsigned long ObjectSize,
 	  unsigned long NObjects,
 	  class Allocator,
-	  bool DieFastOn>
-class RandomMiniHeapDieHarderChoose<Numerator, Denominator, ObjectSize, NObjects, Allocator, DieFastOn, true>  : public RandomMiniHeapDieHarderBase<Numerator, Denominator, ObjectSize, NObjects, Allocator, DieFastOn> {
+	  bool DieFastOn,
+	  template <class> class BitMapType>
+class RandomMiniHeapDieHarderChoose<Numerator, Denominator, ObjectSize, NObjects, Allocator, DieFastOn, true, BitMapType>  : public RandomMiniHeapDieHarderBase<Numerator, Denominator, ObjectSize, NObjects, Allocator, DieFastOn, BitMapType> {
 public:
 
-  typedef RandomMiniHeapDieHarderBase<Numerator, Denominator, ObjectSize, NObjects, Allocator, DieFastOn> SuperHeap;
+  typedef RandomMiniHeapDieHarderBase<Numerator, Denominator, ObjectSize, NObjects, Allocator, DieFastOn, BitMapType> SuperHeap;
 
   RandomMiniHeapDieHarderChoose() {
     static_assert(ObjectSize >= CPUInfo::PageSize, "Object must be at least a page in size.");
@@ -310,9 +314,10 @@ template <int Numerator,
 	  unsigned long ObjectSize,
 	  unsigned long NObjects,
 	  class Allocator,
-	  bool DieFastOn>
+	  bool DieFastOn,
+	  template <class> class BitMapType = BitMap>
 class RandomMiniHeapDieHarder :
-  public RandomMiniHeapDieHarderChoose<Numerator, Denominator, ObjectSize, NObjects, Allocator, DieFastOn, (ObjectSize >= CPUInfo::PageSize)> {};
+  public RandomMiniHeapDieHarderChoose<Numerator, Denominator, ObjectSize, NObjects, Allocator, DieFastOn, (ObjectSize >= CPUInfo::PageSize), BitMapType> {};
 
 
 #endif
