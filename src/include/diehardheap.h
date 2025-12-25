@@ -241,7 +241,8 @@ private:
   mutable int _cachedSizeClass = -1;
 
   // The buffer that holds each RandomHeap.
-  char _buf[MINIHEAPSIZE * MAX_INDEX];
+  // Must be aligned since RandomHeap has alignas(CACHE_LINE_SIZE) members.
+  alignas(CACHE_LINE_SIZE) char _buf[MINIHEAPSIZE * MAX_INDEX];
 
 };
 

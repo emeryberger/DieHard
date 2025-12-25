@@ -401,7 +401,8 @@ private:
   mutable int _cachedMiniHeap;
 
   /// The buffer that holds the various mini heaps.
-  char _buf[sizeof(MiniHeapType<MIN_OBJECTS>) * MAX_MINIHEAPS];
+  /// Must be aligned since mini heaps may have alignas(CACHE_LINE_SIZE) members.
+  alignas(CACHE_LINE_SIZE) char _buf[sizeof(MiniHeapType<MIN_OBJECTS>) * MAX_MINIHEAPS];
 
   size_t _check2;
 
