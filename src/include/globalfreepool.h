@@ -25,6 +25,10 @@
 #include <cstddef>
 #include <pthread.h>
 
+#if __cplusplus >= 202002L
+#include <bit>
+#endif
+
 /**
  * @brief Special thread ID indicating unknown or invalid ownership.
  */
@@ -63,8 +67,13 @@ static constexpr size_t INVALID_THREAD_ID = SIZE_MAX;
  */
 class alignas(CACHE_LINE_SIZE) PerThreadFreeQueue {
 public:
+#if __cplusplus >= 202002L
+  static_assert(std::has_single_bit(static_cast<unsigned>(FREE_QUEUE_CAPACITY)),
+                "FREE_QUEUE_CAPACITY must be a power of 2");
+#else
   static_assert((FREE_QUEUE_CAPACITY & (FREE_QUEUE_CAPACITY - 1)) == 0,
                 "FREE_QUEUE_CAPACITY must be a power of 2");
+#endif
 
   PerThreadFreeQueue()
     : _head(0),

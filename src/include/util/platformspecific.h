@@ -11,6 +11,18 @@
 #ifndef DH_PLATFORMSPECIFIC_H
 #define DH_PLATFORMSPECIFIC_H
 
+// C++23 provides std::unreachable()
+#if __cplusplus >= 202302L
+#include <utility>
+#define DH_UNREACHABLE() std::unreachable()
+#elif defined(__GNUC__) || defined(__clang__)
+#define DH_UNREACHABLE() __builtin_unreachable()
+#elif defined(_MSC_VER)
+#define DH_UNREACHABLE() __assume(false)
+#else
+#define DH_UNREACHABLE() ((void)0)
+#endif
+
 #if defined(_WIN32)
 
 // Turn inlining hints into requirements.
@@ -28,11 +40,12 @@
 #define ATTRIBUTE_ALWAYS_INLINE __attribute__((always_inline)) inline
 
 // ASSUME tells the compiler a condition is always true, enabling optimizations.
-// On Clang, use __builtin_assume. On GCC, use __builtin_unreachable() idiom.
+// C++23 has [[assume(x)]] but it's an attribute, not usable as expression.
+// Use compiler intrinsics for now.
 #if defined(__clang__)
 #define ASSUME(x) __builtin_assume(x)
 #else
-#define ASSUME(x) do { if (!(x)) __builtin_unreachable(); } while (0)
+#define ASSUME(x) do { if (!(x)) DH_UNREACHABLE(); } while (0)
 #endif
 
 #else

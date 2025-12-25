@@ -48,8 +48,21 @@ local:
   };
 ")
 
-# Use C++20 for better optimization opportunities (bit operations, [[likely]], etc.)
-set(CMAKE_CXX_STANDARD 20)
+# Use C++23 when available for std::unreachable(), [[assume]], etc.
+# Fall back to C++20 for bit operations, [[likely]], etc.
+option(USE_CXX23 "Use C++23 standard if available" ON)
+if(USE_CXX23)
+  # Check if compiler supports C++23
+  include(CheckCXXCompilerFlag)
+  check_cxx_compiler_flag("-std=c++23" COMPILER_SUPPORTS_CXX23)
+  if(COMPILER_SUPPORTS_CXX23)
+    set(CMAKE_CXX_STANDARD 23)
+  else()
+    set(CMAKE_CXX_STANDARD 20)
+  endif()
+else()
+  set(CMAKE_CXX_STANDARD 20)
+endif()
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Enable Link Time Optimization for better cross-unit inlining

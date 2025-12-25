@@ -177,7 +177,7 @@ private:
 
   /// The number of size classes managed by this heap.
 #if __cplusplus > 199711L
-  enum { MAX_INDEX = staticlog(MaxSize) - staticlog(Alignment) + 1 };
+  static constexpr int MAX_INDEX = staticlog(MaxSize) - staticlog(Alignment) + 1;
 #else
   enum { MAX_INDEX =
 	 StaticLog<MaxSize>::VALUE -
@@ -230,8 +230,8 @@ private:
     return (RandomHeapBase<Numerator, Denominator> *) &_buf[MINIHEAPSIZE * index];
   }
 
-  enum { MINIHEAPSIZE =
-	 sizeof(RandomHeap<Numerator, Denominator, Alignment, MaxSize, RandomMiniHeap, DieFastOn, DieHarderOn, BitMapType>) };
+  static constexpr size_t MINIHEAPSIZE =
+	 sizeof(RandomHeap<Numerator, Denominator, Alignment, MaxSize, RandomMiniHeap, DieFastOn, DieHarderOn, BitMapType>);
 
   /// A random value used for detecting overflows (for DieFast).
   const size_t _localRandomValue;

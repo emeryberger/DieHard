@@ -14,6 +14,10 @@
 #include <string.h>
 #include <stdio.h>
 
+#if __cplusplus >= 202002L
+#include <bit>
+#endif
+
 #include "staticlog.h"
 
 #ifndef DH_BITMAP_H
@@ -105,19 +109,21 @@ private:
 
   /// To find the bit in a word, do this: word & getMask(bitPosition)
   /// @return a "mask" for the given position.
-  inline static WORD getMask (unsigned long long pos) {
+  static constexpr WORD getMask (unsigned long long pos) {
     return ((WORD) 1) << pos;
   }
 
   /// The number of bits in a WORD.
-  enum { WORDBITS = sizeof(WORD) * 8 };
+  static constexpr size_t WORDBITS = sizeof(WORD) * 8;
 
   /// The number of BYTES in a WORD.
-  enum { WORDBYTES = sizeof(WORD) };
+  static constexpr size_t WORDBYTES = sizeof(WORD);
 
   /// The log of the number of bits in a WORD, for shifting.
-#if __cplusplus > 199711L
-  enum { WORDBITSHIFT = staticlog(WORDBITS) };
+#if __cplusplus >= 202002L
+  static constexpr size_t WORDBITSHIFT = std::bit_width(WORDBITS) - 1;
+#elif __cplusplus > 199711L
+  static constexpr size_t WORDBITSHIFT = staticlog(WORDBITS);
 #else
   enum { WORDBITSHIFT = StaticLog<WORDBITS>::VALUE };
 #endif
