@@ -7,6 +7,7 @@
 #include "util/atomicbitmap.h"
 #include "check.h"
 #include "modulo.h"
+#include "platformspecific.h"
 #include "randomnumbergenerator.h"
 #include "tprintf.hh"
 
@@ -90,11 +91,11 @@ public:
 
   /// @return an allocated object of size ObjectSize
   /// @param sz   requested object size
-  /// @note May return nullptr even though there is free space.
+  /// @note May return nullptr even though there is free space (random collision).
 #ifdef NDEBUG
-  void * malloc (size_t)
+  ATTRIBUTE_ALWAYS_INLINE void * malloc (size_t)
 #else
-  void * malloc (size_t sz)
+  ATTRIBUTE_ALWAYS_INLINE void * malloc (size_t sz)
 #endif
   {
     Check<RandomMiniHeapCore *> sanity (this);
@@ -102,25 +103,23 @@ public:
     // Ensure size is reasonable.
     assert (sz <= ObjectSize);
 
-    void * ptr = nullptr;
-
-    // Try to allocate an object from the bitmap.
+    // Try to allocate an object from the bitmap at a random index.
+    // modulo<NObjects> uses fast bitwise AND when NObjects is power of 2.
     unsigned int index = modulo<NObjects> (_random.next());
 
-    bool didMalloc = _miniHeapBitmap.tryToSet (index);
-
-    if (!didMalloc) {
+    // Atomic CAS to claim this slot. May fail due to collision.
+    if (unlikely(!_miniHeapBitmap.tryToSet(index))) {
       return nullptr;
     }
 
     // Get the address of the indexed object.
-    ptr = getObject (index);
+    void * ptr = getObject(index);
 
 #ifndef NDEBUG
     unsigned int computedIndex = computeIndex (ptr);
     assert (index == computedIndex);
 #endif
-    
+
     if (DieFastOn) {
       // Check to see if this object was overflowed.
       if (DieFast::checkNot (ptr, ObjectSize, _freedValue)) {

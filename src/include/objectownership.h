@@ -23,6 +23,13 @@
 
 #include "globalfreepool.h"
 #include "heapregistry.h"
+#include "platformspecific.h"
+
+// How often to check for pending cross-thread frees (every N mallocs).
+// Checking on every malloc adds overhead from atomic loads.
+#ifndef DRAIN_CHECK_INTERVAL
+#define DRAIN_CHECK_INTERVAL 16
+#endif
 
 /**
  * @class OwnershipTrackingHeap
@@ -43,47 +50,43 @@ public:
 
   OwnershipTrackingHeap()
     : _threadId(ThreadIdManager::getThreadId()),
-      _registered(false)
+      _registered(false),
+      _allocCount(0)
   {
   }
 
-  inline void* malloc(size_t sz) {
-    // Ensure we're registered (lazy initialization)
-    ensureRegistered();
+  ATTRIBUTE_ALWAYS_INLINE void* malloc(size_t sz) {
+    // Ensure we're registered (lazy initialization).
+    // After first allocation, _registered is always true.
+    if (unlikely(!_registered)) {
+      doRegister();
+    }
 
-    // Drain any pending cross-thread frees for this thread
-    drainPendingFrees();
+    // Periodically check for pending cross-thread frees.
+    // Checking every malloc adds atomic load overhead, so we batch.
+    if (unlikely((++_allocCount & (DRAIN_CHECK_INTERVAL - 1)) == 0)) {
+      maybeDrainPendingFrees();
+    }
 
     // Allocate from the underlying heap
     return SuperHeap::malloc(sz);
   }
 
-  inline bool free(void* ptr) {
-    if (ptr == nullptr) {
+  ATTRIBUTE_ALWAYS_INLINE bool free(void* ptr) {
+    if (unlikely(ptr == nullptr)) {
       return false;
     }
 
-    // Ensure we're registered
-    ensureRegistered();
-
-    // Fast path: check if we own this object
-    if (SuperHeap::getSize(ptr) > 0) {
-      // We own it - free directly
-      return SuperHeap::free(ptr);
+    // Fast path: try to free directly from our heap.
+    // free() returns true if we owned the object and freed it.
+    // This avoids calling getSize() first, which would iterate
+    // through size classes twice (once for getSize, once for free).
+    if (likely(SuperHeap::free(ptr))) {
+      return true;
     }
 
-    // Slow path: find the owner via HeapRegistry
-    size_t ownerId = HeapRegistry::getInstance().findOwner(ptr, _threadId);
-
-    if (ownerId == INVALID_THREAD_ID) {
-      // Unknown owner - possibly from large heap or invalid pointer
-      // Try to free anyway (will return false if not found)
-      return SuperHeap::free(ptr);
-    }
-
-    // Cross-thread free - route to the owner's queue
-    GlobalFreePool::getInstance().crossThreadFree(ptr, ownerId);
-    return true; // We've handled it (will be freed by owner later)
+    // Slow path: cross-thread free or unknown object
+    return freeSlow(ptr);
   }
 
   inline size_t getSize(void* ptr) {
@@ -101,9 +104,10 @@ public:
 protected:
 
   /**
-   * @brief Drain pending cross-thread frees for this thread.
+   * @brief Check and drain pending cross-thread frees if threshold reached.
+   * @note Called periodically, not on every malloc.
    */
-  void drainPendingFrees() {
+  NO_INLINE void maybeDrainPendingFrees() {
     auto& pool = GlobalFreePool::getInstance();
     if (pool.shouldDrain(_threadId)) {
       pool.drainForThread(_threadId, [this](void* ptr) {
@@ -115,21 +119,40 @@ protected:
 private:
 
   /**
-   * @brief Ensure this heap is registered with HeapRegistry.
-   *
-   * Called lazily on first malloc/free to ensure the SuperHeap
-   * is fully constructed before we register it.
+   * @brief Slow path for free: handle cross-thread frees.
+   * @note Separated from fast path to keep hot code compact.
    */
-  void ensureRegistered() {
-    if (!_registered) {
-      // Register with the heap registry
-      HeapRegistry::getInstance().registerHeap(
-        static_cast<void*>(static_cast<SuperHeap*>(this)),
-        _threadId,
-        &OwnershipTrackingHeap::getSizeStatic
-      );
-      _registered = true;
+  NO_INLINE bool freeSlow(void* ptr) {
+    // Ensure we're registered (needed for cross-thread lookup)
+    if (unlikely(!_registered)) {
+      doRegister();
     }
+
+    // Find the owner via HeapRegistry
+    size_t ownerId = HeapRegistry::getInstance().findOwner(ptr, _threadId);
+
+    if (ownerId == INVALID_THREAD_ID) {
+      // Unknown owner - possibly from large heap or invalid pointer
+      // Try to free anyway (will return false if not found)
+      return SuperHeap::free(ptr);
+    }
+
+    // Cross-thread free - route to the owner's queue
+    GlobalFreePool::getInstance().crossThreadFree(ptr, ownerId);
+    return true; // We've handled it (will be freed by owner later)
+  }
+
+  /**
+   * @brief Register this heap with HeapRegistry.
+   * @note Called once on first malloc/free. Marked NO_INLINE to keep hot path small.
+   */
+  NO_INLINE void doRegister() {
+    HeapRegistry::getInstance().registerHeap(
+      static_cast<void*>(static_cast<SuperHeap*>(this)),
+      _threadId,
+      &OwnershipTrackingHeap::getSizeStatic
+    );
+    _registered = true;
   }
 
   /**
@@ -144,6 +167,9 @@ private:
 
   /// Whether we've registered with HeapRegistry.
   bool _registered;
+
+  /// Allocation counter for batching drain checks.
+  unsigned int _allocCount;
 };
 
 #endif // DH_OBJECTOWNERSHIP_H
