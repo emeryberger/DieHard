@@ -79,18 +79,24 @@ public:
   
   /// @brief Allocate an object of the requested size.
   /// @return such an object, or null.
-  inline void * malloc (size_t sz) {
-    assert (sz <= MaxSize);
-#if 1
-    // If the object request size is too big, just return null.
-    if (sz > MaxSize) {
+  /// @note Expected to be called through ANSIWrapper/CombineHeap which guarantee:
+  ///       sz >= Alignment (16) and sz <= MaxSize.
+  ATTRIBUTE_ALWAYS_INLINE void * malloc (size_t sz) {
+#if DIEHARD_DISABLE_SAFETY_CHECKS
+    // When explicitly disabled, assume caller guarantees bounds.
+    // Only enable this if you have verified the call hierarchy.
+    ASSUME(sz >= Alignment);
+    ASSUME(sz <= MaxSize);
+#else
+    // Safety checks - marked unlikely since callers should guarantee these.
+    // These protect against misuse but shouldn't affect hot-path performance.
+    if (unlikely(sz > MaxSize)) {
       return nullptr;
     }
-    if (sz < Alignment) {
+    if (unlikely(sz < Alignment)) {
       sz = Alignment;
     }
 #endif
-    assert (sz >= Alignment);
 
     // Compute the index corresponding to the size request, and
     // return an object allocated from that heap.
@@ -102,11 +108,8 @@ public:
     if (DieFastOn) {
       // Fill with special value.
       DieFast::fill (ptr, actualSize, _localRandomValue);
-    } else {
-      // Fill with zeros.
-      ////      DieFast::fill (ptr, actualSize, 0);
     }
-    
+
     assert (((size_t) ptr % Alignment) == 0);
     return ptr;
   }
@@ -114,32 +117,51 @@ public:
   
   /// @brief Relinquishes ownership of this pointer.
   /// @return true iff the object was on this heap.
-  inline bool free (void * ptr) {
-    // Go through the heap and try to free the object.
-    // We assume that the common case is when objects are small,
-    // so we check the smaller heaps first.
-    for (int i = 0; i < MAX_INDEX; i++) {
-      if (getHeap(i)->free (ptr))
-	// Successfully freed.
-	return true;
+  ATTRIBUTE_ALWAYS_INLINE bool free (void * ptr) {
+    // Fast path: try the cached size class first (locality optimization).
+    // Programs often free objects of similar sizes consecutively.
+    int cached = _cachedSizeClass;
+    if (likely(cached >= 0 && cached < MAX_INDEX)) {
+      if (getHeap(cached)->free(ptr)) {
+        return true;
+      }
     }
-    
+
+    // Slow path: linear search through all size classes.
+    for (int i = 0; i < MAX_INDEX; i++) {
+      if (i == cached) continue;  // Already tried
+      if (getHeap(i)->free(ptr)) {
+        _cachedSizeClass = i;  // Cache for next time
+        return true;
+      }
+    }
+
     // If we get here, the object could be a "big" object.
     return false;
   }
-  
+
   /// @brief Gets the size of a heap object.
   /// @return the space available from this point in the given object
   /// @note returns 0 if this object is not managed by this heap
-  inline size_t getSize (void * ptr) const {
+  ATTRIBUTE_ALWAYS_INLINE size_t getSize (void * ptr) const {
     if (!DieHarderOn) {
-      // Iterate, from smallest to largest, checking for the given
-      // object size.
+      // Fast path: try the cached size class first (locality optimization).
+      int cached = _cachedSizeClass;
+      if (likely(cached >= 0 && cached < MAX_INDEX)) {
+        size_t sz = getHeap(cached)->getSize(ptr);
+        if (sz != 0) {
+          return sz;
+        }
+      }
+
+      // Slow path: linear search through all size classes.
       for (int i = 0; i < MAX_INDEX; i++) {
-	size_t sz = getHeap(i)->getSize (ptr);
-	if (sz != 0) {
-	  return sz;
-	}
+        if (i == cached) continue;  // Already tried
+        size_t sz = getHeap(i)->getSize(ptr);
+        if (sz != 0) {
+          _cachedSizeClass = i;  // Cache for next time
+          return sz;
+        }
       }
       // If we get here, the object could be a "big" object. In any
       // event, we don't own it, so return 0.
@@ -213,6 +235,10 @@ private:
 
   /// A random value used for detecting overflows (for DieFast).
   const size_t _localRandomValue;
+
+  /// Cache of the last used size class for free/getSize operations.
+  /// Exploits locality: programs often free objects of similar sizes.
+  mutable int _cachedSizeClass = -1;
 
   // The buffer that holds each RandomHeap.
   char _buf[MINIHEAPSIZE * MAX_INDEX];

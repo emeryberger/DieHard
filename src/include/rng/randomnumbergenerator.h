@@ -10,24 +10,24 @@
 #ifndef DH_RANDOMNUMBERGENERATOR_H
 #define DH_RANDOMNUMBERGENERATOR_H
 
-#include "mwc64.h"
+#include "wyrand.h"
 #include "realrandomvalue.h"
 
 class RandomNumberGenerator {
 public:
 
   RandomNumberGenerator()
-    : mt (RealRandomValue::value(), RealRandomValue::value())
+    : _rng (RealRandomValue::value(), RealRandomValue::value())
   {
   }
 
   inline unsigned int next (void) {
-    return mt.next();
+    return (unsigned int)_rng.next();
   }
 
 private:
-  
-  MWC64 mt;
+
+  Wyrand _rng;
 
 };
 

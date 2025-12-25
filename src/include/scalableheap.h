@@ -25,6 +25,7 @@
 #include <atomic>
 #include <pthread.h>
 #include "heaplayers.h"
+#include "platformspecific.h"
 
 // Maximum number of per-thread heaps
 #ifndef MAX_THREAD_HEAPS
@@ -53,21 +54,21 @@ public:
 
   ScalableHeap() {}
 
-  inline void* malloc(size_t sz) {
+  ATTRIBUTE_ALWAYS_INLINE void* malloc(size_t sz) {
     auto* heap = getHeapSafe();
-    if (heap) {
+    if (likely(heap != nullptr)) {
       return heap->malloc(sz);
     }
-    // Fallback for early init
+    // Fallback for early init (rare after startup)
     return getFallbackHeap()->malloc(sz);
   }
 
-  inline void free(void* ptr) {
-    if (ptr == nullptr) return;
+  ATTRIBUTE_ALWAYS_INLINE void free(void* ptr) {
+    if (unlikely(ptr == nullptr)) return;
 
     // Try per-thread heap first (handles cross-thread frees via OwnershipTrackingHeap)
     auto* heap = getHeapSafe();
-    if (heap) {
+    if (likely(heap != nullptr)) {
       heap->free(ptr);
       return;
     }
@@ -77,11 +78,11 @@ public:
   }
 
   inline size_t getSize(void* ptr) {
-    if (ptr == nullptr) return 0;
+    if (unlikely(ptr == nullptr)) return 0;
 
     // Try per-thread heap first
     auto* heap = getHeapSafe();
-    if (heap) {
+    if (likely(heap != nullptr)) {
       size_t sz = heap->getSize(ptr);
       if (sz > 0) return sz;
     }
@@ -92,7 +93,7 @@ public:
 
   inline void* memalign(size_t alignment, size_t sz) {
     auto* heap = getHeapSafe();
-    if (heap) {
+    if (likely(heap != nullptr)) {
       return heap->memalign(alignment, sz);
     }
     return getFallbackHeap()->memalign(alignment, sz);
@@ -113,24 +114,39 @@ private:
    *
    * Returns nullptr during early initialization when pthread TLS
    * is not ready. The caller should use the fallback heap in this case.
+   *
+   * @note Fast path: after initialization, just reads TLS and decodes pointer.
    */
-  PerThreadHeap* getHeapSafe() {
-    // Check if we're in early init (pthread not ready)
-    if (!_initialized.load(std::memory_order_acquire)) {
-      if (!tryInitialize()) {
-        return nullptr;
+  ATTRIBUTE_ALWAYS_INLINE PerThreadHeap* getHeapSafe() {
+    // Fast path: after init, just get from TLS.
+    // The relaxed load is safe because once true, _initialized never changes back.
+    if (likely(_initialized.load(std::memory_order_relaxed))) {
+      void* tlsValue = pthread_getspecific(_heapKey);
+      if (likely(tlsValue != nullptr)) {
+        // Decode the heap pointer (offset by 1 to distinguish from nullptr)
+        return reinterpret_cast<PerThreadHeap*>(reinterpret_cast<uintptr_t>(tlsValue) - 1);
       }
-    }
-
-    // Get thread-local heap index
-    void* tlsValue = pthread_getspecific(_heapKey);
-
-    if (tlsValue == nullptr) {
       // First allocation on this thread - create a new heap
       return createHeapForThread();
     }
 
-    // Decode the heap pointer (stored as tlsValue directly, offset by 1 to distinguish from nullptr)
+    // Slow path: initialization not complete
+    return getHeapSlow();
+  }
+
+  /**
+   * @brief Slow path for getHeapSafe when not yet initialized.
+   */
+  NO_INLINE PerThreadHeap* getHeapSlow() {
+    if (!tryInitialize()) {
+      return nullptr;
+    }
+
+    // Now initialized, get thread-local heap
+    void* tlsValue = pthread_getspecific(_heapKey);
+    if (tlsValue == nullptr) {
+      return createHeapForThread();
+    }
     return reinterpret_cast<PerThreadHeap*>(reinterpret_cast<uintptr_t>(tlsValue) - 1);
   }
 

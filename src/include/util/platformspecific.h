@@ -19,14 +19,37 @@
 #pragma warning(disable: 4530)
 #pragma warning(disable:4273)
 #define NO_INLINE __declspec(noinline)
+#define ATTRIBUTE_ALWAYS_INLINE __forceinline
+#define ASSUME(x) __assume(x)
 
-#elif defined(__GNUC__)
+#elif defined(__GNUC__) || defined(__clang__)
 
 #define NO_INLINE __attribute__ ((noinline))
-//#define inline __attribute__((always_inline))
+#define ATTRIBUTE_ALWAYS_INLINE __attribute__((always_inline)) inline
+
+// ASSUME tells the compiler a condition is always true, enabling optimizations.
+// On Clang, use __builtin_assume. On GCC, use __builtin_unreachable() idiom.
+#if defined(__clang__)
+#define ASSUME(x) __builtin_assume(x)
+#else
+#define ASSUME(x) do { if (!(x)) __builtin_unreachable(); } while (0)
+#endif
 
 #else
+
 #define NO_INLINE
+#define ATTRIBUTE_ALWAYS_INLINE inline
+#define ASSUME(x) ((void)0)
+
+#endif
+
+// Branch prediction hints
+#if defined(__GNUC__) || defined(__clang__)
+#define likely(x)   __builtin_expect(!!(x), 1)
+#define unlikely(x) __builtin_expect(!!(x), 0)
+#else
+#define likely(x)   (x)
+#define unlikely(x) (x)
 #endif
 
 #endif

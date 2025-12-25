@@ -48,9 +48,16 @@ local:
   };
 ")
 
-# Default to C++14 (adjust as desired)
-set(CMAKE_CXX_STANDARD 14)
+# Use C++20 for better optimization opportunities (bit operations, [[likely]], etc.)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+# Enable Link Time Optimization for better cross-unit inlining
+include(CheckIPOSupported)
+check_ipo_supported(RESULT ipo_supported OUTPUT ipo_error)
+if(ipo_supported)
+  set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
+endif()
 
 # Ensure that the compiler doesn't replace anything with malloc/free
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fvisibility=hidden -fno-builtin-malloc -fno-builtin-calloc -fno-builtin-realloc -fno-builtin-free")
