@@ -100,6 +100,8 @@ FetchContent_Declare(
   Heap-Layers
   GIT_REPOSITORY https://github.com/emeryberger/Heap-Layers.git
   GIT_TAG        master
+  # Patch to fix std::align_val_t -> size_t conversion for C++20/23
+  PATCH_COMMAND sed -i.bak "s/CUSTOM_MEMALIGN(n, al)/CUSTOM_MEMALIGN(n, static_cast<size_t>(al))/g" wrappers/wrapper.cpp
 )
 FetchContent_MakeAvailable(Heap-Layers)
 include_directories(${heap-layers_SOURCE_DIR})
