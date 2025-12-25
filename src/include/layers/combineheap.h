@@ -4,6 +4,7 @@
 #define DH_COMBINEHEAP_H
 
 #include "heaplayers.h"
+#include "platformspecific.h"
 // #include "gcd.h"
 
 template <class SmallHeap,
@@ -16,23 +17,24 @@ public:
 
   virtual ~CombineHeap (void) {}
 
-  inline void * malloc (size_t sz) {
+  ATTRIBUTE_ALWAYS_INLINE void * malloc (size_t sz) {
     void * ptr;
-    if (sz > SmallHeap::MAX_SIZE) {
-      ptr = _big.malloc (sz);
-    } else {
+    // Small allocations are the common case
+    if (likely(sz <= SmallHeap::MAX_SIZE)) {
       ptr = _small.malloc (sz);
+    } else {
+      ptr = _big.malloc (sz);
     }
     assert (((size_t) ptr % Alignment) == 0);
     return ptr;
   }
 
-  inline bool free (void * ptr) {
-    if (_small.free (ptr)) {
+  ATTRIBUTE_ALWAYS_INLINE bool free (void * ptr) {
+    // Try small heap first (common case)
+    if (likely(_small.free (ptr))) {
       return true;
-    } else {
-      return _big.free (ptr);
     }
+    return _big.free (ptr);
   }
 
   inline size_t getSize (void * ptr) {

@@ -22,6 +22,7 @@ using namespace std;
 
 using namespace HL;
 
+#include "platformspecific.h"
 #include "check.h"
 #include "log2.h"
 #include "mmapalloc.h"
@@ -105,7 +106,8 @@ public:
       _miniHeapsInUse (0),
       _chunksInUse (0),
       _check2 ((size_t) CHECK2),
-      _growLock (false)
+      _growLock (false),
+      _cachedMiniHeap (-1)
   {
     Check<RandomHeap *> sanity (this);
 
@@ -126,36 +128,30 @@ public:
   }
 
 
-  inline void * malloc (size_t sz) {
+  ATTRIBUTE_ALWAYS_INLINE void * malloc (size_t sz) {
     Check<RandomHeap *> sanity (this);
 
     assert (sz <= ObjectSize);
 
-    // If we're "out" of memory, get more.
-    // Use atomic loads for lock-free fast path check.
-    while (Numerator * _inUse.load(std::memory_order_relaxed) >=
-           _available.load(std::memory_order_relaxed) * Denominator) {
-      getAnotherMiniHeap();
+    // Fast path: check if we have space available.
+    // Load both values once to avoid repeated atomic loads.
+    size_t inUse = _inUse.load(std::memory_order_relaxed);
+    size_t available = _available.load(std::memory_order_relaxed);
+
+    // Check if we need more space: inUse/available >= Denominator/Numerator
+    // Rearranged to avoid division: Numerator * inUse >= available * Denominator
+    if (unlikely(Numerator * inUse >= available * Denominator)) {
+      // Slow path: need to grow the heap
+      growHeapIfNeeded();
     }
 
-    void * ptr = nullptr;
-    while (ptr == nullptr) {
+    // Get an object from a randomly selected miniheap.
+    void * ptr = getObject(sz);
+
+    // If the first attempt failed, keep trying (rare with proper heap sizing).
+    while (unlikely(ptr == nullptr)) {
       ptr = getObject(sz);
     }
-
-    // Check to see if the object is all zeros. If not, we had an overflow.
-    // NB: Currently disabled as it is fairly expensive.
-#if 0
-    if (DieHarderOn)
-    {
-      for (unsigned int i = 0; i < ObjectSize / sizeof(long); i += sizeof(long)) {
-	if (((long *) ptr)[i] != 0) {
-	  fprintf (stderr, "DieHarder: Buffer overflow encountered.\n");
-	  abort();
-	}
-      }
-    }
-#endif
 
     // Atomically bump up the amount of space in use and return.
     _inUse.fetch_add(1, std::memory_order_relaxed);
@@ -167,14 +163,25 @@ public:
   inline bool free (void * ptr) {
     Check<RandomHeap *> sanity (this);
 
-    // Starting with the largest mini-heap, try to free the object.
-    // If we find it, return true.
-    // Load miniHeapsInUse atomically for the iteration bound.
+    // Fast path: try the cached miniheap first.
+    // Most allocations from a thread go to the same miniheap.
+    int cached = _cachedMiniHeap;
     unsigned int numHeaps = _miniHeapsInUse.load(std::memory_order_acquire);
+
+    if (likely(cached >= 0 && cached < (int)numHeaps)) {
+      if (getMiniHeap(cached)->free(ptr)) {
+        _inUse.fetch_sub(1, std::memory_order_relaxed);
+        return true;
+      }
+    }
+
+    // Slow path: search through miniheaps (largest first).
     for (int i = numHeaps - 1; i >= 0; i--) {
+      if (i == cached) continue;  // Already tried
 
       if (getMiniHeap(i)->free (ptr)) {
-        // Found it -- atomically drop the amount of space in use.
+        // Found it -- cache for next time and update count.
+        _cachedMiniHeap = i;
         _inUse.fetch_sub(1, std::memory_order_relaxed);
         return true;
       }
@@ -216,23 +223,21 @@ private:
   RandomHeap (const RandomHeap&);
   RandomHeap& operator= (const RandomHeap&);
 
-  // Pick a random heap, and get an object from it.
-
-  inline void * getObject (size_t sz) {
-    void * ptr = nullptr;
-    while (!ptr) {
-      size_t rnd = _random.next();
-      // NB: _chunksInUse acts as a bitmask that eliminates the need for
-      // an (expensive) modulus operation on _available -- the
-      // expression is the same as "v = rnd % _available".
-      // Load atomically to get a consistent snapshot.
-      unsigned int chunks = _chunksInUse.load(std::memory_order_acquire);
-      size_t v = rnd & chunks;
-      // Compute the index as a log of v (+1 to avoid log2(0)).
-      unsigned int index = log2(v + 1);
-      ptr = getMiniHeap(index)->malloc (sz);
-    }
-    return ptr;
+  /**
+   * @brief Try to get an object from a randomly selected miniheap.
+   * @return Pointer to allocated object, or nullptr if the random slot was taken.
+   * @note May return nullptr due to random collision; caller should retry.
+   */
+  ATTRIBUTE_ALWAYS_INLINE void * getObject (size_t sz) {
+    size_t rnd = _random.next();
+    // _chunksInUse acts as a bitmask to select a miniheap index.
+    // Use acquire to synchronize with miniheap activation (release fence).
+    unsigned int chunks = _chunksInUse.load(std::memory_order_acquire);
+    size_t v = rnd & chunks;
+    // Compute the index as log2(v + 1). This gives probability
+    // proportional to miniheap size (larger heaps more likely).
+    unsigned int index = log2(v + 1);
+    return getMiniHeap(index)->malloc(sz);
   }
 
   // The allocator for the mini heaps.
@@ -278,6 +283,18 @@ private:
     return (typename MiniHeapType<MIN_OBJECTS>::SuperHeap *) &_buf[index * MINIHEAP_SIZE];
   }
 
+
+  /**
+   * @brief Grow the heap if needed by activating more miniheaps.
+   * @note Loops until enough space is available. Marked NO_INLINE to keep hot path small.
+   */
+  NO_INLINE void growHeapIfNeeded() {
+    // Keep growing until we have enough space
+    while (Numerator * _inUse.load(std::memory_order_relaxed) >=
+           _available.load(std::memory_order_relaxed) * Denominator) {
+      getAnotherMiniHeap();
+    }
+  }
 
   // Activate another mini heap to satisfy the current memory requests.
   // Uses a spinlock to ensure only one thread grows the heap at a time.
@@ -380,8 +397,12 @@ private:
   /// Spinlock for heap growth synchronization.
   alignas(CACHE_LINE_SIZE) std::atomic<bool> _growLock;
 
+  /// Cache of last used miniheap for free() optimization.
+  mutable int _cachedMiniHeap;
+
   /// The buffer that holds the various mini heaps.
-  char _buf[sizeof(MiniHeapType<MIN_OBJECTS>) * MAX_MINIHEAPS];
+  /// Must be aligned since mini heaps may have alignas(CACHE_LINE_SIZE) members.
+  alignas(CACHE_LINE_SIZE) char _buf[sizeof(MiniHeapType<MIN_OBJECTS>) * MAX_MINIHEAPS];
 
   size_t _check2;
 
