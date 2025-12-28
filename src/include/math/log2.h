@@ -28,15 +28,26 @@ static inline constexpr int log2 (size_t sz)
   return sz <= 1 ? 0 : static_cast<int>(std::bit_width(sz - 1));
 }
 #elif defined(_WIN32)
+#include <intrin.h>
 static inline int log2 (size_t sz)
 {
-  int retval;
   sz = (sz << 1) - 1;
-  __asm {
-    bsr eax, sz
-      mov retval, eax
-      }
-  return retval;
+#if defined(_M_AMD64) || defined(_M_X64)
+  // x64 Windows
+  unsigned long index;
+  _BitScanReverse64(&index, sz);
+  return (int)index;
+#elif defined(_M_ARM64)
+  // ARM64 Windows - use leading zeros count
+  unsigned long index;
+  _BitScanReverse64(&index, sz);
+  return (int)index;
+#else
+  // x86 Windows
+  unsigned long index;
+  _BitScanReverse(&index, (unsigned long)sz);
+  return (int)index;
+#endif
 }
 #elif defined(__GNUC__) && defined(__i386__)
 static inline int log2 (size_t sz)

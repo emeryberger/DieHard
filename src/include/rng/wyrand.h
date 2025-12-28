@@ -14,6 +14,10 @@
 
 #include <stdint.h>
 
+#if defined(_MSC_VER)
+#include <intrin.h>
+#endif
+
 class Wyrand {
   uint64_t _state;
 
@@ -27,8 +31,23 @@ public:
 
   inline uint64_t next() {
     _state += 0xa0761d6478bd642fULL;
+#if defined(_MSC_VER)
+    // MSVC doesn't have __uint128_t, use platform-specific intrinsics
+    uint64_t b = _state ^ 0xe7037ed1a0b428dbULL;
+#if defined(_M_ARM64)
+    // ARM64: use __umulh for high 64 bits
+    uint64_t lo = _state * b;
+    uint64_t hi = __umulh(_state, b);
+#else
+    // x64: use _umul128
+    uint64_t hi, lo;
+    lo = _umul128(_state, b, &hi);
+#endif
+    return hi ^ lo;
+#else
     __uint128_t tmp = (__uint128_t)_state * (_state ^ 0xe7037ed1a0b428dbULL);
     return (uint64_t)((tmp >> 64) ^ tmp);
+#endif
   }
 };
 

@@ -8,6 +8,17 @@
 
 #include "heaplayers.h"
 
+// Use platform-specific lock type
+#if defined(_WIN32)
+namespace DH {
+  using LockType = HL::WinLockType;
+}
+#else
+namespace DH {
+  using LockType = HL::PosixLockType;
+}
+#endif
+
 template <class VALUE_TYPE,
 	  size_t INIT_SIZE = 4096,
 	  class SourceHeap = HL::MallocHeap>
@@ -76,15 +87,15 @@ public:
   }
 
   bool get (unsigned long k, VALUE_TYPE& value) {
-    std::lock_guard<HL::PosixLockType> l (_lock);
+    std::lock_guard<DH::LockType> l (_lock);
 
     return find (k, value);
   }
 
   /// @brief Insert the given object into the map.
-  void insert (const VALUE_TYPE& s) 
+  void insert (const VALUE_TYPE& s)
   {
-    std::lock_guard<HL::PosixLockType> l (_lock);
+    std::lock_guard<DH::LockType> l (_lock);
     
 #if 0
     {
@@ -196,7 +207,7 @@ private:
     return new (ptr) StoredObject[nElts];
   }
 
-  HL::PosixLockType _lock;
+  DH::LockType _lock;
 
   SourceHeap _sh;
   size_t _size;

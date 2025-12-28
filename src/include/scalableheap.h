@@ -23,9 +23,26 @@
 #define DH_SCALABLEHEAP_H
 
 #include <atomic>
+#if defined(_WIN32)
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+#include <windows.h>
+#else
 #include <pthread.h>
+#endif
 #include "heaplayers.h"
 #include "platformspecific.h"
+
+// Platform-specific lock type
+#if defined(_WIN32)
+using ScalableHeap_LockType = HL::WinLockType;
+#else
+using ScalableHeap_LockType = HL::PosixLockType;
+#endif
 
 // Maximum number of per-thread heaps
 #ifndef MAX_THREAD_HEAPS
@@ -112,7 +129,7 @@ private:
   /**
    * @brief Get a per-thread heap, or nullptr if not safe yet.
    *
-   * Returns nullptr during early initialization when pthread TLS
+   * Returns nullptr during early initialization when TLS
    * is not ready. The caller should use the fallback heap in this case.
    *
    * @note Fast path: after initialization, just reads TLS and decodes pointer.
@@ -121,7 +138,7 @@ private:
     // Fast path: after init, just get from TLS.
     // The relaxed load is safe because once true, _initialized never changes back.
     if (likely(_initialized.load(std::memory_order_relaxed))) {
-      void* tlsValue = pthread_getspecific(_heapKey);
+      void* tlsValue = getTlsValue();
       if (likely(tlsValue != nullptr)) {
         // Decode the heap pointer (offset by 1 to distinguish from nullptr)
         return reinterpret_cast<PerThreadHeap*>(reinterpret_cast<uintptr_t>(tlsValue) - 1);
@@ -143,7 +160,7 @@ private:
     }
 
     // Now initialized, get thread-local heap
-    void* tlsValue = pthread_getspecific(_heapKey);
+    void* tlsValue = getTlsValue();
     if (tlsValue == nullptr) {
       return createHeapForThread();
     }
@@ -151,7 +168,7 @@ private:
   }
 
   /**
-   * @brief Try to initialize pthread TLS.
+   * @brief Try to initialize TLS.
    * @return true if initialization succeeded, false if not ready.
    */
   bool tryInitialize() {
@@ -174,13 +191,22 @@ private:
       return true;
     }
 
-    // Try to create the pthread key
+    // Try to create the TLS key
+#if defined(_WIN32)
+    _heapKey = TlsAlloc();
+    if (_heapKey == TLS_OUT_OF_INDEXES) {
+      // TLS not ready yet
+      _initializing.store(false, std::memory_order_release);
+      return false;
+    }
+#else
     int result = pthread_key_create(&_heapKey, nullptr);
     if (result != 0) {
       // pthread not ready yet
       _initializing.store(false, std::memory_order_release);
       return false;
     }
+#endif
 
     // Success!
     _initialized.store(true, std::memory_order_release);
@@ -194,15 +220,20 @@ private:
   PerThreadHeap* createHeapForThread() {
     // Allocate heap using mmap (to avoid recursion)
     void* buf = HL::MmapWrapper::map(sizeof(PerThreadHeap));
+#if defined(_WIN32)
+    if (buf == nullptr) {
+      return nullptr;
+    }
+#else
     if (buf == nullptr || buf == MAP_FAILED) {
       return nullptr;
     }
+#endif
 
     auto* heap = new (buf) PerThreadHeap();
 
     // Store in TLS (add 1 to distinguish from nullptr)
-    pthread_setspecific(_heapKey, reinterpret_cast<void*>(
-      reinterpret_cast<uintptr_t>(heap) + 1));
+    setTlsValue(reinterpret_cast<void*>(reinterpret_cast<uintptr_t>(heap) + 1));
 
     return heap;
   }
@@ -212,20 +243,45 @@ private:
    */
   FallbackHeap* getFallbackHeap() {
     // Use placement new in static buffer to avoid malloc during init
+#if defined(_MSC_VER)
+    __declspec(align(16)) static char buf[sizeof(FallbackHeap)];
+#else
     static char buf[sizeof(FallbackHeap)] __attribute__((aligned(16)));
+#endif
     static FallbackHeap* heap = new (buf) FallbackHeap();
     return heap;
+  }
+
+  // Platform-specific TLS accessors
+  void* getTlsValue() {
+#if defined(_WIN32)
+    return TlsGetValue(_heapKey);
+#else
+    return pthread_getspecific(_heapKey);
+#endif
+  }
+
+  void setTlsValue(void* value) {
+#if defined(_WIN32)
+    TlsSetValue(_heapKey, value);
+#else
+    pthread_setspecific(_heapKey, value);
+#endif
   }
 
   // Initialization state
   std::atomic<bool> _initialized{false};
   std::atomic<bool> _initializing{false};
 
-  // pthread TLS key for per-thread heap lookup
+  // TLS key for per-thread heap lookup
+#if defined(_WIN32)
+  DWORD _heapKey;
+#else
   pthread_key_t _heapKey;
+#endif
 
   // Lock for fallback heap
-  HL::PosixLockType _fallbackLock;
+  ScalableHeap_LockType _fallbackLock;
 };
 
 #endif // DH_SCALABLEHEAP_H

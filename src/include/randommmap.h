@@ -8,6 +8,12 @@
 #include "madvisewrapper.h"
 #include "mwc64.h"
 
+// Use platform-specific lock type
+#if defined(_WIN32)
+using DH_LockType = HL::WinLockType;
+#else
+using DH_LockType = HL::PosixLockType;
+#endif
 
 class RandomMmap {
 public:
@@ -36,7 +42,7 @@ public:
   }
 
   void * map (size_t sz) {
-    std::lock_guard<PosixLockType> m (_lock);
+    std::lock_guard<DH_LockType> m (_lock);
 
     // Round up to the nearest number of pages required.
     unsigned long npages = (sz + CPUInfo::PageSize - 1) / CPUInfo::PageSize;
@@ -78,7 +84,7 @@ public:
   
   void unmap (void * ptr, size_t sz)
   {
-    std::lock_guard<PosixLockType> m (_lock);
+    std::lock_guard<DH_LockType> m (_lock);
 
     // Round up to the nearest number of pages required.
     unsigned int npages = (sz + CPUInfo::PageSize - 1) / CPUInfo::PageSize;
@@ -123,7 +129,7 @@ private:
   void * _pages;
 
   /// The lock that guards these data structures.
-  PosixLockType _lock;
+  DH_LockType _lock;
 };
 
 #endif

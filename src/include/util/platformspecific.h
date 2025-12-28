@@ -27,7 +27,8 @@
 
 // Turn inlining hints into requirements.
 #pragma inline_depth(255)
-#define inline __forceinline
+// Note: Do NOT #define inline __forceinline - it breaks MSVC STL headers
+// Use ATTRIBUTE_ALWAYS_INLINE explicitly where needed
 #pragma warning(disable: 4530)
 #pragma warning(disable:4273)
 #define NO_INLINE __declspec(noinline)

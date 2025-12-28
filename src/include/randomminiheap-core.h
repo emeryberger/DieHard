@@ -9,7 +9,8 @@
 #include "modulo.h"
 #include "platformspecific.h"
 #include "randomnumbergenerator.h"
-#include "tprintf.hh"
+
+#include "printf.h"
 
 class RandomMiniHeapBase {
 public:
@@ -49,19 +50,19 @@ private:
   
   void reportOverflowError(void * ptr, int offset) {
     if (DieFastOn) {
-      tprintf::tprintf("DieFast: Overflow detected in object at address: @, position: @ (malloc size = @)\n", ptr, offset, ObjectSize);
+      printf_("DieFast: Overflow detected in object at address: %p, position: %d (malloc size = %lu)\n", ptr, offset, (unsigned long)ObjectSize);
     }
   }
-  
+
   void reportDoubleFreeError(void * ptr) {
     if (DieFastOn) {
-      tprintf::tprintf("DieFast: Double free detected in object at address: @ (malloc size = @)\n", ptr, ObjectSize);
+      printf_("DieFast: Double free detected in object at address: %p (malloc size = %lu)\n", ptr, (unsigned long)ObjectSize);
     }
   }
-  
+
   void reportInvalidFreeError(void * ptr) {
     if (DieFastOn) {
-      tprintf::tprintf("DieFast: Invalid free called on address: @\n", ptr);
+      printf_("DieFast: Invalid free called on address: %p\n", ptr);
     }
   }
   

@@ -23,7 +23,6 @@
 #include <atomic>
 #include <cstdint>
 #include <cstddef>
-#include <pthread.h>
 
 #if __cplusplus >= 202002L
 #include <bit>
