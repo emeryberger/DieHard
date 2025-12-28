@@ -2,6 +2,7 @@
 #define DH_LARGEHEAP_H
 
 #include <assert.h>
+#include <mutex>
 
 #include "heaplayers.h"
 
@@ -9,6 +10,12 @@
 
 using namespace HL;
 
+/**
+ * LargeHeap manages large allocations via mmap, tracking sizes in a hash map.
+ *
+ * Thread-safety: All public methods are protected by a mutex because the
+ * internal std::unordered_map is not thread-safe for concurrent access.
+ */
 template <class Mapper>
 class LargeHeap {
 public:
@@ -17,11 +24,13 @@ public:
 
   void * malloc (size_t sz) {
     void * ptr = Mapper::map (sz);
+    std::lock_guard<std::mutex> lock(_mutex);
     set (ptr, sz);
     return ptr;
   }
 
   bool free (void * ptr) {
+    std::lock_guard<std::mutex> lock(_mutex);
     // If we allocated this object, free it.
     size_t sz = get(ptr);
     if (sz > 0) {
@@ -34,11 +43,13 @@ public:
   }
 
   size_t getSize (void * ptr) {
+    std::lock_guard<std::mutex> lock(_mutex);
     size_t s = get(ptr);
     return s;
   }
 
 private:
+  std::mutex _mutex;
 
   template <class TheMapper>
   class MapAlloc {
