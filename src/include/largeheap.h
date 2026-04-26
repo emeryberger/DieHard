@@ -73,8 +73,16 @@ private:
   mapType _objectSize;
 
   inline size_t get (void * ptr) {
-    size_t sz = _objectSize[ptr];
-    return sz;
+    // Use find() rather than operator[] — the latter default-inserts an
+    // entry for `ptr` whenever the key isn't present, which silently grows
+    // _objectSize on every free of a non-LargeHeap pointer (i.e., every
+    // call to free() that misses the small heap and falls through here).
+    // Repeated phantom inserts can push the map past its rehash threshold
+    // and trigger an mmap+bzero of a fresh bucket array; if that bzero
+    // races with pthread TSD cleanup (see libobjc's
+    // AutoreleasePoolPage::HotPageDealloc), the parent process aborts.
+    auto it = _objectSize.find(ptr);
+    return it == _objectSize.end() ? 0 : it->second;
   }
   
   inline void set (void * ptr, size_t sz) {
